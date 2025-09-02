@@ -10,6 +10,11 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
+import OrderList from "./pages/orders/OrderList";
+import Finance from "./pages/finance/Finance";
+import Settings from "./pages/settings/Settings";
+import TicketManagement from "./pages/tickets/TicketManagement";
+import ProductModule from "./pages/products/ProductModule";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +31,11 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path="orders" element={<OrderList />} />
+            <Route path="finance" element={<Finance />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="tickets" element={<TicketManagement />} />
+            <Route path="products" element={<ProductModule />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
