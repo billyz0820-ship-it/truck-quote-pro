@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import OrderList from "./pages/orders/OrderList";
+import CreateOrder from "./pages/orders/CreateOrder";
 import Finance from "./pages/finance/Finance";
 import Settings from "./pages/settings/Settings";
 import TicketManagement from "./pages/tickets/TicketManagement";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="orders" element={<OrderList />} />
+            <Route path="orders/create" element={<CreateOrder />} />
             <Route path="finance" element={<Finance />} />
             <Route path="settings" element={<Settings />} />
             <Route path="tickets" element={<TicketManagement />} />

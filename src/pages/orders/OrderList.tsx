@@ -14,10 +14,13 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const OrderList = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 
   const orderStatuses = [
@@ -78,9 +81,15 @@ const OrderList = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">订单列表</h1>
-        <p className="text-muted-foreground">管理您的所有运输订单</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">订单列表</h1>
+          <p className="text-muted-foreground">管理您的所有运输订单</p>
+        </div>
+        <Button onClick={() => navigate("/dashboard/orders/create")} className="bg-primary hover:bg-primary/90">
+          <Plus className="h-4 w-4 mr-2" />
+          创建订单
+        </Button>
       </div>
 
       {/* Search and Filter */}
