@@ -58,7 +58,7 @@ const CreateOrder = () => {
       pallets
     };
     console.log("订单数据:", orderData);
-    navigate("/dashboard/orders");
+    navigate("/dashboard/orders/quote", { state: { orderData } });
   };
 
   return (
