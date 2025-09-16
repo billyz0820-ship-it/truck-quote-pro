@@ -3,44 +3,61 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MapPin, Package, DollarSign } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+interface Pallet {
+  id: string;
+  count: number;
+  weight: number;
+  dimensions: string;
+  class: string;
+}
 
 const CreateOrder = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    pickupAddress: "",
-    pickupCity: "",
-    pickupState: "",
     pickupZip: "",
-    pickupContact: "",
-    pickupPhone: "",
-    deliveryAddress: "",
-    deliveryCity: "",
-    deliveryState: "",
     deliveryZip: "",
-    deliveryContact: "",
-    deliveryPhone: "",
-    cargoType: "",
-    weight: "",
-    dimensions: "",
-    pallets: "",
-    specialRequirements: "",
-    preferredDate: "",
-    urgency: "standard"
   });
+  
+  const [pallets, setPallets] = useState<Pallet[]>([
+    { id: "1", count: 1, weight: 0, dimensions: "", class: "" }
+  ]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const addPallet = () => {
+    const newPallet: Pallet = {
+      id: Date.now().toString(),
+      count: 1,
+      weight: 0,
+      dimensions: "",
+      class: ""
+    };
+    setPallets(prev => [...prev, newPallet]);
+  };
+
+  const removePallet = (id: string) => {
+    setPallets(prev => prev.filter(pallet => pallet.id !== id));
+  };
+
+  const updatePallet = (id: string, field: keyof Pallet, value: string | number) => {
+    setPallets(prev => prev.map(pallet => 
+      pallet.id === id ? { ...pallet, [field]: value } : pallet
+    ));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // 这里处理订单提交逻辑
-    console.log("订单数据:", formData);
+    const orderData = {
+      ...formData,
+      pallets
+    };
+    console.log("订单数据:", orderData);
     navigate("/dashboard/orders");
   };
 
@@ -61,270 +78,137 @@ const CreateOrder = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 发货信息 */}
+        {/* 运输路线 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
-              发货信息
+              运输路线
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="pickupAddress">发货地址</Label>
-                <Input
-                  id="pickupAddress"
-                  placeholder="详细地址"
-                  value={formData.pickupAddress}
-                  onChange={(e) => handleInputChange("pickupAddress", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pickupContact">联系人</Label>
-                <Input
-                  id="pickupContact"
-                  placeholder="联系人姓名"
-                  value={formData.pickupContact}
-                  onChange={(e) => handleInputChange("pickupContact", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pickupCity">城市</Label>
-                <Input
-                  id="pickupCity"
-                  placeholder="城市"
-                  value={formData.pickupCity}
-                  onChange={(e) => handleInputChange("pickupCity", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pickupState">州/省</Label>
-                <Input
-                  id="pickupState"
-                  placeholder="州/省"
-                  value={formData.pickupState}
-                  onChange={(e) => handleInputChange("pickupState", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pickupZip">邮编</Label>
+                <Label htmlFor="pickupZip">发货邮编</Label>
                 <Input
                   id="pickupZip"
-                  placeholder="邮编"
+                  placeholder="发货邮编"
                   value={formData.pickupZip}
                   onChange={(e) => handleInputChange("pickupZip", e.target.value)}
                   required
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pickupPhone">联系电话</Label>
-              <Input
-                id="pickupPhone"
-                placeholder="联系电话"
-                value={formData.pickupPhone}
-                onChange={(e) => handleInputChange("pickupPhone", e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 收货信息 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-secondary" />
-              收货信息
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="deliveryAddress">收货地址</Label>
-                <Input
-                  id="deliveryAddress"
-                  placeholder="详细地址"
-                  value={formData.deliveryAddress}
-                  onChange={(e) => handleInputChange("deliveryAddress", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="deliveryContact">联系人</Label>
-                <Input
-                  id="deliveryContact"
-                  placeholder="联系人姓名"
-                  value={formData.deliveryContact}
-                  onChange={(e) => handleInputChange("deliveryContact", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="deliveryCity">城市</Label>
-                <Input
-                  id="deliveryCity"
-                  placeholder="城市"
-                  value={formData.deliveryCity}
-                  onChange={(e) => handleInputChange("deliveryCity", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="deliveryState">州/省</Label>
-                <Input
-                  id="deliveryState"
-                  placeholder="州/省"
-                  value={formData.deliveryState}
-                  onChange={(e) => handleInputChange("deliveryState", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="deliveryZip">邮编</Label>
+                <Label htmlFor="deliveryZip">收货邮编</Label>
                 <Input
                   id="deliveryZip"
-                  placeholder="邮编"
+                  placeholder="收货邮编"
                   value={formData.deliveryZip}
                   onChange={(e) => handleInputChange("deliveryZip", e.target.value)}
                   required
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="deliveryPhone">联系电话</Label>
-              <Input
-                id="deliveryPhone"
-                placeholder="联系电话"
-                value={formData.deliveryPhone}
-                onChange={(e) => handleInputChange("deliveryPhone", e.target.value)}
-                required
-              />
-            </div>
           </CardContent>
         </Card>
 
-        {/* 货物信息 */}
+        {/* 托盘信息 */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-accent" />
-              货物信息
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-accent" />
+                托盘信息
+              </div>
+              <Button type="button" onClick={addPallet} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                添加托盘
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cargoType">货物类型</Label>
-                <Select value={formData.cargoType} onValueChange={(value) => handleInputChange("cargoType", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择货物类型" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="electronics">电子产品</SelectItem>
-                    <SelectItem value="clothing">服装</SelectItem>
-                    <SelectItem value="furniture">家具</SelectItem>
-                    <SelectItem value="machinery">机械设备</SelectItem>
-                    <SelectItem value="food">食品</SelectItem>
-                    <SelectItem value="chemicals">化工产品</SelectItem>
-                    <SelectItem value="other">其他</SelectItem>
-                  </SelectContent>
-                </Select>
+            {pallets.map((pallet, index) => (
+              <div key={pallet.id} className="border rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">托盘 #{index + 1}</h4>
+                  {pallets.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removePallet(pallet.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>托盘数量</Label>
+                    <Input
+                      type="number"
+                      placeholder="数量"
+                      value={pallet.count}
+                      onChange={(e) => updatePallet(pallet.id, "count", parseInt(e.target.value) || 0)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>重量 (磅)</Label>
+                    <Input
+                      type="number"
+                      placeholder="重量"
+                      value={pallet.weight}
+                      onChange={(e) => updatePallet(pallet.id, "weight", parseInt(e.target.value) || 0)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>尺寸 (长x宽x高)</Label>
+                    <Input
+                      placeholder="例: 48x40x42"
+                      value={pallet.dimensions}
+                      onChange={(e) => updatePallet(pallet.id, "dimensions", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>货物等级</Label>
+                    <Select 
+                      value={pallet.class} 
+                      onValueChange={(value) => updatePallet(pallet.id, "class", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择等级" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="50">Class 50</SelectItem>
+                        <SelectItem value="55">Class 55</SelectItem>
+                        <SelectItem value="60">Class 60</SelectItem>
+                        <SelectItem value="65">Class 65</SelectItem>
+                        <SelectItem value="70">Class 70</SelectItem>
+                        <SelectItem value="77.5">Class 77.5</SelectItem>
+                        <SelectItem value="85">Class 85</SelectItem>
+                        <SelectItem value="92.5">Class 92.5</SelectItem>
+                        <SelectItem value="100">Class 100</SelectItem>
+                        <SelectItem value="110">Class 110</SelectItem>
+                        <SelectItem value="125">Class 125</SelectItem>
+                        <SelectItem value="150">Class 150</SelectItem>
+                        <SelectItem value="175">Class 175</SelectItem>
+                        <SelectItem value="200">Class 200</SelectItem>
+                        <SelectItem value="250">Class 250</SelectItem>
+                        <SelectItem value="300">Class 300</SelectItem>
+                        <SelectItem value="400">Class 400</SelectItem>
+                        <SelectItem value="500">Class 500</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="weight">重量 (磅)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  placeholder="总重量"
-                  value={formData.weight}
-                  onChange={(e) => handleInputChange("weight", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="dimensions">尺寸 (长x宽x高, 英寸)</Label>
-                <Input
-                  id="dimensions"
-                  placeholder="例: 48x40x42"
-                  value={formData.dimensions}
-                  onChange={(e) => handleInputChange("dimensions", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pallets">托盘数量</Label>
-                <Input
-                  id="pallets"
-                  type="number"
-                  placeholder="托盘数量"
-                  value={formData.pallets}
-                  onChange={(e) => handleInputChange("pallets", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="specialRequirements">特殊要求</Label>
-              <Textarea
-                id="specialRequirements"
-                placeholder="例: 冷藏运输、易碎物品、危险品等"
-                value={formData.specialRequirements}
-                onChange={(e) => handleInputChange("specialRequirements", e.target.value)}
-              />
-            </div>
+            ))}
           </CardContent>
         </Card>
-
-        {/* 运输要求 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-warning" />
-              运输要求
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="preferredDate">期望提货日期</Label>
-                <Input
-                  id="preferredDate"
-                  type="date"
-                  value={formData.preferredDate}
-                  onChange={(e) => handleInputChange("preferredDate", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="urgency">紧急程度</Label>
-                <Select value={formData.urgency} onValueChange={(value) => handleInputChange("urgency", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择紧急程度" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">标准 (5-7天)</SelectItem>
-                    <SelectItem value="expedited">加急 (2-4天)</SelectItem>
-                    <SelectItem value="emergency">紧急 (24-48小时)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Separator />
 
         {/* 提交按钮 */}
         <div className="flex justify-end gap-4">
