@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Truck, MapPin, Calculator, Users, Phone, Mail, Clock, Shield } from "lucide-react";
+import { Truck, MapPin, Calculator, Users, Phone, Mail, Clock, Shield, User, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-truck.jpg";
 
@@ -38,6 +38,7 @@ const LandingPage = () => {
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <a href="#home" className="text-foreground hover:text-primary transition-colors">首页</a>
+            <a href="#features" className="text-foreground hover:text-primary transition-colors">服务优势</a>
             <a href="#partners" className="text-foreground hover:text-primary transition-colors">合作代理</a>
             <a href="#contact" className="text-foreground hover:text-primary transition-colors">联系我们</a>
           </nav>
@@ -148,7 +149,7 @@ const LandingPage = () => {
       <section className="py-16 bg-secondary/50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">为什么选择我们</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card className="text-center">
               <CardHeader>
                 <Shield className="h-12 w-12 text-primary mx-auto mb-4" />
@@ -156,7 +157,7 @@ const LandingPage = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  所有合作的卡车公司都经过严格筛选，确保货物运输安全可靠
+                  所有合作的卡车公司都经过严格筛选，拥有完整的保险和资质认证，确保货物运输全程安全可靠
                 </p>
               </CardContent>
             </Card>
@@ -167,7 +168,7 @@ const LandingPage = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  一键获取多家报价，30秒内得到回复，节省您的宝贵时间
+                  一键获取多家报价，30秒内得到回复，7×24小时在线客服支持，节省您的宝贵时间
                 </p>
               </CardContent>
             </Card>
@@ -178,7 +179,18 @@ const LandingPage = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  比较多家报价，为您找到最经济实惠的运输方案
+                  比较数百家承运商报价，智能匹配最优方案，为您节省高达30%的运输成本
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardHeader>
+                <Users className="h-12 w-12 text-primary mx-auto mb-4" />
+                <CardTitle>专业服务</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  10年以上行业经验，专业团队全程跟踪，提供端到端的物流解决方案和售后保障
                 </p>
               </CardContent>
             </Card>
@@ -186,24 +198,128 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Partners Section */}
-      <section id="partners" className="py-16">
+      {/* Customer Testimonials */}
+      <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">合作代理</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {["XPO Logistics", "J.B. Hunt", "Knight Transportation", "Schneider"].map((partner) => (
+          <h2 className="text-3xl font-bold text-center mb-12">客户评价</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">张总</CardTitle>
+                    <p className="text-sm text-muted-foreground">某电子科技公司</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  "使用这个平台已经一年多了，报价快速准确，承运商服务质量很高，大大提升了我们的物流效率。"
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">李经理</CardTitle>
+                    <p className="text-sm text-muted-foreground">某零售连锁企业</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  "平台操作简单，价格透明，客服响应及时。相比之前的物流方式，成本降低了25%，非常满意！"
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">王女士</CardTitle>
+                    <p className="text-sm text-muted-foreground">某制造业公司</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  "专业的团队，可靠的服务。货物全程可追踪，送达时间准确，让我们的供应链管理更加顺畅。"
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Carrier Partners Section */}
+      <section className="py-16 bg-secondary/50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-4">合作伙伴</h2>
+          <p className="text-center text-muted-foreground mb-12">与北美顶级承运商建立长期合作关系</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {["XPO Logistics", "J.B. Hunt", "Knight Transportation", "Schneider", "Old Dominion", "YRC Freight", "Estes Express", "ABF Freight", "R+L Carriers", "Saia", "TForce Freight", "Holland"].map((partner) => (
               <Card key={partner} className="text-center hover:shadow-medium transition-shadow">
-                <CardHeader>
-                  <Users className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <CardTitle className="text-lg">{partner}</CardTitle>
+                <CardHeader className="pb-3">
+                  <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <Truck className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-sm">{partner}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    北美知名运输公司，提供可靠的货运服务
-                  </p>
-                </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Agency Partners Section */}
+      <section id="partners" className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-4">合作代理</h2>
+          <p className="text-center text-muted-foreground mb-12">欢迎其他公司代理我们的业务，共创共赢</p>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="text-center">
+              <CardHeader>
+                <Users className="h-12 w-12 text-primary mx-auto mb-4" />
+                <CardTitle>丰厚佣金</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  提供行业领先的佣金比例，每笔订单都有可观收益，月结算，按时支付
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardHeader>
+                <Shield className="h-12 w-12 text-primary mx-auto mb-4" />
+                <CardTitle>完善支持</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  提供专业培训、营销物料、技术支持，帮助代理商快速开展业务
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="text-center">
+              <CardHeader>
+                <TrendingUp className="h-12 w-12 text-primary mx-auto mb-4" />
+                <CardTitle>长期合作</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  建立长期战略合作关系，共同发展北美物流市场，实现互利共赢
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

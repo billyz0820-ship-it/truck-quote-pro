@@ -18,6 +18,8 @@ import Settings from "./pages/settings/Settings";
 import TicketManagement from "./pages/tickets/TicketManagement";
 import ProductModule from "./pages/products/ProductModule";
 
+import OrderDetails from "./pages/orders/OrderDetails";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -36,6 +38,7 @@ const App = () => (
             <Route path="orders" element={<OrderList />} />
             <Route path="orders/create" element={<CreateOrder />} />
             <Route path="orders/quote" element={<QuoteResults />} />
+            <Route path="orders/details" element={<OrderDetails />} />
             <Route path="finance" element={<Finance />} />
             <Route path="settings" element={<Settings />} />
             <Route path="tickets" element={<TicketManagement />} />

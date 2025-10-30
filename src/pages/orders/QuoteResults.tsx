@@ -85,8 +85,8 @@ const QuoteResults = () => {
 
   const handleSelectQuote = (quote: CarrierQuote) => {
     console.log("选择报价:", quote);
-    // 这里可以导航到确认订单页面
-    navigate("/dashboard/orders");
+    // 导航到填写详细信息页面
+    navigate("/dashboard/orders/details", { state: { quote } });
   };
 
   return (

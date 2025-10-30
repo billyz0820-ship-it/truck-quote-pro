@@ -103,6 +103,7 @@ const Finance = () => {
         <TabsList>
           <TabsTrigger value="transactions">流水记录</TabsTrigger>
           <TabsTrigger value="bills">月度账单</TabsTrigger>
+          <TabsTrigger value="rebills">反弹账单</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions">
@@ -196,6 +197,86 @@ const Finance = () => {
                       </TableCell>
                     </TableRow>
                   ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="rebills">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  反弹账单录入
+                </span>
+                <Button>
+                  <Download className="h-4 w-4 mr-2" />
+                  录入新账单
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>订单编号</TableHead>
+                    <TableHead>原始费用</TableHead>
+                    <TableHead>实际费用</TableHead>
+                    <TableHead>差额</TableHead>
+                    <TableHead>费用明细</TableHead>
+                    <TableHead>录入日期</TableHead>
+                    <TableHead>状态</TableHead>
+                    <TableHead>操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">ORD-2024-001</TableCell>
+                    <TableCell>$100.00</TableCell>
+                    <TableCell className="text-destructive">$150.00</TableCell>
+                    <TableCell className="text-destructive font-medium">+$50.00</TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>基础价: $20</div>
+                        <div>燃油费: $15</div>
+                        <div>长途附加费: $15</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>2024-01-16</TableCell>
+                    <TableCell>
+                      <Badge className="bg-yellow-500">待审核</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">查看</Button>
+                        <Button variant="outline" size="sm">编辑</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">ORD-2024-002</TableCell>
+                    <TableCell>$200.00</TableCell>
+                    <TableCell className="text-destructive">$280.00</TableCell>
+                    <TableCell className="text-destructive font-medium">+$80.00</TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>基础价: $40</div>
+                        <div>燃油费: $25</div>
+                        <div>长途附加费: $15</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>2024-01-15</TableCell>
+                    <TableCell>
+                      <Badge className="bg-success">已确认</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">查看</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </CardContent>

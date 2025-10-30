@@ -1,109 +1,159 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  Search, 
-  Filter, 
-  MoreHorizontal,
-  Package,
-  Truck,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  Plus
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Search, Filter, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const OrderList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchType, setSearchType] = useState("all");
 
   const orderStatuses = [
-    { key: "all", label: "全部订单", count: 342 },
-    { key: "pending", label: "待下单", count: 12 },
-    { key: "review", label: "待审核", count: 8 },
-    { key: "processing", label: "处理中", count: 23 },
-    { key: "pickup-pending", label: "待提货", count: 15 },
-    { key: "picked-up", label: "已提货", count: 18 },
-    { key: "in-transit", label: "运输中", count: 25 },
-    { key: "delivered", label: "已送达", count: 156 },
-    { key: "cancelled", label: "取消", count: 5 },
+    { value: "all", label: "全部订单", count: 128 },
+    { value: "quoted", label: "已报价", count: 15 },
+    { value: "confirmed", label: "已确认", count: 23 },
+    { value: "picked-up", label: "已提货", count: 35 },
+    { value: "in-transit", label: "运输中", count: 42 },
+    { value: "delivered", label: "已送达", count: 13 },
   ];
 
+  // 模拟订单数据 - 增加了参考编号、PRO号、BOL号、SKU
   const mockOrders = [
     {
       id: "ORD-2024-001",
-      pickup: "洛杉矶, CA",
-      delivery: "纽约, NY",
+      referenceNumber: "REF-ABC-123",
+      proNumber: "PRO-456789",
+      bolNumber: "BOL-987654",
+      sku: "SKU-ELEC-001",
+      pickup: "90001",
+      delivery: "10001",
       cargo: "电子产品",
       status: "in-transit",
-      amount: "$2,450",
-      date: "2024-01-15",
+      amount: "$2,450.00",
+      date: "2024-01-15"
     },
     {
-      id: "ORD-2024-002", 
-      pickup: "芝加哥, IL",
-      delivery: "迈阿密, FL",
-      cargo: "服装",
-      status: "delivered",
-      amount: "$1,850",
-      date: "2024-01-14",
+      id: "ORD-2024-002",
+      referenceNumber: "REF-XYZ-456",
+      proNumber: "PRO-789012",
+      bolNumber: "BOL-321098",
+      sku: "SKU-FURN-002",
+      pickup: "60601",
+      delivery: "33101",
+      cargo: "家具",
+      status: "picked-up",
+      amount: "$3,200.00",
+      date: "2024-01-14"
     },
+    {
+      id: "ORD-2024-003",
+      referenceNumber: "REF-DEF-789",
+      proNumber: "",
+      bolNumber: "",
+      sku: "SKU-FOOD-003",
+      pickup: "94102",
+      delivery: "98101",
+      cargo: "食品",
+      status: "confirmed",
+      amount: "$1,800.00",
+      date: "2024-01-13"
+    }
   ];
 
   const getStatusBadge = (status: string) => {
-    const statusMap = {
-      "pending": { label: "待下单", variant: "outline" as const },
-      "review": { label: "待审核", variant: "secondary" as const },
-      "processing": { label: "处理中", variant: "default" as const },
-      "pickup-pending": { label: "待提货", variant: "secondary" as const },
-      "picked-up": { label: "已提货", variant: "default" as const },
-      "in-transit": { label: "运输中", variant: "default" as const },
-      "delivered": { label: "已送达", variant: "default" as const },
-      "cancelled": { label: "取消", variant: "destructive" as const },
+    const statusConfig: Record<string, { label: string; className: string }> = {
+      "quoted": { label: "已报价", className: "bg-blue-500" },
+      "confirmed": { label: "已确认", className: "bg-purple-500" },
+      "picked-up": { label: "已提货", className: "bg-yellow-500" },
+      "in-transit": { label: "运输中", className: "bg-orange-500" },
+      "delivered": { label: "已送达", className: "bg-green-500" }
     };
-    
-    const statusInfo = statusMap[status as keyof typeof statusMap];
-    return statusInfo ? (
-      <Badge variant={statusInfo.variant} className={
-        status === "delivered" ? "bg-success" : 
-        status === "in-transit" ? "bg-info" : ""
-      }>
-        {statusInfo.label}
-      </Badge>
-    ) : null;
+
+    const config = statusConfig[status] || { label: status, className: "bg-gray-500" };
+    return <Badge className={config.className}>{config.label}</Badge>;
   };
+
+  const filteredOrders = mockOrders.filter(order => {
+    if (!searchTerm) return true;
+    
+    const term = searchTerm.toLowerCase();
+    
+    switch (searchType) {
+      case "order":
+        return order.id.toLowerCase().includes(term);
+      case "reference":
+        return order.referenceNumber.toLowerCase().includes(term);
+      case "pro":
+        return order.proNumber.toLowerCase().includes(term);
+      case "bol":
+        return order.bolNumber.toLowerCase().includes(term);
+      case "sku":
+        return order.sku.toLowerCase().includes(term);
+      case "pickup":
+        return order.pickup.includes(term);
+      case "delivery":
+        return order.delivery.includes(term);
+      default:
+        return (
+          order.id.toLowerCase().includes(term) ||
+          order.referenceNumber.toLowerCase().includes(term) ||
+          order.proNumber.toLowerCase().includes(term) ||
+          order.bolNumber.toLowerCase().includes(term) ||
+          order.sku.toLowerCase().includes(term) ||
+          order.pickup.includes(term) ||
+          order.delivery.includes(term)
+        );
+    }
+  });
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">订单列表</h1>
-          <p className="text-muted-foreground">管理您的所有运输订单</p>
+          <h1 className="text-3xl font-bold">订单管理</h1>
+          <p className="text-muted-foreground">查看和管理所有运输订单</p>
         </div>
-        <Button onClick={() => navigate("/dashboard/orders/create")} className="bg-primary hover:bg-primary/90">
+        <Button onClick={() => navigate("/dashboard/orders/create")}>
           <Plus className="h-4 w-4 mr-2" />
           创建订单
         </Button>
       </div>
 
-      {/* Search and Filter */}
+      {/* 搜索和筛选 */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="搜索订单编号、起点、终点..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 flex gap-2">
+              <Select value={searchType} onValueChange={setSearchType}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="搜索类型" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部</SelectItem>
+                  <SelectItem value="order">订单编号</SelectItem>
+                  <SelectItem value="reference">参考编号</SelectItem>
+                  <SelectItem value="pro">PRO号</SelectItem>
+                  <SelectItem value="bol">BOL号</SelectItem>
+                  <SelectItem value="sku">SKU</SelectItem>
+                  <SelectItem value="pickup">起点邮编</SelectItem>
+                  <SelectItem value="delivery">终点邮编</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="搜索订单..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
             <Button variant="outline">
               <Filter className="h-4 w-4 mr-2" />
@@ -113,36 +163,33 @@ const OrderList = () => {
         </CardContent>
       </Card>
 
-      {/* Order Status Tabs */}
+      {/* 订单状态标签页 */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid grid-cols-9 w-full">
+        <TabsList>
           {orderStatuses.map((status) => (
-            <TabsTrigger key={status.key} value={status.key} className="text-xs">
-              {status.label}
-              <Badge variant="secondary" className="ml-1">
-                {status.count}
-              </Badge>
+            <TabsTrigger key={status.value} value={status.value}>
+              {status.label} ({status.count})
             </TabsTrigger>
           ))}
         </TabsList>
 
         {orderStatuses.map((status) => (
-          <TabsContent key={status.key} value={status.key}>
+          <TabsContent key={status.value} value={status.value}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  {status.label}
-                </CardTitle>
+                <CardTitle>{status.label}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>订单编号</TableHead>
-                      <TableHead>提货地</TableHead>
-                      <TableHead>送货地</TableHead>
+                      <TableHead>参考编号</TableHead>
+                      <TableHead>起点</TableHead>
+                      <TableHead>终点</TableHead>
                       <TableHead>货物</TableHead>
+                      <TableHead>PRO号</TableHead>
+                      <TableHead>BOL号</TableHead>
                       <TableHead>状态</TableHead>
                       <TableHead>金额</TableHead>
                       <TableHead>日期</TableHead>
@@ -150,12 +197,15 @@ const OrderList = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockOrders.map((order) => (
+                    {filteredOrders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">{order.id}</TableCell>
+                        <TableCell>{order.referenceNumber}</TableCell>
                         <TableCell>{order.pickup}</TableCell>
                         <TableCell>{order.delivery}</TableCell>
                         <TableCell>{order.cargo}</TableCell>
+                        <TableCell>{order.proNumber || "-"}</TableCell>
+                        <TableCell>{order.bolNumber || "-"}</TableCell>
                         <TableCell>{getStatusBadge(order.status)}</TableCell>
                         <TableCell className="font-medium">{order.amount}</TableCell>
                         <TableCell>{order.date}</TableCell>

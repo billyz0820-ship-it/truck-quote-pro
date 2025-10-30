@@ -70,12 +70,152 @@ const Settings = () => {
         <p className="text-muted-foreground">管理收货人、发货人和子账号配置</p>
       </div>
 
-      <Tabs defaultValue="consignees" className="w-full">
+      <Tabs defaultValue="users" className="w-full">
         <TabsList>
+          <TabsTrigger value="users">用户配置</TabsTrigger>
+          <TabsTrigger value="customers">客户配置</TabsTrigger>
           <TabsTrigger value="consignees">收货人配置</TabsTrigger>
           <TabsTrigger value="shippers">发货人配置</TabsTrigger>
-          <TabsTrigger value="subaccounts">子账号配置</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="users">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  内部用户管理
+                </span>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  添加用户
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>用户名</TableHead>
+                    <TableHead>姓名</TableHead>
+                    <TableHead>角色</TableHead>
+                    <TableHead>权限</TableHead>
+                    <TableHead>状态</TableHead>
+                    <TableHead>最后登录</TableHead>
+                    <TableHead>操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {subAccounts.map((account) => (
+                    <TableRow key={account.id}>
+                      <TableCell className="font-medium">{account.username}</TableCell>
+                      <TableCell>{account.name}</TableCell>
+                      <TableCell>{account.role}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">订单管理</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-success">活跃</Badge>
+                      </TableCell>
+                      <TableCell>{account.lastLogin}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="customers">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  客户管理
+                </span>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  添加客户
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>客户名称</TableHead>
+                    <TableHead>联系人</TableHead>
+                    <TableHead>联系方式</TableHead>
+                    <TableHead>账期(天)</TableHead>
+                    <TableHead>信用额度</TableHead>
+                    <TableHead>权限级别</TableHead>
+                    <TableHead>状态</TableHead>
+                    <TableHead>操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">ABC贸易公司</TableCell>
+                    <TableCell>王经理</TableCell>
+                    <TableCell>+1 (555) 111-2222</TableCell>
+                    <TableCell>30天</TableCell>
+                    <TableCell>$50,000</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">标准</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="bg-success">正常</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">XYZ物流有限公司</TableCell>
+                    <TableCell>李总</TableCell>
+                    <TableCell>+1 (555) 333-4444</TableCell>
+                    <TableCell>45天</TableCell>
+                    <TableCell>$100,000</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">VIP</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="bg-success">正常</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="consignees">
           <Card>
@@ -177,59 +317,6 @@ const Settings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="subaccounts">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  子账号管理
-                </span>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  添加子账号
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>用户名</TableHead>
-                    <TableHead>姓名</TableHead>
-                    <TableHead>角色</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead>最后登录</TableHead>
-                    <TableHead>操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {subAccounts.map((account) => (
-                    <TableRow key={account.id}>
-                      <TableCell className="font-medium">{account.username}</TableCell>
-                      <TableCell>{account.name}</TableCell>
-                      <TableCell>{account.role}</TableCell>
-                      <TableCell>
-                        <Badge className="bg-success">活跃</Badge>
-                      </TableCell>
-                      <TableCell>{account.lastLogin}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
