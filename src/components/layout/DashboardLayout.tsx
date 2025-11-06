@@ -1,6 +1,8 @@
-import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -40,6 +42,8 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = useSidebar();
+  const { signOut } = useAuth();
+  const { t } = useLanguage();
 
   const menuItems = [
     { title: "首页", url: "/dashboard", icon: Home },
@@ -52,8 +56,8 @@ const DashboardLayout = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const handleLogout = () => {
-    navigate("/");
+  const handleLogout = async () => {
+    await signOut();
   };
 
   return (
@@ -71,7 +75,9 @@ const DashboardLayout = () => {
             </div>
           </div>
           
-          <DropdownMenu>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
@@ -95,6 +101,7 @@ const DashboardLayout = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </header>
 
         {/* Main Content */}

@@ -4,116 +4,118 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Truck } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const Register = () => {
-  const navigate = useNavigate();
+  const { signUp } = useAuth();
+  const { t } = useLanguage();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    company: "",
-    name: "",
     email: "",
-    phone: "",
     password: "",
     confirmPassword: ""
   });
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 这里添加注册逻辑
-    navigate("/dashboard");
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "密码不匹配 / Passwords don't match",
+        description: "Please make sure passwords match",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoading(true);
+    const { error } = await signUp(formData.email, formData.password);
+    
+    if (error) {
+      toast({
+        title: "注册失败 / Registration Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "注册成功 / Registration Successful",
+        description: "Please check your email to verify your account",
+      });
+    }
+    
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <Card className="w-full max-w-md shadow-strong">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Truck className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold text-primary">北美卡车经纪</span>
           </div>
-          <CardTitle className="text-2xl">创建账户</CardTitle>
+          <CardTitle className="text-2xl">{t("register")}</CardTitle>
           <CardDescription>
-            注册您的账户以开始使用我们的服务
+            Create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <Label htmlFor="company">公司名称</Label>
-              <Input
-                id="company"
-                placeholder="请输入公司名称"
-                value={formData.company}
-                onChange={(e) => handleInputChange("company", e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="name">联系人姓名</Label>
-              <Input
-                id="name"
-                placeholder="请输入您的姓名"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">邮箱地址</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="请输入您的邮箱"
+                placeholder="your@email.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="phone">电话号码</Label>
-              <Input
-                id="phone"
-                placeholder="请输入您的电话"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">密码</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="请输入密码"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="confirmPassword">确认密码</Label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="请再次输入密码"
+                placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                 required
               />
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent">
-              注册
+            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent" disabled={loading}>
+              {loading ? t("loading") : t("register")}
             </Button>
           </form>
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               已有账户？{" "}
               <Link to="/login" className="text-primary hover:underline">
-                立即登录
+                {t("login")}
               </Link>
             </p>
           </div>
