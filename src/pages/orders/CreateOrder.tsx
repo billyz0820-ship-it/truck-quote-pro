@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, MapPin, Package, Plus, Trash2, Copy, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface Pallet {
   id: string;
@@ -22,6 +25,8 @@ interface Pallet {
 
 const CreateOrder = () => {
   const navigate = useNavigate();
+  const { customerId, user } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     pickupZip: "",
     deliveryZip: "",
@@ -30,6 +35,7 @@ const CreateOrder = () => {
     consignee: "",
     shipper: "",
     referenceNumber: "",
+    cargoDescription: "",
   });
   
   const [pallets, setPallets] = useState<Pallet[]>([
@@ -91,17 +97,58 @@ const CreateOrder = () => {
     ));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const orderData = {
-      ...formData,
-      pallets,
-      unit,
-      pickupServices,
-      deliveryServices
-    };
-    console.log("订单数据:", orderData);
-    navigate("/dashboard/orders/quote", { state: { orderData } });
+    
+    if (!customerId) {
+      toast.error("无法获取客户信息");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 生成订单编号
+      const orderNumber = `ORD-${Date.now()}`;
+      
+      // 计算总重量和报价（简化版本）
+      const totalWeight = pallets.reduce((sum, p) => sum + (p.weight * p.count), 0);
+      const baseRate = 0.5; // 每磅0.5美元
+      const quotedAmount = totalWeight * baseRate;
+
+      // 获取客户编码
+      const { data: customerData } = await supabase
+        .from('customers')
+        .select('customer_code')
+        .eq('id', customerId)
+        .single();
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          customer_id: customerId,
+          customer_code: customerData?.customer_code || '',
+          pickup_zip: formData.pickupZip,
+          delivery_zip: formData.deliveryZip,
+          reference_number: formData.referenceNumber || null,
+          cargo_description: formData.cargoDescription || null,
+          quoted_amount: quotedAmount,
+          status: 'quoted',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("订单创建成功！");
+      navigate("/dashboard/orders");
+    } catch (error: any) {
+      console.error("创建订单失败:", error);
+      toast.error("创建订单失败: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const weightUnit = unit === "imperial" ? "磅" : "千克";
@@ -161,6 +208,16 @@ const CreateOrder = () => {
                   placeholder="参考编号"
                   value={formData.referenceNumber}
                   onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="cargoDescription">货物描述</Label>
+                <Input
+                  id="cargoDescription"
+                  placeholder="货物描述"
+                  value={formData.cargoDescription}
+                  onChange={(e) => handleInputChange("cargoDescription", e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -476,11 +533,12 @@ const CreateOrder = () => {
             type="button" 
             variant="outline" 
             onClick={() => navigate("/dashboard/orders")}
+            disabled={loading}
           >
             取消
           </Button>
-          <Button type="submit" className="bg-primary hover:bg-primary/90">
-            获取报价
+          <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
+            {loading ? "创建中..." : "创建订单"}
           </Button>
         </div>
       </form>

@@ -16,12 +16,12 @@ import NotFound from "./pages/NotFound";
 import OrderList from "./pages/orders/OrderList";
 import CreateOrder from "./pages/orders/CreateOrder";
 import QuoteResults from "./pages/orders/QuoteResults";
+import OrderDetails from "./pages/orders/OrderDetails";
+import OrderDetailView from "./pages/orders/OrderDetailView";
 import Finance from "./pages/finance/Finance";
 import Settings from "./pages/settings/Settings";
 import TicketManagement from "./pages/tickets/TicketManagement";
 import ProductModule from "./pages/products/ProductModule";
-
-import OrderDetails from "./pages/orders/OrderDetails";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +44,7 @@ const App = () => (
             <Route path="orders/create" element={<CreateOrder />} />
             <Route path="orders/quote" element={<QuoteResults />} />
             <Route path="orders/details" element={<OrderDetails />} />
+            <Route path="orders/:id" element={<OrderDetailView />} />
             <Route path="finance" element={<Finance />} />
             <Route path="settings" element={<Settings />} />
             <Route path="tickets" element={<TicketManagement />} />
