@@ -6,11 +6,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, MapPin, Package, Truck, FileText, Clock, Edit } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Truck, FileText, Clock, Edit, Upload } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import FileUpload from "@/components/FileUpload";
 
 interface Order {
   id: string;
@@ -42,6 +43,7 @@ const OrderDetailView = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [fileDialogOpen, setFileDialogOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   
   const [updateForm, setUpdateForm] = useState({
@@ -211,14 +213,52 @@ const OrderDetailView = () => {
           </div>
         </div>
         
-        {userRole === 'admin' && (
-          <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+        <div className="flex gap-2">
+          <Dialog open={fileDialogOpen} onOpenChange={setFileDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Edit className="h-4 w-4 mr-2" />
-                更新订单
+              <Button variant="outline">
+                <Upload className="h-4 w-4 mr-2" />
+                管理文件
               </Button>
             </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>订单文件管理</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <FileUpload
+                  orderId={order.id}
+                  fileType="bol"
+                  currentUrl={order.bol_url}
+                  onUploadComplete={fetchOrder}
+                  label="BOL文档 (Bill of Lading)"
+                />
+                <FileUpload
+                  orderId={order.id}
+                  fileType="sbol"
+                  currentUrl={order.sbol_url}
+                  onUploadComplete={fetchOrder}
+                  label="SBOL文档 (Straight Bill of Lading)"
+                />
+                <FileUpload
+                  orderId={order.id}
+                  fileType="pallet_label"
+                  currentUrl={order.pallet_label_url}
+                  onUploadComplete={fetchOrder}
+                  label="托盘标签 (Pallet Label)"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {userRole === 'admin' && (
+            <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Edit className="h-4 w-4 mr-2" />
+                  更新订单
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>更新订单信息</DialogTitle>
@@ -289,7 +329,8 @@ const OrderDetailView = () => {
               </div>
             </DialogContent>
           </Dialog>
-        )}
+          )}
+        </div>
       </div>
 
       {/* 物流追踪时间线 */}
