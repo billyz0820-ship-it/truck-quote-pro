@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           created_by: string
           customer_id: string | null
+          expire_at: string | null
           id: string
           status: string
           used_at: string | null
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           created_by: string
           customer_id?: string | null
+          expire_at?: string | null
           id?: string
           status?: string
           used_at?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           customer_id?: string | null
+          expire_at?: string | null
           id?: string
           status?: string
           used_at?: string | null
