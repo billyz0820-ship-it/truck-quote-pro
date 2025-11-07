@@ -36,7 +36,8 @@ import {
   LogOut,
   User,
   ChevronDown,
-  Ticket
+  Ticket,
+  Receipt
 } from "lucide-react";
 
 const DashboardLayout = () => {
@@ -51,6 +52,7 @@ const DashboardLayout = () => {
     { title: "订单列表", url: "/dashboard/orders", icon: Package },
     { title: "财务", url: "/dashboard/finance", icon: DollarSign },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
+    { title: "补费管理", url: "/dashboard/rebills", icon: Receipt },
     { title: "配置", url: "/dashboard/settings", icon: Settings },
     { title: "工单管理", url: "/dashboard/tickets", icon: FileText },
     { title: "产品模块", url: "/dashboard/products", icon: ShoppingCart },

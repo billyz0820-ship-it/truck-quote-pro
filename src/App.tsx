@@ -23,6 +23,7 @@ import Settings from "./pages/settings/Settings";
 import TicketManagement from "./pages/tickets/TicketManagement";
 import ProductModule from "./pages/products/ProductModule";
 import CouponManagement from "./pages/coupons/CouponManagement";
+import RebillManagement from "./pages/rebills/RebillManagement";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="orders/:id" element={<OrderDetailView />} />
             <Route path="finance" element={<Finance />} />
             <Route path="coupons" element={<CouponManagement />} />
+            <Route path="rebills" element={<RebillManagement />} />
             <Route path="settings" element={<Settings />} />
             <Route path="tickets" element={<TicketManagement />} />
             <Route path="products" element={<ProductModule />} />
