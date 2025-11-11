@@ -53,11 +53,12 @@ const DashboardLayout = () => {
     { title: "订单列表", url: "/dashboard/orders", icon: Package },
     { title: "财务", url: "/dashboard/finance", icon: DollarSign },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
-    { title: "补费管理", url: "/dashboard/rebills", icon: Receipt },
-    { title: "用户管理", url: "/dashboard/users", icon: Users },
-    { title: "配置", url: "/dashboard/settings", icon: Settings },
+    { title: "配置管理", url: "/dashboard/settings", icon: Settings },
     { title: "工单管理", url: "/dashboard/tickets", icon: FileText },
     { title: "产品模块", url: "/dashboard/products", icon: ShoppingCart },
+    { title: "知识库", url: "/dashboard/knowledge", icon: FileText },
+    { title: "通知管理", url: "/dashboard/notifications", icon: FileText },
+    { title: "邮件管理", url: "/dashboard/emails", icon: FileText },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -129,21 +130,21 @@ const AppSidebar = ({
   const { state } = useSidebar();
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="w-64">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>导航菜单</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-base font-semibold px-4 py-3">导航菜单</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild className="h-12 px-4">
                     <a 
                       href={item.url}
                       className={isActive(item.url) ? "bg-accent text-accent-foreground" : ""}
                     >
-                      <item.icon className="h-4 w-4" />
-                      {state === "expanded" && <span>{item.title}</span>}
+                      <item.icon className="h-5 w-5" />
+                      {state === "expanded" && <span className="text-base">{item.title}</span>}
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

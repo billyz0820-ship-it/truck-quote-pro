@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      bills: {
+        Row: {
+          bill_month: string
+          bill_number: string
+          created_at: string
+          customer_id: string
+          id: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          bill_month: string
+          bill_number: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          bill_month?: string
+          bill_number?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           amount: number
@@ -99,6 +132,7 @@ export type Database = {
           customer_code: string
           customer_type: Database["public"]["Enums"]["customer_type"]
           id: string
+          last_login_at: string | null
           payment_due_date: string | null
           payment_terms: number | null
           status: Database["public"]["Enums"]["customer_status"]
@@ -115,6 +149,7 @@ export type Database = {
           customer_code: string
           customer_type?: Database["public"]["Enums"]["customer_type"]
           id?: string
+          last_login_at?: string | null
           payment_due_date?: string | null
           payment_terms?: number | null
           status?: Database["public"]["Enums"]["customer_status"]
@@ -131,9 +166,145 @@ export type Database = {
           customer_code?: string
           customer_type?: Database["public"]["Enums"]["customer_type"]
           id?: string
+          last_login_at?: string | null
           payment_due_date?: string | null
           payment_terms?: number | null
           status?: Database["public"]["Enums"]["customer_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_bindings: {
+        Row: {
+          created_at: string
+          customer_id: string
+          email: string
+          email_type: string
+          enabled: boolean
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          email: string
+          email_type?: string
+          enabled?: boolean
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          email?: string
+          email_type?: string
+          enabled?: boolean
+          id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          expense_date: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expense_date: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      knowledge_base: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          end_time: string | null
+          id: string
+          media_urls: Json | null
+          notification_type: string
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          end_time?: string | null
+          id?: string
+          media_urls?: Json | null
+          notification_type?: string
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          end_time?: string | null
+          id?: string
+          media_urls?: Json | null
+          notification_type?: string
+          start_time?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -158,6 +329,7 @@ export type Database = {
           quoted_amount: number
           reference_number: string | null
           sbol_url: string | null
+          shipment_type: string | null
           sku: string | null
           status: string
           updated_at: string
@@ -181,6 +353,7 @@ export type Database = {
           quoted_amount: number
           reference_number?: string | null
           sbol_url?: string | null
+          shipment_type?: string | null
           sku?: string | null
           status: string
           updated_at?: string
@@ -204,6 +377,7 @@ export type Database = {
           quoted_amount?: number
           reference_number?: string | null
           sbol_url?: string | null
+          shipment_type?: string | null
           sku?: string | null
           status?: string
           updated_at?: string
@@ -295,44 +469,53 @@ export type Database = {
         Row: {
           actual_amount: number
           base_fee: number | null
+          carrier_name: string | null
           created_at: string
           created_by: string
           customer_id: string
           difference: number
+          fee_type: string | null
           fuel_surcharge: number | null
           id: string
           long_haul_fee: number | null
           order_id: string
           original_amount: number
           other_fees: number | null
+          platform_name: string | null
         }
         Insert: {
           actual_amount: number
           base_fee?: number | null
+          carrier_name?: string | null
           created_at?: string
           created_by: string
           customer_id: string
           difference: number
+          fee_type?: string | null
           fuel_surcharge?: number | null
           id?: string
           long_haul_fee?: number | null
           order_id: string
           original_amount: number
           other_fees?: number | null
+          platform_name?: string | null
         }
         Update: {
           actual_amount?: number
           base_fee?: number | null
+          carrier_name?: string | null
           created_at?: string
           created_by?: string
           customer_id?: string
           difference?: number
+          fee_type?: string | null
           fuel_surcharge?: number | null
           id?: string
           long_haul_fee?: number | null
           order_id?: string
           original_amount?: number
           other_fees?: number | null
+          platform_name?: string | null
         }
         Relationships: [
           {
@@ -343,6 +526,117 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sub_accounts: {
+        Row: {
+          created_at: string
+          customer_permissions: Json | null
+          email: string
+          feature_permissions: Json | null
+          id: string
+          phone: string | null
+          role: string
+          status: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          customer_permissions?: Json | null
+          email: string
+          feature_permissions?: Json | null
+          id?: string
+          phone?: string | null
+          role: string
+          status?: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          customer_permissions?: Json | null
+          email?: string
+          feature_permissions?: Json | null
+          id?: string
+          phone?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      temporary_credits: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          valid_until: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          valid_until: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string
+          customer_id: string | null
+          description: string
+          id: string
+          priority: string
+          resolved_at: string | null
+          status: string
+          ticket_number: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by: string
+          customer_id?: string | null
+          description: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          ticket_number: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string | null
+          description?: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          ticket_number?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
