@@ -19,6 +19,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { BillManagement } from "@/components/BillManagement";
 
 interface Customer {
   id: string;
@@ -251,6 +252,7 @@ const Finance = () => {
           <TabsTrigger value="customers">客户余额</TabsTrigger>
           <TabsTrigger value="vouchers">付款凭证</TabsTrigger>
           <TabsTrigger value="profit">利润分析</TabsTrigger>
+          <TabsTrigger value="bills">账单管理</TabsTrigger>
         </TabsList>
 
         <TabsContent value="customers">
@@ -430,6 +432,10 @@ const Finance = () => {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="bills">
+          <BillManagement />
         </TabsContent>
       </Tabs>
 
