@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, MapPin, Package, Plus, Trash2, Copy, Calendar } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Plus, Trash2, Copy, Calendar, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,15 +25,21 @@ interface Pallet {
 
 const CreateOrder = () => {
   const navigate = useNavigate();
-  const { customerId, user } = useAuth();
+  const { customerId, userRole } = useAuth();
   const [loading, setLoading] = useState(false);
+  
+  // 客户选择（仅管理员需要）
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  
+  // 运输类型
+  const [shipmentType, setShipmentType] = useState<"FTL" | "LTL">("LTL");
+  
   const [formData, setFormData] = useState({
     pickupZip: "",
     deliveryZip: "",
     pickupDate: "",
     pickupTimeSlot: "",
-    consignee: "",
-    shipper: "",
     referenceNumber: "",
     cargoDescription: "",
   });
@@ -97,11 +103,37 @@ const CreateOrder = () => {
     ));
   };
 
+  // 加载客户列表（仅管理员需要）
+  useEffect(() => {
+    if (userRole === "admin") {
+      loadCustomers();
+    }
+  }, [userRole]);
+
+  const loadCustomers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('id, company_name, customer_code, status')
+        .eq('status', 'active')
+        .order('company_name');
+      
+      if (error) throw error;
+      if (data) setCustomers(data);
+    } catch (error: any) {
+      console.error("加载客户列表失败:", error);
+      toast.error("加载客户列表失败");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!customerId) {
-      toast.error("无法获取客户信息");
+    // 确定使用的客户ID
+    const orderCustomerId = userRole === "admin" ? selectedCustomerId : customerId;
+    
+    if (!orderCustomerId) {
+      toast.error(userRole === "admin" ? "请选择客户" : "无法获取客户信息");
       return;
     }
 
@@ -120,14 +152,14 @@ const CreateOrder = () => {
       const { data: customerData } = await supabase
         .from('customers')
         .select('customer_code')
-        .eq('id', customerId)
+        .eq('id', orderCustomerId)
         .single();
 
       const { data, error } = await supabase
         .from('orders')
         .insert({
           order_number: orderNumber,
-          customer_id: customerId,
+          customer_id: orderCustomerId,
           customer_code: customerData?.customer_code || '',
           pickup_zip: formData.pickupZip,
           delivery_zip: formData.deliveryZip,
@@ -135,6 +167,7 @@ const CreateOrder = () => {
           cargo_description: formData.cargoDescription || null,
           quoted_amount: quotedAmount,
           status: 'quoted',
+          shipment_type: shipmentType,
         })
         .select()
         .single();
@@ -171,6 +204,36 @@ const CreateOrder = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* 客户选择（仅管理员可见） */}
+        {userRole === "admin" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>选择客户</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="customer">客户</Label>
+                <Select 
+                  value={selectedCustomerId} 
+                  onValueChange={setSelectedCustomerId}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="请选择客户" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map(customer => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.company_name} ({customer.customer_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 运输路线 */}
         <Card>
           <CardHeader>
@@ -179,7 +242,32 @@ const CreateOrder = () => {
               运输路线
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            {/* 运输类型选择 */}
+            <div>
+              <Label className="text-base font-semibold mb-3 block">运输类型</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  type="button"
+                  variant={shipmentType === "LTL" ? "default" : "outline"}
+                  className="h-16 text-base"
+                  onClick={() => setShipmentType("LTL")}
+                >
+                  <Package className="mr-2 h-5 w-5" />
+                  零担运输 (LTL)
+                </Button>
+                <Button
+                  type="button"
+                  variant={shipmentType === "FTL" ? "default" : "outline"}
+                  className="h-16 text-base"
+                  onClick={() => setShipmentType("FTL")}
+                >
+                  <Truck className="mr-2 h-5 w-5" />
+                  整车运输 (FTL)
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="pickupZip">发货邮编</Label>
@@ -224,12 +312,12 @@ const CreateOrder = () => {
           </CardContent>
         </Card>
 
-        {/* 发货时间与联系人 */}
+        {/* 发货时间 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              发货时间与联系人
+              发货时间
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -259,119 +347,99 @@ const CreateOrder = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="shipper">发货人</Label>
-                <Select value={formData.shipper} onValueChange={(value) => handleInputChange("shipper", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择发货人" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="shipper1">Global Manufacturing Ltd.</SelectItem>
-                    <SelectItem value="shipper2">Tech Supplies Inc.</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="consignee">收货人</Label>
-                <Select value={formData.consignee} onValueChange={(value) => handleInputChange("consignee", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择收货人" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="consignee1">ABC Electronics Inc.</SelectItem>
-                    <SelectItem value="consignee2">XYZ Retail Corp.</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 发货配套服务 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>发货配套服务</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="doorPickup" 
-                  checked={pickupServices.doorPickup}
-                  onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, doorPickup: checked as boolean }))}
-                />
-                <label htmlFor="doorPickup" className="text-sm font-medium">上门取件</label>
+        {/* 发货配套服务（仅零担时显示） */}
+        {shipmentType === "LTL" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>发货配套服务</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="doorPickup" 
+                    checked={pickupServices.doorPickup}
+                    onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, doorPickup: checked as boolean }))}
+                  />
+                  <label htmlFor="doorPickup" className="text-sm font-medium">上门取件</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="pickupLiftgate" 
+                    checked={pickupServices.liftgate}
+                    onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, liftgate: checked as boolean }))}
+                  />
+                  <label htmlFor="pickupLiftgate" className="text-sm font-medium">卸货装置</label>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="pickupLiftgate" 
-                  checked={pickupServices.liftgate}
-                  onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, liftgate: checked as boolean }))}
-                />
-                <label htmlFor="pickupLiftgate" className="text-sm font-medium">卸货装置</label>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* 收货配套服务 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>收货配套服务</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="deliveryAppointment" 
-                  checked={deliveryServices.deliveryAppointment}
-                  onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, deliveryAppointment: checked as boolean }))}
-                />
-                <label htmlFor="deliveryAppointment" className="text-sm font-medium">送货预约</label>
+        {/* 收货配套服务（仅零担时显示） */}
+        {shipmentType === "LTL" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>收货配套服务</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="deliveryAppointment" 
+                    checked={deliveryServices.deliveryAppointment}
+                    onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, deliveryAppointment: checked as boolean }))}
+                  />
+                  <label htmlFor="deliveryAppointment" className="text-sm font-medium">送货预约</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="residential" 
+                    checked={deliveryServices.residential}
+                    onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, residential: checked as boolean }))}
+                  />
+                  <label htmlFor="residential" className="text-sm font-medium">住宅配送</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="notifyConsignee" 
+                    checked={deliveryServices.notifyConsignee}
+                    onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, notifyConsignee: checked as boolean }))}
+                  />
+                  <label htmlFor="notifyConsignee" className="text-sm font-medium">通知收货人</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="limitedAccess" 
+                    checked={deliveryServices.limitedAccess}
+                    onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, limitedAccess: checked as boolean }))}
+                  />
+                  <label htmlFor="limitedAccess" className="text-sm font-medium">限制交付</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="deliveryLiftgate" 
+                    checked={deliveryServices.liftgate}
+                    onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, liftgate: checked as boolean }))}
+                  />
+                  <label htmlFor="deliveryLiftgate" className="text-sm font-medium">卸货装置</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="hazmat" 
+                    checked={deliveryServices.hazmat}
+                    onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, hazmat: checked as boolean }))}
+                  />
+                  <label htmlFor="hazmat" className="text-sm font-medium">危险品</label>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="residential" 
-                  checked={deliveryServices.residential}
-                  onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, residential: checked as boolean }))}
-                />
-                <label htmlFor="residential" className="text-sm font-medium">住宅配送</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="notifyConsignee" 
-                  checked={deliveryServices.notifyConsignee}
-                  onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, notifyConsignee: checked as boolean }))}
-                />
-                <label htmlFor="notifyConsignee" className="text-sm font-medium">通知收货人</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="limitedAccess" 
-                  checked={deliveryServices.limitedAccess}
-                  onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, limitedAccess: checked as boolean }))}
-                />
-                <label htmlFor="limitedAccess" className="text-sm font-medium">限制交付</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="deliveryLiftgate" 
-                  checked={deliveryServices.liftgate}
-                  onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, liftgate: checked as boolean }))}
-                />
-                <label htmlFor="deliveryLiftgate" className="text-sm font-medium">卸货装置</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="hazmat" 
-                  checked={deliveryServices.hazmat}
-                  onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, hazmat: checked as boolean }))}
-                />
-                <label htmlFor="hazmat" className="text-sm font-medium">危险品</label>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 托盘信息 */}
         <Card>
