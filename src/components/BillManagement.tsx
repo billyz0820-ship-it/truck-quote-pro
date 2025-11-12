@@ -28,8 +28,8 @@ export const BillManagement = () => {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCustomer, setFilterCustomer] = useState("");
-  const [filterMonth, setFilterMonth] = useState("");
+  const [filterCustomer, setFilterCustomer] = useState("all");
+  const [filterMonth, setFilterMonth] = useState("all");
 
   useEffect(() => {
     fetchData();
@@ -123,8 +123,8 @@ export const BillManagement = () => {
 
   // 筛选账单
   const filteredBills = bills.filter(bill => {
-    if (filterCustomer && bill.customer_id !== filterCustomer) return false;
-    if (filterMonth && bill.bill_month !== filterMonth) return false;
+    if (filterCustomer && filterCustomer !== "all" && bill.customer_id !== filterCustomer) return false;
+    if (filterMonth && filterMonth !== "all" && bill.bill_month !== filterMonth) return false;
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       return (
@@ -227,7 +227,7 @@ export const BillManagement = () => {
                 <SelectValue placeholder="筛选客户" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部客户</SelectItem>
+                <SelectItem value="all">全部客户</SelectItem>
                 {customers.map((customer) => (
                   <SelectItem key={customer.id} value={customer.id}>
                     {customer.customer_code} - {customer.company_name}
@@ -241,7 +241,7 @@ export const BillManagement = () => {
                 <SelectValue placeholder="筛选月份" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部月份</SelectItem>
+                <SelectItem value="all">全部月份</SelectItem>
                 {uniqueMonths.map((month) => (
                   <SelectItem key={month} value={month}>
                     {month}
