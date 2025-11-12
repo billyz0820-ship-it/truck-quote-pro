@@ -133,10 +133,16 @@ const Settings = () => {
 
   const handleSaveCustomer = async () => {
     try {
+      // 处理空字符串字段，将其转换为 null
+      const customerData = {
+        ...customerForm,
+        payment_due_date: customerForm.payment_due_date || null,
+      };
+
       if (editingCustomer) {
         const { error } = await supabase
           .from("customers")
-          .update(customerForm as any)
+          .update(customerData as any)
           .eq("id", editingCustomer.id);
 
         if (error) throw error;
@@ -154,7 +160,7 @@ const Settings = () => {
         const { error } = await supabase
           .from("customers")
           .insert([{
-            ...customerForm,
+            ...customerData,
             customer_code: codeData
           }]);
 
