@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { RouteMap } from "@/components/RouteMap";
 
 interface Pallet {
   id: string;
@@ -179,124 +180,130 @@ const CreateOrder = () => {
   const dimensionUnit = unit === "imperial" ? "英寸" : "厘米";
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
         <Button 
           variant="ghost" 
           onClick={() => navigate("/dashboard/orders")}
-          className="p-2"
+          className="p-2 h-9"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">创建新订单</h1>
-          <p className="text-muted-foreground">输入运输详情获取实时报价</p>
+          <h1 className="text-2xl font-bold">创建新订单</h1>
+          <p className="text-sm text-muted-foreground">输入运输详情获取实时报价</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* 路线图 */}
+      {formData.pickupZip && formData.deliveryZip && (
+        <RouteMap 
+          pickupZip={formData.pickupZip}
+          deliveryZip={formData.deliveryZip}
+        />
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* 客户选择（仅管理员可见） */}
         {userRole === "admin" && (
           <Card>
-            <CardHeader>
-              <CardTitle>选择客户</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">选择客户</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="customer">客户</Label>
-                <Select 
-                  value={selectedCustomerId} 
-                  onValueChange={setSelectedCustomerId}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="请选择客户" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map(customer => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.company_name} ({customer.customer_code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select 
+                value={selectedCustomerId} 
+                onValueChange={setSelectedCustomerId}
+                required
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="请选择客户" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map(customer => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.company_name} ({customer.customer_code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
         )}
 
         {/* 运输路线 */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" />
               运输路线
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-3">
             {/* 运输类型选择 */}
-            <div>
-              <Label className="text-base font-semibold mb-3 block">运输类型</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  type="button"
-                  variant={shipmentType === "LTL" ? "default" : "outline"}
-                  className="h-16 text-base"
-                  onClick={() => setShipmentType("LTL")}
-                >
-                  <Package className="mr-2 h-5 w-5" />
-                  零担运输 (LTL)
-                </Button>
-                <Button
-                  type="button"
-                  variant={shipmentType === "FTL" ? "default" : "outline"}
-                  className="h-16 text-base"
-                  onClick={() => setShipmentType("FTL")}
-                >
-                  <Truck className="mr-2 h-5 w-5" />
-                  整车运输 (FTL)
-                </Button>
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant={shipmentType === "LTL" ? "default" : "outline"}
+                className="h-10 text-sm"
+                onClick={() => setShipmentType("LTL")}
+              >
+                <Package className="mr-2 h-4 w-4" />
+                零担运输 (LTL)
+              </Button>
+              <Button
+                type="button"
+                variant={shipmentType === "FTL" ? "default" : "outline"}
+                className="h-10 text-sm"
+                onClick={() => setShipmentType("FTL")}
+              >
+                <Truck className="mr-2 h-4 w-4" />
+                整车运输 (FTL)
+              </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pickupZip">发货邮编</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="pickupZip" className="text-sm">发货邮编</Label>
                 <Input
                   id="pickupZip"
                   placeholder="发货邮编"
                   value={formData.pickupZip}
                   onChange={(e) => handleInputChange("pickupZip", e.target.value)}
                   required
+                  className="h-9"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="deliveryZip">收货邮编</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="deliveryZip" className="text-sm">收货邮编</Label>
                 <Input
                   id="deliveryZip"
                   placeholder="收货邮编"
                   value={formData.deliveryZip}
                   onChange={(e) => handleInputChange("deliveryZip", e.target.value)}
                   required
+                  className="h-9"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="referenceNumber">参考编号（可选）</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="referenceNumber" className="text-sm">参考编号（可选）</Label>
                 <Input
                   id="referenceNumber"
                   placeholder="参考编号"
                   value={formData.referenceNumber}
                   onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
+                  className="h-9"
                 />
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="cargoDescription">货物描述</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="cargoDescription" className="text-sm">货物描述</Label>
                 <Input
                   id="cargoDescription"
                   placeholder="货物描述"
                   value={formData.cargoDescription}
                   onChange={(e) => handleInputChange("cargoDescription", e.target.value)}
                   required
+                  className="h-9"
                 />
               </div>
             </div>
@@ -305,28 +312,29 @@ const CreateOrder = () => {
 
         {/* 发货时间 */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
               发货时间
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="pickupDate">发货日期</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="pickupDate" className="text-sm">发货日期</Label>
                 <Input
                   id="pickupDate"
                   type="date"
                   value={formData.pickupDate}
                   onChange={(e) => handleInputChange("pickupDate", e.target.value)}
                   required
+                  className="h-9"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="pickupTimeSlot">发货时间段</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="pickupTimeSlot" className="text-sm">发货时间段</Label>
                 <Select value={formData.pickupTimeSlot} onValueChange={(value) => handleInputChange("pickupTimeSlot", value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="选择时间段" />
                   </SelectTrigger>
                   <SelectContent>
@@ -345,18 +353,18 @@ const CreateOrder = () => {
         {/* 发货配套服务（仅零担时显示） */}
         {shipmentType === "LTL" && (
           <Card>
-            <CardHeader>
-              <CardTitle>发货配套服务</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">发货配套服务</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="doorPickup" 
                     checked={pickupServices.doorPickup}
                     onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, doorPickup: checked as boolean }))}
                   />
-                  <label htmlFor="doorPickup" className="text-sm font-medium">上门取件</label>
+                  <label htmlFor="doorPickup" className="text-sm">上门取件</label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -364,7 +372,7 @@ const CreateOrder = () => {
                     checked={pickupServices.liftgate}
                     onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, liftgate: checked as boolean }))}
                   />
-                  <label htmlFor="pickupLiftgate" className="text-sm font-medium">卸货装置</label>
+                  <label htmlFor="pickupLiftgate" className="text-sm">卸货装置</label>
                 </div>
               </div>
             </CardContent>
@@ -374,18 +382,18 @@ const CreateOrder = () => {
         {/* 收货配套服务（仅零担时显示） */}
         {shipmentType === "LTL" && (
           <Card>
-            <CardHeader>
-              <CardTitle>收货配套服务</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">收货配套服务</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="deliveryAppointment" 
                     checked={deliveryServices.deliveryAppointment}
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, deliveryAppointment: checked as boolean }))}
                   />
-                  <label htmlFor="deliveryAppointment" className="text-sm font-medium">送货预约</label>
+                  <label htmlFor="deliveryAppointment" className="text-sm">送货预约</label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -393,7 +401,7 @@ const CreateOrder = () => {
                     checked={deliveryServices.residential}
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, residential: checked as boolean }))}
                   />
-                  <label htmlFor="residential" className="text-sm font-medium">住宅配送</label>
+                  <label htmlFor="residential" className="text-sm">住宅配送</label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -401,7 +409,7 @@ const CreateOrder = () => {
                     checked={deliveryServices.notifyConsignee}
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, notifyConsignee: checked as boolean }))}
                   />
-                  <label htmlFor="notifyConsignee" className="text-sm font-medium">通知收货人</label>
+                  <label htmlFor="notifyConsignee" className="text-sm">通知收货人</label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -409,7 +417,7 @@ const CreateOrder = () => {
                     checked={deliveryServices.limitedAccess}
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, limitedAccess: checked as boolean }))}
                   />
-                  <label htmlFor="limitedAccess" className="text-sm font-medium">限制交付</label>
+                  <label htmlFor="limitedAccess" className="text-sm">限制交付</label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -417,7 +425,7 @@ const CreateOrder = () => {
                     checked={deliveryServices.liftgate}
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, liftgate: checked as boolean }))}
                   />
-                  <label htmlFor="deliveryLiftgate" className="text-sm font-medium">卸货装置</label>
+                  <label htmlFor="deliveryLiftgate" className="text-sm">卸货装置</label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -425,7 +433,7 @@ const CreateOrder = () => {
                     checked={deliveryServices.hazmat}
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, hazmat: checked as boolean }))}
                   />
-                  <label htmlFor="hazmat" className="text-sm font-medium">危险品</label>
+                  <label htmlFor="hazmat" className="text-sm">危险品</label>
                 </div>
               </div>
             </CardContent>
@@ -434,15 +442,15 @@ const CreateOrder = () => {
 
         {/* 托盘信息 */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-accent" />
+                <Package className="h-4 w-4 text-primary" />
                 托盘信息
               </div>
               <div className="flex gap-2">
                 <Select value={unit} onValueChange={(value: "imperial" | "metric") => setUnit(value)}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-[110px] h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -450,27 +458,27 @@ const CreateOrder = () => {
                     <SelectItem value="metric">kg / cm</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button type="button" onClick={addPallet} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  添加托盘
+                <Button type="button" onClick={addPallet} size="sm" className="h-8">
+                  <Plus className="h-3 w-3 mr-1" />
+                  添加
                 </Button>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {pallets.map((pallet, index) => (
-              <div key={pallet.id} className="border rounded-lg p-4 space-y-4">
+              <div key={pallet.id} className="border rounded-lg p-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">托盘 #{index + 1}</h4>
-                  <div className="flex gap-2">
+                  <h4 className="text-sm font-medium">托盘 #{index + 1}</h4>
+                  <div className="flex gap-1">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => copyPallet(pallet)}
-                      className="text-primary hover:text-primary"
+                      className="h-7 w-7 p-0"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3 w-3" />
                     </Button>
                     {pallets.length > 1 && (
                       <Button
@@ -478,106 +486,104 @@ const CreateOrder = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => removePallet(pallet.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="h-7 w-7 p-0 text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <Label>托盘数量</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">托盘数量</Label>
                     <Input
                       type="number"
                       placeholder="数量"
                       value={pallet.count}
                       onChange={(e) => updatePallet(pallet.id, "count", parseInt(e.target.value) || 0)}
                       required
+                      className="h-8 text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>重量 ({weightUnit})</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">重量 ({weightUnit})</Label>
                     <Input
                       type="number"
                       placeholder="重量"
                       value={pallet.weight}
                       onChange={(e) => updatePallet(pallet.id, "weight", parseInt(e.target.value) || 0)}
                       required
+                      className="h-8 text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>尺寸 ({dimensionUnit})</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">尺寸 ({dimensionUnit})</Label>
                     <Input
-                      placeholder="例: 48x40x42"
+                      placeholder="48x40x42"
                       value={pallet.dimensions}
                       onChange={(e) => updatePallet(pallet.id, "dimensions", e.target.value)}
                       required
+                      className="h-8 text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>货物等级</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">货物等级</Label>
                     <Select 
                       value={pallet.class} 
                       onValueChange={(value) => updatePallet(pallet.id, "class", value)}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="选择等级" />
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue placeholder="等级" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="50">Class 50</SelectItem>
                         <SelectItem value="55">Class 55</SelectItem>
                         <SelectItem value="60">Class 60</SelectItem>
-                        <SelectItem value="65">Class 65</SelectItem>
                         <SelectItem value="70">Class 70</SelectItem>
-                        <SelectItem value="77.5">Class 77.5</SelectItem>
                         <SelectItem value="85">Class 85</SelectItem>
-                        <SelectItem value="92.5">Class 92.5</SelectItem>
                         <SelectItem value="100">Class 100</SelectItem>
-                        <SelectItem value="110">Class 110</SelectItem>
                         <SelectItem value="125">Class 125</SelectItem>
                         <SelectItem value="150">Class 150</SelectItem>
-                        <SelectItem value="175">Class 175</SelectItem>
                         <SelectItem value="200">Class 200</SelectItem>
-                        <SelectItem value="250">Class 250</SelectItem>
-                        <SelectItem value="300">Class 300</SelectItem>
-                        <SelectItem value="400">Class 400</SelectItem>
-                        <SelectItem value="500">Class 500</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label>商品总数</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">商品总数</Label>
                     <Input
                       type="number"
-                      placeholder="商品数量"
+                      placeholder="数量"
                       value={pallet.itemCount}
                       onChange={(e) => updatePallet(pallet.id, "itemCount", parseInt(e.target.value) || 0)}
+                      className="h-8 text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>总货值 ($)</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">总货值 ($)</Label>
                     <Input
                       type="number"
                       placeholder="货值"
                       value={pallet.value}
                       onChange={(e) => updatePallet(pallet.id, "value", parseInt(e.target.value) || 0)}
+                      className="h-8 text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>NMFC</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">NMFC</Label>
                     <Input
-                      placeholder="NMFC编码"
+                      placeholder="NMFC"
                       value={pallet.nmfc}
                       onChange={(e) => updatePallet(pallet.id, "nmfc", e.target.value)}
+                      className="h-8 text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>NMFC Sub</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">NMFC Sub</Label>
                     <Input
-                      placeholder="NMFC子类"
+                      placeholder="Sub"
                       value={pallet.nmfcSub}
                       onChange={(e) => updatePallet(pallet.id, "nmfcSub", e.target.value)}
+                      className="h-8 text-sm"
                     />
                   </div>
                 </div>
@@ -587,17 +593,18 @@ const CreateOrder = () => {
         </Card>
 
         {/* 提交按钮 */}
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-3">
           <Button 
             type="button" 
             variant="outline" 
             onClick={() => navigate("/dashboard/orders")}
             disabled={loading}
+            className="h-9"
           >
             取消
           </Button>
-          <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
-            {loading ? "创建中..." : "创建订单"}
+          <Button type="submit" disabled={loading} className="h-9">
+            {loading ? "提交中..." : "获取报价"}
           </Button>
         </div>
       </form>

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import FileUpload from "@/components/FileUpload";
+import { RouteMap } from "@/components/RouteMap";
 
 interface Order {
   id: string;
@@ -197,26 +198,26 @@ const OrderDetailView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
             onClick={() => navigate("/dashboard/orders")}
-            className="p-2"
+            className="p-2 h-9"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">订单详情</h1>
-            <p className="text-muted-foreground">{order.order_number}</p>
+            <h1 className="text-2xl font-bold">订单详情</h1>
+            <p className="text-sm text-muted-foreground">{order.order_number}</p>
           </div>
         </div>
         
         <div className="flex gap-2">
           <Dialog open={fileDialogOpen} onOpenChange={setFileDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" size="sm" className="h-9">
                 <Upload className="h-4 w-4 mr-2" />
                 管理文件
               </Button>
@@ -231,21 +232,21 @@ const OrderDetailView = () => {
                   fileType="bol"
                   currentUrl={order.bol_url}
                   onUploadComplete={fetchOrder}
-                  label="BOL文档 (Bill of Lading)"
+                  label="BOL文档"
                 />
                 <FileUpload
                   orderId={order.id}
                   fileType="sbol"
                   currentUrl={order.sbol_url}
                   onUploadComplete={fetchOrder}
-                  label="SBOL文档 (Straight Bill of Lading)"
+                  label="SBOL文档"
                 />
                 <FileUpload
                   orderId={order.id}
                   fileType="pallet_label"
                   currentUrl={order.pallet_label_url}
                   onUploadComplete={fetchOrder}
-                  label="托盘标签 (Pallet Label)"
+                  label="托盘标签"
                 />
               </div>
             </DialogContent>
@@ -254,7 +255,7 @@ const OrderDetailView = () => {
           {userRole === 'admin' && (
             <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button size="sm" className="h-9">
                   <Edit className="h-4 w-4 mr-2" />
                   更新订单
                 </Button>
@@ -263,16 +264,16 @@ const OrderDetailView = () => {
               <DialogHeader>
                 <DialogTitle>更新订单信息</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>订单状态</Label>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">订单状态</Label>
                   <Select value={updateForm.status} onValueChange={(value) => setUpdateForm(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="quoted">已报价</SelectItem>
-                      <SelectItem value="confirmed">已确认</SelectItem>
+                      <SelectItem value="placed">已下单</SelectItem>
                       <SelectItem value="picked-up">已提货</SelectItem>
                       <SelectItem value="in-transit">运输中</SelectItem>
                       <SelectItem value="delivered">已送达</SelectItem>
@@ -280,49 +281,53 @@ const OrderDetailView = () => {
                   </Select>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>承运商名称</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">承运商名称</Label>
                   <Input
                     value={updateForm.carrier_name}
                     onChange={(e) => setUpdateForm(prev => ({ ...prev, carrier_name: e.target.value }))}
                     placeholder="承运商名称"
+                    className="h-9"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>PRO号</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">PRO号</Label>
                   <Input
                     value={updateForm.pro_number}
                     onChange={(e) => setUpdateForm(prev => ({ ...prev, pro_number: e.target.value }))}
                     placeholder="PRO号"
+                    className="h-9"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>BOL号</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">BOL号</Label>
                   <Input
                     value={updateForm.bol_number}
                     onChange={(e) => setUpdateForm(prev => ({ ...prev, bol_number: e.target.value }))}
                     placeholder="BOL号"
+                    className="h-9"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>实际成本</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">实际成本</Label>
                   <Input
                     type="number"
                     step="0.01"
                     value={updateForm.actual_cost}
                     onChange={(e) => setUpdateForm(prev => ({ ...prev, actual_cost: e.target.value }))}
                     placeholder="实际成本"
+                    className="h-9"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setUpdateDialogOpen(false)} disabled={updating}>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setUpdateDialogOpen(false)} disabled={updating} size="sm" className="h-9">
                     取消
                   </Button>
-                  <Button onClick={handleUpdateOrder} disabled={updating}>
+                  <Button onClick={handleUpdateOrder} disabled={updating} size="sm" className="h-9">
                     {updating ? "更新中..." : "确认更新"}
                   </Button>
                 </div>
@@ -332,6 +337,12 @@ const OrderDetailView = () => {
           )}
         </div>
       </div>
+
+      {/* 路线图 */}
+      <RouteMap 
+        pickupZip={order.pickup_zip}
+        deliveryZip={order.delivery_zip}
+      />
 
       {/* 物流追踪时间线 */}
       <Card>
