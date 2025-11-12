@@ -73,7 +73,7 @@ const OrderList = () => {
     return [
       { value: "all", label: "全部订单", count: allCount },
       { value: "quoted", label: "已报价", count: statusCounts.quoted || 0 },
-      { value: "confirmed", label: "已确认", count: statusCounts.confirmed || 0 },
+      { value: "placed", label: "已下单", count: statusCounts.placed || 0 },
       { value: "picked-up", label: "已提货", count: statusCounts["picked-up"] || 0 },
       { value: "in-transit", label: "运输中", count: statusCounts["in-transit"] || 0 },
       { value: "delivered", label: "已送达", count: statusCounts.delivered || 0 },
@@ -83,7 +83,7 @@ const OrderList = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; className: string }> = {
       "quoted": { label: "已报价", className: "bg-blue-500" },
-      "confirmed": { label: "已确认", className: "bg-purple-500" },
+      "placed": { label: "已下单", className: "bg-purple-500" },
       "picked-up": { label: "已提货", className: "bg-yellow-500" },
       "in-transit": { label: "运输中", className: "bg-orange-500" },
       "delivered": { label: "已送达", className: "bg-green-500" }

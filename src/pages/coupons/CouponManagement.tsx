@@ -131,7 +131,11 @@ const CouponManagement = () => {
       }
 
       if (couponForm.expire_at) {
-        insertData.expire_at = new Date(couponForm.expire_at).toISOString();
+        // 确保日期格式正确
+        const expireDate = new Date(couponForm.expire_at);
+        if (!isNaN(expireDate.getTime())) {
+          insertData.expire_at = expireDate.toISOString();
+        }
       }
 
       const { error } = await supabase

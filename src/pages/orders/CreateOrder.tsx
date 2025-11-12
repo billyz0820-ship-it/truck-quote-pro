@@ -137,17 +137,13 @@ const CreateOrder = () => {
       return;
     }
 
+    // 验证托盘数据
+    if (pallets.length === 0) {
+      toast.error("请至少添加一个托盘");
+      return;
+    }
+
     try {
-      setLoading(true);
-
-      // 生成订单编号
-      const orderNumber = `ORD-${Date.now()}`;
-      
-      // 计算总重量和报价（简化版本）
-      const totalWeight = pallets.reduce((sum, p) => sum + (p.weight * p.count), 0);
-      const baseRate = 0.5; // 每磅0.5美元
-      const quotedAmount = totalWeight * baseRate;
-
       // 获取客户编码
       const { data: customerData } = await supabase
         .from('customers')
@@ -155,32 +151,27 @@ const CreateOrder = () => {
         .eq('id', orderCustomerId)
         .single();
 
-      const { data, error } = await supabase
-        .from('orders')
-        .insert({
-          order_number: orderNumber,
-          customer_id: orderCustomerId,
-          customer_code: customerData?.customer_code || '',
-          pickup_zip: formData.pickupZip,
-          delivery_zip: formData.deliveryZip,
-          reference_number: formData.referenceNumber || null,
-          cargo_description: formData.cargoDescription || null,
-          quoted_amount: quotedAmount,
-          status: 'quoted',
-          shipment_type: shipmentType,
-        })
-        .select()
-        .single();
+      // 准备订单数据
+      const orderData = {
+        customerId: orderCustomerId,
+        customerCode: customerData?.customer_code,
+        shipmentType,
+        pickupZip: formData.pickupZip,
+        deliveryZip: formData.deliveryZip,
+        pickupDate: formData.pickupDate,
+        pickupTimeSlot: formData.pickupTimeSlot,
+        referenceNumber: formData.referenceNumber,
+        cargoDescription: formData.cargoDescription,
+        pallets,
+        pickupServices: shipmentType === "LTL" ? pickupServices : null,
+        deliveryServices: shipmentType === "LTL" ? deliveryServices : null,
+      };
 
-      if (error) throw error;
-
-      toast.success("订单创建成功！");
-      navigate("/dashboard/orders");
+      // 跳转到报价页面
+      navigate("/dashboard/orders/quote", { state: { orderData } });
     } catch (error: any) {
-      console.error("创建订单失败:", error);
-      toast.error("创建订单失败: " + error.message);
-    } finally {
-      setLoading(false);
+      console.error("获取客户信息失败:", error);
+      toast.error("获取客户信息失败: " + error.message);
     }
   };
 

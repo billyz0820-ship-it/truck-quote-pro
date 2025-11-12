@@ -4,19 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MapPin, User, Phone, Mail } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, MapPin, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const OrderDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const quote = location.state?.quote;
+  const { orderData, selectedQuote } = location.state || {};
+  const [loading, setLoading] = useState(false);
+
+  // 如果没有数据，返回创建页面
+  if (!orderData || !selectedQuote) {
+    navigate("/dashboard/orders/create");
+    return null;
+  }
 
   const [pickupDetails, setPickupDetails] = useState({
     address: "",
     city: "",
     state: "",
-    zip: "",
+    zip: orderData.pickupZip || "",
+    addressType: "",
     contactName: "",
     contactPhone: "",
     contactEmail: "",
@@ -27,7 +38,8 @@ const OrderDetails = () => {
     address: "",
     city: "",
     state: "",
-    zip: "",
+    zip: orderData.deliveryZip || "",
+    addressType: "",
     contactName: "",
     contactPhone: "",
     contactEmail: "",
@@ -42,16 +54,62 @@ const OrderDetails = () => {
     setDeliveryDetails(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const orderData = {
-      quote,
-      pickupDetails,
-      deliveryDetails
-    };
-    console.log("订单详情:", orderData);
-    // 这里可以提交订单或导航到确认页面
-    navigate("/dashboard/orders");
+    
+    try {
+      setLoading(true);
+      
+      // 生成订单编号
+      const orderNumber = `ORD-${Date.now()}`;
+      
+      // 创建订单到数据库
+      const { data, error } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          customer_id: orderData.customerId,
+          customer_code: orderData.customerCode,
+          pickup_zip: orderData.pickupZip,
+          delivery_zip: orderData.deliveryZip,
+          reference_number: orderData.referenceNumber || null,
+          cargo_description: orderData.cargoDescription || null,
+          quoted_amount: selectedQuote.totalCost,
+          carrier_name: selectedQuote.name,
+          status: 'placed',
+          shipment_type: orderData.shipmentType,
+          // 发货详细信息
+          pickup_address: pickupDetails.address,
+          pickup_city: pickupDetails.city,
+          pickup_state: pickupDetails.state,
+          pickup_address_type: pickupDetails.addressType,
+          pickup_contact_name: pickupDetails.contactName,
+          pickup_contact_phone: pickupDetails.contactPhone,
+          pickup_contact_email: pickupDetails.contactEmail,
+          pickup_notes: pickupDetails.notes || null,
+          // 收货详细信息
+          delivery_address: deliveryDetails.address,
+          delivery_city: deliveryDetails.city,
+          delivery_state: deliveryDetails.state,
+          delivery_address_type: deliveryDetails.addressType,
+          delivery_contact_name: deliveryDetails.contactName,
+          delivery_contact_phone: deliveryDetails.contactPhone,
+          delivery_contact_email: deliveryDetails.contactEmail,
+          delivery_notes: deliveryDetails.notes || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("订单创建成功！");
+      navigate(`/dashboard/orders/${data.id}`);
+    } catch (error: any) {
+      console.error("创建订单失败:", error);
+      toast.error("创建订单失败: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,22 +129,20 @@ const OrderDetails = () => {
       </div>
 
       {/* 选中的报价摘要 */}
-      {quote && (
-        <Card className="bg-primary/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-lg">{quote.name}</h3>
-                <p className="text-sm text-muted-foreground">运输时间: {quote.transitTime}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-primary">${quote.totalCost}</p>
-                <p className="text-sm text-muted-foreground">总费用</p>
-              </div>
+      <Card className="bg-primary/5">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-lg">{selectedQuote.name}</h3>
+              <p className="text-sm text-muted-foreground">运输时间: {selectedQuote.transitTime}</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div className="text-right">
+              <p className="text-2xl font-bold text-primary">${selectedQuote.totalCost}</p>
+              <p className="text-sm text-muted-foreground">总费用</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 发货地址详情 */}
@@ -138,6 +194,22 @@ const OrderDetails = () => {
                   onChange={(e) => handlePickupChange("zip", e.target.value)}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pickupAddressType">地址类型</Label>
+                <Select
+                  value={pickupDetails.addressType}
+                  onValueChange={(value) => handlePickupChange("addressType", value)}
+                >
+                  <SelectTrigger id="pickupAddressType">
+                    <SelectValue placeholder="选择地址类型" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="residential">住宅</SelectItem>
+                    <SelectItem value="commercial">商业</SelectItem>
+                    <SelectItem value="warehouse">仓库</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -243,6 +315,22 @@ const OrderDetails = () => {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="deliveryAddressType">地址类型</Label>
+                <Select
+                  value={deliveryDetails.addressType}
+                  onValueChange={(value) => handleDeliveryChange("addressType", value)}
+                >
+                  <SelectTrigger id="deliveryAddressType">
+                    <SelectValue placeholder="选择地址类型" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="residential">住宅</SelectItem>
+                    <SelectItem value="commercial">商业</SelectItem>
+                    <SelectItem value="warehouse">仓库</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="border-t pt-4 mt-4">
@@ -303,11 +391,12 @@ const OrderDetails = () => {
             type="button" 
             variant="outline" 
             onClick={() => navigate(-1)}
+            disabled={loading}
           >
             返回
           </Button>
-          <Button type="submit" className="bg-primary hover:bg-primary/90">
-            确认并提交订单
+          <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={loading}>
+            {loading ? "创建中..." : "确认并提交订单"}
           </Button>
         </div>
       </form>

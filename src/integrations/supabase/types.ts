@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      addresses: {
+        Row: {
+          address: string
+          address_type: string
+          city: string
+          contact_email: string | null
+          contact_name: string
+          contact_phone: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_default: boolean | null
+          location_type: string
+          name: string
+          notes: string | null
+          state: string
+          updated_at: string
+          zip: string
+        }
+        Insert: {
+          address: string
+          address_type: string
+          city: string
+          contact_email?: string | null
+          contact_name: string
+          contact_phone: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_default?: boolean | null
+          location_type: string
+          name: string
+          notes?: string | null
+          state: string
+          updated_at?: string
+          zip: string
+        }
+        Update: {
+          address?: string
+          address_type?: string
+          city?: string
+          contact_email?: string | null
+          contact_name?: string
+          contact_phone?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_default?: boolean | null
+          location_type?: string
+          name?: string
+          notes?: string | null
+          state?: string
+          updated_at?: string
+          zip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addresses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bills: {
         Row: {
           bill_month: string
@@ -44,6 +109,45 @@ export type Database = {
           status?: string
           total_amount?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      cost_imports: {
+        Row: {
+          actual_cost: number
+          carrier_name: string | null
+          created_at: string
+          created_by: string
+          id: string
+          import_date: string
+          notes: string | null
+          order_number: string
+          payment_method: string | null
+          reference_number: string | null
+        }
+        Insert: {
+          actual_cost: number
+          carrier_name?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          import_date: string
+          notes?: string | null
+          order_number: string
+          payment_method?: string | null
+          reference_number?: string | null
+        }
+        Update: {
+          actual_cost?: number
+          carrier_name?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          import_date?: string
+          notes?: string | null
+          order_number?: string
+          payment_method?: string | null
+          reference_number?: string | null
         }
         Relationships: []
       }
@@ -319,10 +423,26 @@ export type Database = {
           created_at: string
           customer_code: string
           customer_id: string
+          delivery_address: string | null
+          delivery_address_type: string | null
+          delivery_city: string | null
+          delivery_contact_email: string | null
+          delivery_contact_name: string | null
+          delivery_contact_phone: string | null
+          delivery_notes: string | null
+          delivery_state: string | null
           delivery_zip: string
           id: string
           order_number: string
           pallet_label_url: string | null
+          pickup_address: string | null
+          pickup_address_type: string | null
+          pickup_city: string | null
+          pickup_contact_email: string | null
+          pickup_contact_name: string | null
+          pickup_contact_phone: string | null
+          pickup_notes: string | null
+          pickup_state: string | null
           pickup_zip: string
           pro_number: string | null
           profit: number | null
@@ -343,10 +463,26 @@ export type Database = {
           created_at?: string
           customer_code: string
           customer_id: string
+          delivery_address?: string | null
+          delivery_address_type?: string | null
+          delivery_city?: string | null
+          delivery_contact_email?: string | null
+          delivery_contact_name?: string | null
+          delivery_contact_phone?: string | null
+          delivery_notes?: string | null
+          delivery_state?: string | null
           delivery_zip: string
           id?: string
           order_number: string
           pallet_label_url?: string | null
+          pickup_address?: string | null
+          pickup_address_type?: string | null
+          pickup_city?: string | null
+          pickup_contact_email?: string | null
+          pickup_contact_name?: string | null
+          pickup_contact_phone?: string | null
+          pickup_notes?: string | null
+          pickup_state?: string | null
           pickup_zip: string
           pro_number?: string | null
           profit?: number | null
@@ -367,10 +503,26 @@ export type Database = {
           created_at?: string
           customer_code?: string
           customer_id?: string
+          delivery_address?: string | null
+          delivery_address_type?: string | null
+          delivery_city?: string | null
+          delivery_contact_email?: string | null
+          delivery_contact_name?: string | null
+          delivery_contact_phone?: string | null
+          delivery_notes?: string | null
+          delivery_state?: string | null
           delivery_zip?: string
           id?: string
           order_number?: string
           pallet_label_url?: string | null
+          pickup_address?: string | null
+          pickup_address_type?: string | null
+          pickup_city?: string | null
+          pickup_contact_email?: string | null
+          pickup_contact_name?: string | null
+          pickup_contact_phone?: string | null
+          pickup_notes?: string | null
+          pickup_state?: string | null
           pickup_zip?: string
           pro_number?: string | null
           profit?: number | null

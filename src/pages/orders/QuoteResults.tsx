@@ -28,6 +28,12 @@ const QuoteResults = () => {
   const location = useLocation();
   const orderData = location.state?.orderData;
 
+  // 如果没有订单数据，返回创建页面
+  if (!orderData) {
+    navigate("/dashboard/orders/create");
+    return null;
+  }
+
   // 模拟报价数据
   const [quotes] = useState<CarrierQuote[]>([
     {
@@ -84,9 +90,13 @@ const QuoteResults = () => {
   const route = `${orderData?.pickupZip} → ${orderData?.deliveryZip}`;
 
   const handleSelectQuote = (quote: CarrierQuote) => {
-    console.log("选择报价:", quote);
-    // 导航到填写详细信息页面
-    navigate("/dashboard/orders/details", { state: { quote } });
+    // 将订单数据和选中的报价一起传递
+    navigate("/dashboard/orders/details", { 
+      state: { 
+        orderData,
+        selectedQuote: quote 
+      } 
+    });
   };
 
   return (
