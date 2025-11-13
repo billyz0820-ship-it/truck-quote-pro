@@ -845,16 +845,19 @@ export type Database = {
       user_roles: {
         Row: {
           id: string
+          permissions: Json | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           id?: string
+          permissions?: Json | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           id?: string
+          permissions?: Json | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
@@ -875,7 +878,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "customer"
+      app_role:
+        | "admin"
+        | "customer"
+        | "customer_service"
+        | "operations"
+        | "finance"
+        | "moderator"
       customer_status: "active" | "frozen"
       customer_type: "prepaid" | "credit"
       payment_method: "bank_transfer" | "credit_card" | "paypal" | "other"
@@ -1006,7 +1015,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "customer"],
+      app_role: [
+        "admin",
+        "customer",
+        "customer_service",
+        "operations",
+        "finance",
+        "moderator",
+      ],
       customer_status: ["active", "frozen"],
       customer_type: ["prepaid", "credit"],
       payment_method: ["bank_transfer", "credit_card", "paypal", "other"],

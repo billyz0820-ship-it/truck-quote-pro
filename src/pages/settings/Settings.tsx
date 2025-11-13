@@ -29,11 +29,14 @@ const Settings = () => {
   const { userRole, user } = useAuth();
   const [customers, setCustomers] = useState<any[]>([]);
   const [subAccounts, setSubAccounts] = useState<any[]>([]);
+  const [internalUsers, setInternalUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [openCustomerDialog, setOpenCustomerDialog] = useState(false);
   const [openSubAccountDialog, setOpenSubAccountDialog] = useState(false);
+  const [openInternalUserDialog, setOpenInternalUserDialog] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [editingSubAccount, setEditingSubAccount] = useState<any>(null);
+  const [editingInternalUser, setEditingInternalUser] = useState<any>(null);
   const [openTemporaryCredit, setOpenTemporaryCredit] = useState(false);
   const [selectedCustomerForCredit, setSelectedCustomerForCredit] = useState<any>(null);
   const [openPasswordReset, setOpenPasswordReset] = useState(false);
@@ -79,6 +82,13 @@ const Settings = () => {
     feature_permissions: [] as string[]
   });
 
+  const [internalUserForm, setInternalUserForm] = useState({
+    email: "",
+    password: "",
+    role: "customer_service" as "admin" | "customer_service" | "operations" | "finance" | "moderator",
+    permissions: [] as string[]
+  });
+
   const featureOptions = [
     { id: "dashboard", label: "首页", children: ["cost_profit_analysis", "platform_orders", "carrier_ranking", "order_status", "ticket_items"] },
     { id: "orders", label: "订单管理", children: [] },
@@ -93,6 +103,7 @@ const Settings = () => {
     if (userRole === "admin") {
       fetchCustomers();
       fetchSubAccounts();
+      fetchInternalUsers();
     }
   }, [userRole]);
 
@@ -126,6 +137,25 @@ const Settings = () => {
 
       if (error) throw error;
       setSubAccounts(data || []);
+    } catch (error: any) {
+      toast({
+        title: "错误",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchInternalUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("*")
+        .in("role", ["admin", "customer_service", "operations", "finance", "moderator"])
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setInternalUsers(data || []);
     } catch (error: any) {
       toast({
         title: "错误",
@@ -381,6 +411,113 @@ const Settings = () => {
     });
   };
 
+  const resetInternalUserForm = () => {
+    setEditingInternalUser(null);
+    setInternalUserForm({
+      email: "",
+      password: "",
+      role: "customer_service",
+      permissions: []
+    });
+  };
+
+  const handleSaveInternalUser = async () => {
+    try {
+      if (!internalUserForm.email || (!editingInternalUser && !internalUserForm.password)) {
+        toast({
+          title: "错误",
+          description: "请填写所有必填字段",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (editingInternalUser) {
+        // 更新现有用户
+        const { error } = await supabase
+          .from("user_roles")
+          .update({
+            role: internalUserForm.role,
+            permissions: internalUserForm.permissions
+          })
+          .eq("user_id", editingInternalUser.user_id);
+
+        if (error) throw error;
+        toast({ title: "成功", description: "用户已更新" });
+      } else {
+        // 创建新用户
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email: internalUserForm.email,
+          password: internalUserForm.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+
+        if (signUpError) throw signUpError;
+        if (!authData.user) throw new Error("创建用户失败");
+
+        // 添加用户角色
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: authData.user.id,
+            role: internalUserForm.role,
+            permissions: internalUserForm.permissions
+          });
+
+        if (roleError) throw roleError;
+        toast({ title: "成功", description: "用户已创建" });
+      }
+
+      setOpenInternalUserDialog(false);
+      resetInternalUserForm();
+      fetchInternalUsers();
+    } catch (error: any) {
+      toast({
+        title: "错误",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteInternalUser = async (userId: string) => {
+    if (!confirm("确定要删除此用户吗？")) return;
+
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "成功",
+        description: "用户已删除"
+      });
+      fetchInternalUsers();
+    } catch (error: any) {
+      toast({
+        title: "错误",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getRoleName = (role: string) => {
+    const roleMap: Record<string, string> = {
+      admin: "管理员",
+      customer_service: "客服",
+      operations: "运营",
+      finance: "财务",
+      moderator: "审核员"
+    };
+    return roleMap[role] || role;
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -398,20 +535,177 @@ const Settings = () => {
         <TabsContent value="users">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                内部用户管理
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  内部用户管理
+                </span>
+                <Dialog open={openInternalUserDialog} onOpenChange={(open) => {
+                  setOpenInternalUserDialog(open);
+                  if (!open) resetInternalUserForm();
+                }}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      添加用户
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>{editingInternalUser ? "编辑用户" : "添加内部用户"}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>邮箱 *</Label>
+                        <Input
+                          type="email"
+                          value={internalUserForm.email}
+                          onChange={(e) => setInternalUserForm({ ...internalUserForm, email: e.target.value })}
+                          placeholder="user@example.com"
+                          disabled={!!editingInternalUser}
+                        />
+                      </div>
+                      {!editingInternalUser && (
+                        <div className="space-y-2">
+                          <Label>密码 *</Label>
+                          <Input
+                            type="password"
+                            value={internalUserForm.password}
+                            onChange={(e) => setInternalUserForm({ ...internalUserForm, password: e.target.value })}
+                            placeholder="至少6个字符"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label>角色 *</Label>
+                        <Select
+                          value={internalUserForm.role}
+                          onValueChange={(value: any) => setInternalUserForm({ ...internalUserForm, role: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">管理员</SelectItem>
+                            <SelectItem value="customer_service">客服</SelectItem>
+                            <SelectItem value="operations">运营</SelectItem>
+                            <SelectItem value="finance">财务</SelectItem>
+                            <SelectItem value="moderator">审核员</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-4 border-t pt-4">
+                        <h3 className="font-semibold">功能权限</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          {featureOptions.map((feature) => (
+                            <div key={feature.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`internal-feature-${feature.id}`}
+                                checked={internalUserForm.permissions.includes(feature.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setInternalUserForm({
+                                      ...internalUserForm,
+                                      permissions: [...internalUserForm.permissions, feature.id]
+                                    });
+                                  } else {
+                                    setInternalUserForm({
+                                      ...internalUserForm,
+                                      permissions: internalUserForm.permissions.filter(id => id !== feature.id)
+                                    });
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`internal-feature-${feature.id}`} className="text-sm">
+                                {feature.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={() => setOpenInternalUserDialog(false)}>
+                          取消
+                        </Button>
+                        <Button onClick={handleSaveInternalUser}>
+                          {editingInternalUser ? "更新" : "添加"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  此页面用于管理公司内部人员（管理员、客服、运营等）的配置。
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  功能开发中...
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                管理公司内部人员（管理员、客服、运营等）的账号和权限
+              </p>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>用户ID</TableHead>
+                    <TableHead>角色</TableHead>
+                    <TableHead>权限</TableHead>
+                    <TableHead>创建时间</TableHead>
+                    <TableHead>操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {internalUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        暂无内部用户
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    internalUsers.map((user) => (
+                      <TableRow key={user.user_id}>
+                        <TableCell className="font-mono text-xs">{user.user_id}</TableCell>
+                        <TableCell>
+                          <Badge>{getRoleName(user.role)}</Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {user.permissions && user.permissions.length > 0
+                            ? user.permissions.map((p: string) => 
+                                featureOptions.find(f => f.id === p)?.label
+                              ).filter(Boolean).join(", ")
+                            : "无"}
+                        </TableCell>
+                        <TableCell>
+                          {user.created_at ? format(new Date(user.created_at), "yyyy-MM-dd") : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingInternalUser(user);
+                                setInternalUserForm({
+                                  email: "",
+                                  password: "",
+                                  role: user.role,
+                                  permissions: user.permissions || []
+                                });
+                                setOpenInternalUserDialog(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteInternalUser(user.user_id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
