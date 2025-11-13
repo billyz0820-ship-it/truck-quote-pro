@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, FileDown, FileUp, Trash2, Edit, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CreateExpressOrderForm } from "@/components/express/CreateExpressOrderForm";
 
 interface ExpressOrder {
   id: string;
@@ -332,13 +332,17 @@ export default function ExpressOrders() {
                 新增订单
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>新增快递订单</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <p className="text-muted-foreground">订单创建表单将在下一步完善</p>
-              </div>
+              <CreateExpressOrderForm
+                onSuccess={() => {
+                  setShowCreateDialog(false);
+                  fetchOrders();
+                }}
+                onCancel={() => setShowCreateDialog(false)}
+              />
             </DialogContent>
           </Dialog>
           <Button variant="outline">
