@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Copy, Trash2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 
 const packageSchema = z.object({
@@ -59,6 +60,8 @@ type PackageData = z.infer<typeof packageSchema>;
 interface CreateExpressOrderFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  orderId?: string;
+  mode?: 'create' | 'edit';
 }
 
 export function CreateExpressOrderForm({ onSuccess, onCancel }: CreateExpressOrderFormProps) {
