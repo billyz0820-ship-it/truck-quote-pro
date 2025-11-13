@@ -398,275 +398,20 @@ const Settings = () => {
         <TabsContent value="users">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
-                  内部用户管理
-                </span>
-                <Dialog open={openSubAccountDialog} onOpenChange={(open) => {
-                  setOpenSubAccountDialog(open);
-                  if (!open) resetSubAccountForm();
-                }}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      添加用户
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>{editingSubAccount ? "编辑用户" : "添加用户"}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>用户名 *</Label>
-                          <Input
-                            value={subAccountForm.username}
-                            onChange={(e) => setSubAccountForm({ ...subAccountForm, username: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>邮箱 *</Label>
-                          <Input
-                            type="email"
-                            value={subAccountForm.email}
-                            onChange={(e) => setSubAccountForm({ ...subAccountForm, email: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>手机号</Label>
-                          <Input
-                            value={subAccountForm.phone}
-                            onChange={(e) => setSubAccountForm({ ...subAccountForm, phone: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>角色 *</Label>
-                          <Input
-                            value={subAccountForm.role}
-                            onChange={(e) => setSubAccountForm({ ...subAccountForm, role: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>状态</Label>
-                          <Select
-                            value={subAccountForm.status}
-                            onValueChange={(value) => setSubAccountForm({ ...subAccountForm, status: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">活跃</SelectItem>
-                              <SelectItem value="frozen">冻结</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {!editingSubAccount && (
-                          <div className="space-y-2">
-                            <Label>密码 *</Label>
-                            <Input
-                              type="password"
-                              value={subAccountForm.password}
-                              onChange={(e) => setSubAccountForm({ ...subAccountForm, password: e.target.value })}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-4 border-t pt-4">
-                        <h3 className="font-semibold">客户权限</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          {customers.map((customer) => (
-                            <div key={customer.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`customer-${customer.id}`}
-                                checked={subAccountForm.customer_permissions.includes(customer.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSubAccountForm({
-                                      ...subAccountForm,
-                                      customer_permissions: [...subAccountForm.customer_permissions, customer.id]
-                                    });
-                                  } else {
-                                    setSubAccountForm({
-                                      ...subAccountForm,
-                                      customer_permissions: subAccountForm.customer_permissions.filter(id => id !== customer.id)
-                                    });
-                                  }
-                                }}
-                              />
-                              <label htmlFor={`customer-${customer.id}`} className="text-sm">
-                                {customer.company_name}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="space-y-4 border-t pt-4">
-                        <h3 className="font-semibold">功能权限</h3>
-                        {featureOptions.map((feature) => (
-                          <div key={feature.id} className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`feature-${feature.id}`}
-                                checked={subAccountForm.feature_permissions.includes(feature.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSubAccountForm({
-                                      ...subAccountForm,
-                                      feature_permissions: [...subAccountForm.feature_permissions, feature.id]
-                                    });
-                                  } else {
-                                    setSubAccountForm({
-                                      ...subAccountForm,
-                                      feature_permissions: subAccountForm.feature_permissions.filter(id => id !== feature.id)
-                                    });
-                                  }
-                                }}
-                              />
-                              <label htmlFor={`feature-${feature.id}`} className="text-sm font-medium">
-                                {feature.label}
-                              </label>
-                            </div>
-                            {feature.children.length > 0 && (
-                              <div className="ml-6 space-y-2">
-                                {feature.children.map((child) => (
-                                  <div key={child} className="flex items-center space-x-2">
-                                    <Checkbox
-                                      id={`feature-${child}`}
-                                      checked={subAccountForm.feature_permissions.includes(child)}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          setSubAccountForm({
-                                            ...subAccountForm,
-                                            feature_permissions: [...subAccountForm.feature_permissions, child]
-                                          });
-                                        } else {
-                                          setSubAccountForm({
-                                            ...subAccountForm,
-                                            feature_permissions: subAccountForm.feature_permissions.filter(id => id !== child)
-                                          });
-                                        }
-                                      }}
-                                    />
-                                    <label htmlFor={`feature-${child}`} className="text-sm">
-                                      {child}
-                                    </label>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex justify-end gap-2 pt-4">
-                        <Button variant="outline" onClick={() => setOpenSubAccountDialog(false)}>
-                          取消
-                        </Button>
-                        <Button onClick={handleSaveSubAccount}>
-                          {editingSubAccount ? "更新" : "添加"}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                内部用户管理
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
-                <Label>筛选客户</Label>
-                <Select value={filterSubAccountCustomer} onValueChange={setFilterSubAccountCustomer}>
-                  <SelectTrigger className="w-[300px]">
-                    <SelectValue placeholder="选择客户" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部客户</SelectItem>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.customer_code} - {customer.company_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  此页面用于管理公司内部人员（管理员、客服、运营等）的配置。
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  功能开发中...
+                </p>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>用户名</TableHead>
-                    <TableHead>邮箱</TableHead>
-                    <TableHead>手机号</TableHead>
-                    <TableHead>角色</TableHead>
-                    <TableHead>关联客户</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead>创建时间</TableHead>
-                    <TableHead>操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredSubAccounts.map((account) => (
-                    <TableRow key={account.id}>
-                      <TableCell className="font-medium">{account.username}</TableCell>
-                      <TableCell>{account.email}</TableCell>
-                      <TableCell>{account.phone || "-"}</TableCell>
-                      <TableCell>{account.role}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {getCustomerNamesForSubAccount(account.customer_permissions)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={account.status === "active" ? "default" : "secondary"}>
-                          {account.status === "active" ? "活跃" : "冻结"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{format(new Date(account.created_at), "yyyy-MM-dd")}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingSubAccount(account);
-                              setSubAccountForm({
-                                username: account.username,
-                                email: account.email,
-                                phone: account.phone || "",
-                                role: account.role,
-                                status: account.status,
-                                password: "",
-                                customer_permissions: account.customer_permissions || [],
-                                feature_permissions: account.feature_permissions || []
-                              });
-                              setOpenSubAccountDialog(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setResetPasswordSubAccount(account);
-                              setOpenPasswordReset(true);
-                            }}
-                          >
-                            重置密码
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteSubAccount(account.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
             </CardContent>
           </Card>
         </TabsContent>
@@ -927,15 +672,275 @@ const Settings = () => {
         <TabsContent value="subaccounts">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                子账号管理
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  客户子账号管理
+                </span>
+                <Dialog open={openSubAccountDialog} onOpenChange={(open) => {
+                  setOpenSubAccountDialog(open);
+                  if (!open) resetSubAccountForm();
+                }}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      添加子账号
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{editingSubAccount ? "编辑子账号" : "添加子账号"}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>用户名 *</Label>
+                          <Input
+                            value={subAccountForm.username}
+                            onChange={(e) => setSubAccountForm({ ...subAccountForm, username: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>邮箱 *</Label>
+                          <Input
+                            type="email"
+                            value={subAccountForm.email}
+                            onChange={(e) => setSubAccountForm({ ...subAccountForm, email: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>手机号</Label>
+                          <Input
+                            value={subAccountForm.phone}
+                            onChange={(e) => setSubAccountForm({ ...subAccountForm, phone: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>角色 *</Label>
+                          <Input
+                            value={subAccountForm.role}
+                            onChange={(e) => setSubAccountForm({ ...subAccountForm, role: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>状态</Label>
+                          <Select
+                            value={subAccountForm.status}
+                            onValueChange={(value) => setSubAccountForm({ ...subAccountForm, status: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">活跃</SelectItem>
+                              <SelectItem value="frozen">冻结</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {!editingSubAccount && (
+                          <div className="space-y-2">
+                            <Label>密码 *</Label>
+                            <Input
+                              type="password"
+                              value={subAccountForm.password}
+                              onChange={(e) => setSubAccountForm({ ...subAccountForm, password: e.target.value })}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-4 border-t pt-4">
+                        <h3 className="font-semibold">客户权限</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          {customers.map((customer) => (
+                            <div key={customer.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`customer-${customer.id}`}
+                                checked={subAccountForm.customer_permissions.includes(customer.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSubAccountForm({
+                                      ...subAccountForm,
+                                      customer_permissions: [...subAccountForm.customer_permissions, customer.id]
+                                    });
+                                  } else {
+                                    setSubAccountForm({
+                                      ...subAccountForm,
+                                      customer_permissions: subAccountForm.customer_permissions.filter(id => id !== customer.id)
+                                    });
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`customer-${customer.id}`} className="text-sm">
+                                {customer.company_name}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 border-t pt-4">
+                        <h3 className="font-semibold">功能权限</h3>
+                        {featureOptions.map((feature) => (
+                          <div key={feature.id} className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`feature-${feature.id}`}
+                                checked={subAccountForm.feature_permissions.includes(feature.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSubAccountForm({
+                                      ...subAccountForm,
+                                      feature_permissions: [...subAccountForm.feature_permissions, feature.id]
+                                    });
+                                  } else {
+                                    setSubAccountForm({
+                                      ...subAccountForm,
+                                      feature_permissions: subAccountForm.feature_permissions.filter(id => id !== feature.id)
+                                    });
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`feature-${feature.id}`} className="text-sm font-medium">
+                                {feature.label}
+                              </label>
+                            </div>
+                            {feature.children.length > 0 && (
+                              <div className="ml-6 space-y-2">
+                                {feature.children.map((child) => (
+                                  <div key={child} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`feature-${child}`}
+                                      checked={subAccountForm.feature_permissions.includes(child)}
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          setSubAccountForm({
+                                            ...subAccountForm,
+                                            feature_permissions: [...subAccountForm.feature_permissions, child]
+                                          });
+                                        } else {
+                                          setSubAccountForm({
+                                            ...subAccountForm,
+                                            feature_permissions: subAccountForm.feature_permissions.filter(id => id !== child)
+                                          });
+                                        }
+                                      }}
+                                    />
+                                    <label htmlFor={`feature-${child}`} className="text-sm">
+                                      {child}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={() => setOpenSubAccountDialog(false)}>
+                          取消
+                        </Button>
+                        <Button onClick={handleSaveSubAccount}>
+                          {editingSubAccount ? "更新" : "添加"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                子账号配置已移至独立页面，请到<strong>子账号配置</strong>菜单查看。
-              </p>
+              <div className="mb-4">
+                <Label>筛选客户</Label>
+                <Select value={filterSubAccountCustomer} onValueChange={setFilterSubAccountCustomer}>
+                  <SelectTrigger className="w-[300px]">
+                    <SelectValue placeholder="选择客户" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部客户</SelectItem>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.customer_code} - {customer.company_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>用户名</TableHead>
+                    <TableHead>邮箱</TableHead>
+                    <TableHead>手机号</TableHead>
+                    <TableHead>角色</TableHead>
+                    <TableHead>关联客户</TableHead>
+                    <TableHead>状态</TableHead>
+                    <TableHead>创建时间</TableHead>
+                    <TableHead>操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSubAccounts.map((account) => (
+                    <TableRow key={account.id}>
+                      <TableCell className="font-medium">{account.username}</TableCell>
+                      <TableCell>{account.email}</TableCell>
+                      <TableCell>{account.phone || "-"}</TableCell>
+                      <TableCell>{account.role}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {getCustomerNamesForSubAccount(account.customer_permissions)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={account.status === "active" ? "default" : "secondary"}>
+                          {account.status === "active" ? "活跃" : "冻结"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{format(new Date(account.created_at), "yyyy-MM-dd")}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingSubAccount(account);
+                              setSubAccountForm({
+                                username: account.username,
+                                email: account.email,
+                                phone: account.phone || "",
+                                role: account.role,
+                                status: account.status,
+                                password: "",
+                                customer_permissions: account.customer_permissions || [],
+                                feature_permissions: account.feature_permissions || []
+                              });
+                              setOpenSubAccountDialog(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setResetPasswordSubAccount(account);
+                              setOpenPasswordReset(true);
+                            }}
+                          >
+                            重置密码
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteSubAccount(account.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
