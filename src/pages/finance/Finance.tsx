@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { 
   DollarSign, 
   TrendingUp, 
@@ -59,13 +60,19 @@ interface Order {
 }
 
 const Finance = () => {
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [vouchers, setVouchers] = useState<PaymentVoucher[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedVoucher, setSelectedVoucher] = useState<PaymentVoucher | null>(null);
   const [voucherDialogOpen, setVoucherDialogOpen] = useState(false);
+  const [openTemporaryCredit, setOpenTemporaryCredit] = useState(false);
+  const [selectedCustomerForCredit, setSelectedCustomerForCredit] = useState<Customer | null>(null);
+  const [temporaryCreditForm, setTemporaryCreditForm] = useState({
+    amount: 0,
+    valid_until: ""
+  });
   
   const [stats, setStats] = useState({
     totalRevenue: 0,
@@ -172,6 +179,29 @@ const Finance = () => {
     }
   };
 
+  const handleSaveTemporaryCredit = async () => {
+    try {
+      if (!selectedCustomerForCredit || !user) return;
+      
+      const { error } = await supabase
+        .from("temporary_credits")
+        .insert([{
+          customer_id: selectedCustomerForCredit.id,
+          amount: temporaryCreditForm.amount,
+          valid_until: temporaryCreditForm.valid_until,
+          created_by: user.id
+        }]);
+
+      if (error) throw error;
+
+      toast.success("临时额度已设置");
+      setOpenTemporaryCredit(false);
+      setTemporaryCreditForm({ amount: 0, valid_until: "" });
+    } catch (error: any) {
+      toast.error("设置失败: " + error.message);
+    }
+  };
+
   if (userRole !== 'admin') {
     return (
       <div className="flex items-center justify-center h-96">
@@ -273,6 +303,7 @@ const Finance = () => {
                     <TableHead>当前余额</TableHead>
                     <TableHead>信用额度</TableHead>
                     <TableHead>可用额度</TableHead>
+                    <TableHead>操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -293,6 +324,18 @@ const Finance = () => {
                         <TableCell>${Number(customer.credit_limit).toFixed(2)}</TableCell>
                         <TableCell className={available < 0 ? 'text-red-600' : 'text-green-600'}>
                           ${available.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedCustomerForCredit(customer);
+                              setOpenTemporaryCredit(true);
+                            }}
+                          >
+                            设置临时额度
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -508,6 +551,49 @@ const Finance = () => {
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   批准
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Temporary Credit Dialog */}
+      <Dialog open={openTemporaryCredit} onOpenChange={setOpenTemporaryCredit}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>设置临时额度</DialogTitle>
+          </DialogHeader>
+          {selectedCustomerForCredit && (
+            <div className="space-y-4">
+              <div>
+                <Label>客户</Label>
+                <p className="text-sm font-medium">{selectedCustomerForCredit.company_name}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>临时额度金额</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={temporaryCreditForm.amount}
+                  onChange={(e) => setTemporaryCreditForm({ ...temporaryCreditForm, amount: parseFloat(e.target.value) || 0 })}
+                  placeholder="输入金额"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>有效期至</Label>
+                <Input
+                  type="datetime-local"
+                  value={temporaryCreditForm.valid_until}
+                  onChange={(e) => setTemporaryCreditForm({ ...temporaryCreditForm, valid_until: e.target.value })}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setOpenTemporaryCredit(false)}>
+                  取消
+                </Button>
+                <Button onClick={handleSaveTemporaryCredit}>
+                  确认设置
                 </Button>
               </div>
             </div>

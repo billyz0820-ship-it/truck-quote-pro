@@ -111,12 +111,18 @@ const NotificationManagement = () => {
     setEditingNotification(null);
   };
 
-  const isActive = (notification: any) => {
+  const getNotificationStatus = (notification: any) => {
     const now = new Date();
     const start = new Date(notification.start_time);
     const end = notification.end_time ? new Date(notification.end_time) : null;
     
-    return now >= start && (!end || now <= end);
+    if (now < start) {
+      return { label: "待发布", variant: "secondary" as const };
+    } else if (!end || now <= end) {
+      return { label: "发布中", variant: "default" as const };
+    } else {
+      return { label: "已结束", variant: "outline" as const };
+    }
   };
 
   if (userRole !== "admin") {
@@ -248,9 +254,10 @@ const NotificationManagement = () => {
                         {notification.end_time ? format(new Date(notification.end_time), "yyyy-MM-dd HH:mm") : "无限期"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={isActive(notification) ? "default" : "secondary"}>
-                          {isActive(notification) ? "进行中" : "已结束"}
-                        </Badge>
+                        {(() => {
+                          const status = getNotificationStatus(notification);
+                          return <Badge variant={status.variant}>{status.label}</Badge>;
+                        })()}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">

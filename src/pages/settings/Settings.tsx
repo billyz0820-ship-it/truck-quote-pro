@@ -908,16 +908,6 @@ const Settings = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => {
-                                  setSelectedCustomerForCredit(customer);
-                                  setOpenTemporaryCredit(true);
-                                }}
-                              >
-                                临时额度
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
                                 onClick={() => handleDeleteCustomer(customer.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -937,10 +927,15 @@ const Settings = () => {
         <TabsContent value="subaccounts">
           <Card>
             <CardHeader>
-              <CardTitle>子账号配置</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                子账号管理
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">子账号配置功能正在开发中...</p>
+              <p className="text-muted-foreground">
+                子账号配置已移至独立页面，请到<strong>子账号配置</strong>菜单查看。
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

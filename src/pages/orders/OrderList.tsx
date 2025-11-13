@@ -77,6 +77,7 @@ const OrderList = () => {
       { value: "picked-up", label: "已提货", count: statusCounts["picked-up"] || 0 },
       { value: "in-transit", label: "运输中", count: statusCounts["in-transit"] || 0 },
       { value: "delivered", label: "已送达", count: statusCounts.delivered || 0 },
+      { value: "cancelled", label: "已取消", count: statusCounts.cancelled || 0 },
     ];
   };
 
@@ -86,7 +87,9 @@ const OrderList = () => {
       "placed": { label: "已下单", className: "bg-purple-500" },
       "picked-up": { label: "已提货", className: "bg-yellow-500" },
       "in-transit": { label: "运输中", className: "bg-orange-500" },
-      "delivered": { label: "已送达", className: "bg-green-500" }
+      "delivered": { label: "已送达", className: "bg-green-500" },
+      "cancelled": { label: "已取消", className: "bg-gray-500" },
+      "deleted": { label: "已删除", className: "bg-red-500" }
     };
 
     const config = statusConfig[status] || { label: status, className: "bg-gray-500" };
@@ -94,6 +97,11 @@ const OrderList = () => {
   };
 
   const filteredOrders = orders.filter(order => {
+    // 已删除的订单不在全部订单中显示
+    if (activeTab === "all" && order.status === "deleted") {
+      return false;
+    }
+    
     // Filter by tab
     if (activeTab !== "all" && order.status !== activeTab) {
       return false;
@@ -231,14 +239,60 @@ const OrderList = () => {
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell className="font-medium">${order.quoted_amount.toFixed(2)}</TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleDateString('zh-CN')}</TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => navigate(`/dashboard/orders/${order.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                       <TableCell>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/dashboard/orders/${order.id}`)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {order.status === "quoted" && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={async () => {
+                                if (!confirm("确定要删除此报价吗？")) return;
+                                try {
+                                  const { error } = await supabase
+                                    .from('orders')
+                                    .update({ status: 'deleted' })
+                                    .eq('id', order.id);
+                                  if (error) throw error;
+                                  toast.success("报价已删除");
+                                  fetchOrders();
+                                } catch (error: any) {
+                                  toast.error("删除失败: " + error.message);
+                                }
+                              }}
+                            >
+                              删除
+                            </Button>
+                          )}
+                          {order.status === "placed" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                if (!confirm("确定要取消此订单吗？")) return;
+                                try {
+                                  const { error } = await supabase
+                                    .from('orders')
+                                    .update({ status: 'cancelled' })
+                                    .eq('id', order.id);
+                                  if (error) throw error;
+                                  toast.success("订单已取消");
+                                  fetchOrders();
+                                } catch (error: any) {
+                                  toast.error("取消失败: " + error.message);
+                                }
+                              }}
+                            >
+                              取消
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

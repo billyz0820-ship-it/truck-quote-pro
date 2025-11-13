@@ -753,14 +753,52 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_communications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          ticket_id: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          ticket_id: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          ticket_id?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_communications_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           assigned_to: string | null
+          attachments: Json | null
+          carrier_name: string | null
           created_at: string
           created_by: string
           customer_id: string | null
           description: string
           id: string
+          order_number: string | null
           priority: string
           resolved_at: string | null
           status: string
@@ -770,11 +808,14 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          attachments?: Json | null
+          carrier_name?: string | null
           created_at?: string
           created_by: string
           customer_id?: string | null
           description: string
           id?: string
+          order_number?: string | null
           priority?: string
           resolved_at?: string | null
           status?: string
@@ -784,11 +825,14 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          attachments?: Json | null
+          carrier_name?: string | null
           created_at?: string
           created_by?: string
           customer_id?: string | null
           description?: string
           id?: string
+          order_number?: string | null
           priority?: string
           resolved_at?: string | null
           status?: string

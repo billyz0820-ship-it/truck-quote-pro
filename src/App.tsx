@@ -21,12 +21,15 @@ import OrderDetailView from "./pages/orders/OrderDetailView";
 import Finance from "./pages/finance/Finance";
 import Settings from "./pages/settings/Settings";
 import TicketManagement from "./pages/tickets/TicketManagement";
+import TicketDetail from "./pages/tickets/TicketDetail";
 import ProductModule from "./pages/products/ProductModule";
 import CouponManagement from "./pages/coupons/CouponManagement";
 import RebillManagement from "./pages/rebills/RebillManagement";
 import KnowledgeBase from "./pages/knowledge/KnowledgeBase";
 import NotificationManagement from "./pages/notifications/NotificationManagement";
 import EmailManagement from "./pages/emails/EmailManagement";
+import SubAccountManagement from "./pages/settings/SubAccountManagement";
+import UserManagement from "./pages/users/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -54,10 +57,14 @@ const App = () => (
             <Route path="coupons" element={<CouponManagement />} />
             <Route path="settings" element={<Settings />} />
             <Route path="tickets" element={<TicketManagement />} />
+            <Route path="tickets/:id" element={<TicketDetail />} />
             <Route path="products" element={<ProductModule />} />
             <Route path="knowledge" element={<KnowledgeBase />} />
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="emails" element={<EmailManagement />} />
+            <Route path="subaccounts" element={<SubAccountManagement />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="rebills" element={<RebillManagement />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
