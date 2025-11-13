@@ -1,8 +1,11 @@
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { TabProvider, useTab } from "@/contexts/TabContext";
+import { TabBar } from "@/components/TabBar";
+import { PageTransition } from "@/components/PageTransition";
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -42,7 +45,6 @@ import {
 } from "lucide-react";
 
 const DashboardLayout = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { state } = useSidebar();
   const { signOut } = useAuth();
@@ -59,6 +61,8 @@ const DashboardLayout = () => {
     { title: "知识库", url: "/dashboard/knowledge", icon: FileText },
     { title: "通知管理", url: "/dashboard/notifications", icon: FileText },
     { title: "邮件管理", url: "/dashboard/emails", icon: FileText },
+    { title: "返单管理", url: "/dashboard/rebills", icon: Receipt },
+    { title: "用户管理", url: "/dashboard/users", icon: Users },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -111,9 +115,14 @@ const DashboardLayout = () => {
           </div>
         </header>
 
+        {/* Tab Bar */}
+        <TabBar />
+
         {/* Main Content */}
-        <main className="flex-1 p-6 bg-secondary/10">
-          <Outlet />
+        <main className="flex-1 p-6 bg-secondary/10 overflow-auto">
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </main>
       </div>
     </div>
@@ -128,6 +137,15 @@ const AppSidebar = ({
   isActive: (path: string) => boolean 
 }) => {
   const { state } = useSidebar();
+  const { openTab } = useTab();
+
+  const handleNavClick = (item: any) => {
+    openTab({
+      title: item.title,
+      path: item.url,
+      icon: item.icon,
+    });
+  };
 
   return (
     <Sidebar collapsible="icon" className="w-64">
@@ -138,14 +156,12 @@ const AppSidebar = ({
             <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-12 px-4">
-                    <a 
-                      href={item.url}
-                      className={isActive(item.url) ? "bg-accent text-accent-foreground" : ""}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {state === "expanded" && <span className="text-base">{item.title}</span>}
-                    </a>
+                  <SidebarMenuButton 
+                    className={`h-12 px-4 cursor-pointer ${isActive(item.url) ? "bg-accent text-accent-foreground" : ""}`}
+                    onClick={() => handleNavClick(item)}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {state === "expanded" && <span className="text-base">{item.title}</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -159,7 +175,9 @@ const AppSidebar = ({
 
 const DashboardLayoutWithProvider = () => (
   <SidebarProvider>
-    <DashboardLayout />
+    <TabProvider>
+      <DashboardLayout />
+    </TabProvider>
   </SidebarProvider>
 );
 
