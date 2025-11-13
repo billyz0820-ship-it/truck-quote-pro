@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LucideIcon, Home } from "lucide-react";
 
 export interface Tab {
@@ -31,7 +31,25 @@ const HOME_TAB: Tab = {
 export const TabProvider = ({ children }: { children: ReactNode }) => {
   const [tabs, setTabs] = useState<Tab[]>([HOME_TAB]);
   const [activeTabId, setActiveTabId] = useState("home");
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle navigation in useEffect to avoid calling navigate during render
+  useEffect(() => {
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+      setPendingNavigation(null);
+    }
+  }, [pendingNavigation, navigate]);
+
+  // Sync active tab with current route
+  useEffect(() => {
+    const currentTab = tabs.find((t) => t.path === location.pathname);
+    if (currentTab && currentTab.id !== activeTabId) {
+      setActiveTabId(currentTab.id);
+    }
+  }, [location.pathname, tabs, activeTabId]);
 
   const openTab = useCallback((newTab: Omit<Tab, "id" | "closable">) => {
     const tabId = newTab.path.replace(/\//g, "-");
@@ -40,7 +58,7 @@ export const TabProvider = ({ children }: { children: ReactNode }) => {
       const existingTab = prevTabs.find((t) => t.path === newTab.path);
       if (existingTab) {
         setActiveTabId(existingTab.id);
-        navigate(newTab.path);
+        setPendingNavigation(newTab.path);
         return prevTabs;
       }
 
@@ -55,36 +73,33 @@ export const TabProvider = ({ children }: { children: ReactNode }) => {
       };
 
       setActiveTabId(tabId);
-      navigate(newTab.path);
+      setPendingNavigation(newTab.path);
       return [...prevTabs, tab];
     });
-  }, [navigate]);
+  }, []);
 
   const closeTab = useCallback((tabId: string) => {
-    setTabs((prevTabs) => {
-      const closingTab = prevTabs.find((t) => t.id === tabId);
-      if (!closingTab?.closable) return prevTabs;
+    const closingTab = tabs.find((t) => t.id === tabId);
+    if (!closingTab?.closable) return;
 
-      const newTabs = prevTabs.filter((t) => t.id !== tabId);
-      
-      if (activeTabId === tabId) {
-        const closingIndex = prevTabs.findIndex((t) => t.id === tabId);
-        const newActiveTab = newTabs[closingIndex - 1] || newTabs[0];
-        setActiveTabId(newActiveTab.id);
-        navigate(newActiveTab.path);
-      }
-
-      return newTabs;
-    });
-  }, [activeTabId, navigate]);
+    const newTabs = tabs.filter((t) => t.id !== tabId);
+    setTabs(newTabs);
+    
+    if (activeTabId === tabId) {
+      const closingIndex = tabs.findIndex((t) => t.id === tabId);
+      const newActiveTab = newTabs[closingIndex - 1] || newTabs[0];
+      setActiveTabId(newActiveTab.id);
+      setPendingNavigation(newActiveTab.path);
+    }
+  }, [tabs, activeTabId]);
 
   const switchTab = useCallback((tabId: string) => {
     const tab = tabs.find((t) => t.id === tabId);
     if (tab) {
       setActiveTabId(tabId);
-      navigate(tab.path);
+      setPendingNavigation(tab.path);
     }
-  }, [tabs, navigate]);
+  }, [tabs]);
 
   return (
     <TabContext.Provider value={{ tabs, activeTabId, openTab, closeTab, switchTab }}>
