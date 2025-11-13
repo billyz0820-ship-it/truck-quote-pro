@@ -28,7 +28,7 @@ import RebillManagement from "./pages/rebills/RebillManagement";
 import KnowledgeBase from "./pages/knowledge/KnowledgeBase";
 import NotificationManagement from "./pages/notifications/NotificationManagement";
 import EmailManagement from "./pages/emails/EmailManagement";
-import SubAccountManagement from "./pages/settings/SubAccountManagement";
+
 import UserManagement from "./pages/users/UserManagement";
 
 const queryClient = new QueryClient();
@@ -62,7 +62,6 @@ const App = () => (
             <Route path="knowledge" element={<KnowledgeBase />} />
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="emails" element={<EmailManagement />} />
-            <Route path="subaccounts" element={<SubAccountManagement />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="rebills" element={<RebillManagement />} />
           </Route>

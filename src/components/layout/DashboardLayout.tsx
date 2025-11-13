@@ -54,7 +54,6 @@ const DashboardLayout = () => {
     { title: "财务", url: "/dashboard/finance", icon: DollarSign },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
     { title: "配置管理", url: "/dashboard/settings", icon: Settings },
-    { title: "子账号配置", url: "/dashboard/subaccounts", icon: Users },
     { title: "工单管理", url: "/dashboard/tickets", icon: FileText },
     { title: "产品模块", url: "/dashboard/products", icon: ShoppingCart },
     { title: "知识库", url: "/dashboard/knowledge", icon: FileText },
