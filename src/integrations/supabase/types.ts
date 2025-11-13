@@ -346,6 +346,164 @@ export type Database = {
         }
         Relationships: []
       }
+      express_orders: {
+        Row: {
+          address: string
+          address_type: string | null
+          cancelled_at: string | null
+          carrier: string
+          city: string
+          country: string
+          created_at: string
+          customer_code: string
+          customer_id: string
+          id: string
+          label_printed_at: string | null
+          logistics_account: string | null
+          logistics_status: string | null
+          notes: string | null
+          order_number: string
+          order_source: string | null
+          recipient_email: string | null
+          recipient_name: string
+          recipient_phone: string | null
+          reference_number: string | null
+          service_type: string
+          shipping_fee: number | null
+          signature_service: string | null
+          state: string
+          status: string
+          tracking_number: string | null
+          updated_at: string
+          warehouse: string
+          zip_code: string
+          zone: string | null
+        }
+        Insert: {
+          address: string
+          address_type?: string | null
+          cancelled_at?: string | null
+          carrier: string
+          city: string
+          country?: string
+          created_at?: string
+          customer_code: string
+          customer_id: string
+          id?: string
+          label_printed_at?: string | null
+          logistics_account?: string | null
+          logistics_status?: string | null
+          notes?: string | null
+          order_number: string
+          order_source?: string | null
+          recipient_email?: string | null
+          recipient_name: string
+          recipient_phone?: string | null
+          reference_number?: string | null
+          service_type: string
+          shipping_fee?: number | null
+          signature_service?: string | null
+          state: string
+          status?: string
+          tracking_number?: string | null
+          updated_at?: string
+          warehouse: string
+          zip_code: string
+          zone?: string | null
+        }
+        Update: {
+          address?: string
+          address_type?: string | null
+          cancelled_at?: string | null
+          carrier?: string
+          city?: string
+          country?: string
+          created_at?: string
+          customer_code?: string
+          customer_id?: string
+          id?: string
+          label_printed_at?: string | null
+          logistics_account?: string | null
+          logistics_status?: string | null
+          notes?: string | null
+          order_number?: string
+          order_source?: string | null
+          recipient_email?: string | null
+          recipient_name?: string
+          recipient_phone?: string | null
+          reference_number?: string | null
+          service_type?: string
+          shipping_fee?: number | null
+          signature_service?: string | null
+          state?: string
+          status?: string
+          tracking_number?: string | null
+          updated_at?: string
+          warehouse?: string
+          zip_code?: string
+          zone?: string | null
+        }
+        Relationships: []
+      }
+      express_packages: {
+        Row: {
+          created_at: string
+          declared_value: number | null
+          height: number | null
+          id: string
+          insurance_amount: number | null
+          insurance_fee: number | null
+          length: number | null
+          order_id: string
+          origin_country: string | null
+          package_type: string | null
+          product_sku: string | null
+          unit_system: string
+          weight: number
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          declared_value?: number | null
+          height?: number | null
+          id?: string
+          insurance_amount?: number | null
+          insurance_fee?: number | null
+          length?: number | null
+          order_id: string
+          origin_country?: string | null
+          package_type?: string | null
+          product_sku?: string | null
+          unit_system?: string
+          weight: number
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          declared_value?: number | null
+          height?: number | null
+          id?: string
+          insurance_amount?: number | null
+          insurance_fee?: number | null
+          length?: number | null
+          order_id?: string
+          origin_country?: string | null
+          package_type?: string | null
+          product_sku?: string | null
+          unit_system?: string
+          weight?: number
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "express_packages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "express_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_base: {
         Row: {
           category: string | null

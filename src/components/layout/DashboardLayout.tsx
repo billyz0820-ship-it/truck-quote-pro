@@ -16,9 +16,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarTrigger,
   useSidebar
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronRight } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +57,14 @@ const DashboardLayout = () => {
 
   const menuItems = [
     { title: "首页", url: "/dashboard", icon: Home },
-    { title: "订单列表", url: "/dashboard/orders", icon: Package },
+    { 
+      title: "订单列表", 
+      icon: Package,
+      subItems: [
+        { title: "卡车订单", url: "/dashboard/orders/truck", icon: Truck },
+        { title: "快递订单", url: "/dashboard/orders/express", icon: Package },
+      ]
+    },
     { title: "财务", url: "/dashboard/finance", icon: DollarSign },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
     { title: "配置管理", url: "/dashboard/settings", icon: Settings },
@@ -140,11 +152,13 @@ const AppSidebar = ({
   const { openTab } = useTab();
 
   const handleNavClick = (item: any) => {
-    openTab({
-      title: item.title,
-      path: item.url,
-      icon: item.icon,
-    });
+    if (item.url) {
+      openTab({
+        title: item.title,
+        path: item.url,
+        icon: item.icon,
+      });
+    }
   };
 
   return (
@@ -156,13 +170,44 @@ const AppSidebar = ({
             <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    className={`h-12 px-4 cursor-pointer ${isActive(item.url) ? "bg-accent text-accent-foreground" : ""}`}
-                    onClick={() => handleNavClick(item)}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {state === "expanded" && <span className="text-base">{item.title}</span>}
-                  </SidebarMenuButton>
+                  {item.subItems ? (
+                    <Collapsible defaultOpen className="group/collapsible">
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton className="h-12 px-4 cursor-pointer">
+                          <item.icon className="h-5 w-5" />
+                          {state === "expanded" && (
+                            <>
+                              <span className="text-base flex-1 text-left">{item.title}</span>
+                              <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                            </>
+                          )}
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.subItems.map((subItem: any) => (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton
+                                className={`h-10 cursor-pointer ${isActive(subItem.url) ? "bg-accent text-accent-foreground" : ""}`}
+                                onClick={() => handleNavClick(subItem)}
+                              >
+                                <subItem.icon className="h-4 w-4" />
+                                {state === "expanded" && <span>{subItem.title}</span>}
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : (
+                    <SidebarMenuButton 
+                      className={`h-12 px-4 cursor-pointer ${item.url && isActive(item.url) ? "bg-accent text-accent-foreground" : ""}`}
+                      onClick={() => handleNavClick(item)}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {state === "expanded" && <span className="text-base">{item.title}</span>}
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

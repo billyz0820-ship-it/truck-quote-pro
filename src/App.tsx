@@ -13,7 +13,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
-import OrderList from "./pages/orders/OrderList";
+import TruckOrders from "./pages/orders/TruckOrders";
+import ExpressOrders from "./pages/orders/ExpressOrders";
 import CreateOrder from "./pages/orders/CreateOrder";
 import QuoteResults from "./pages/orders/QuoteResults";
 import OrderDetails from "./pages/orders/OrderDetails";
@@ -48,7 +49,8 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
-            <Route path="orders" element={<OrderList />} />
+            <Route path="orders/truck" element={<TruckOrders />} />
+            <Route path="orders/express" element={<ExpressOrders />} />
             <Route path="orders/create" element={<CreateOrder />} />
             <Route path="orders/quote" element={<QuoteResults />} />
             <Route path="orders/details" element={<OrderDetails />} />
