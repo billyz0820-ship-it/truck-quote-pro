@@ -79,6 +79,8 @@ const App = () => (
             <Route path="carrier/comparison" element={<PriceComparison />} />
             <Route path="carrier/remote-areas" element={<RemoteAreas />} />
             <Route path="carrier/rules" element={<ShippingRules />} />
+            <Route path="carrier/customer-pricing" element={<CustomerPricing />} />
+            <Route path="carrier/price-history" element={<PriceHistory />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
