@@ -26,6 +26,36 @@ export default function PriceComparison() {
   const [calculations, setCalculations] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
 
+  const handleSaveHistory = async () => {
+    if (results.length === 0) {
+      toast({ title: "请先进行价格计算", variant: "destructive" });
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "请先登录", variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("price_calculation_history")
+      .insert({
+        user_id: user.id,
+        calculation_type: "comparison",
+        package_info: packageInfo,
+        results: results,
+        notes: notes || null,
+      });
+
+    if (error) {
+      toast({ title: "保存失败", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "保存成功" });
+      setNotes("");
+    }
+  };
+
   const handleCalculate = () => {
     // 模拟多个账号的价格计算
     const mockAccounts = [

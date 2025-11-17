@@ -992,6 +992,36 @@ export type Database = {
           },
         ]
       }
+      price_calculation_history: {
+        Row: {
+          calculation_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          package_info: Json
+          results: Json
+          user_id: string
+        }
+        Insert: {
+          calculation_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          package_info: Json
+          results: Json
+          user_id: string
+        }
+        Update: {
+          calculation_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          package_info?: Json
+          results?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       pricing_templates: {
         Row: {
           ahs_dim: Json

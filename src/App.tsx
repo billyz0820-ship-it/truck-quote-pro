@@ -36,6 +36,8 @@ import AccountCosts from "./pages/carrier/AccountCosts";
 import PriceComparison from "./pages/carrier/PriceComparison";
 import RemoteAreas from "./pages/carrier/RemoteAreas";
 import ShippingRules from "./pages/carrier/ShippingRules";
+import CustomerPricing from "./pages/carrier/CustomerPricing";
+import PriceHistory from "./pages/carrier/PriceHistory";
 
 const queryClient = new QueryClient();
 
