@@ -57,7 +57,7 @@ export function ExpressOrderExport({ orders, selectedOrders }: ExpressOrderExpor
 
   const handleExport = () => {
     const exportData = selectedOrders && selectedOrders.length > 0
-      ? orders.filter(o => selectedOrders.includes(o.id))
+      ? orders.filter((o: any) => selectedOrders.includes(o.id))
       : orders;
 
     if (exportData.length === 0) {
