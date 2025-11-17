@@ -20,27 +20,36 @@ interface ShippingRule {
 }
 
 export default function ShippingRules() {
-  const [rules, setRules] = useState<ShippingRule[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingRule, setEditingRule] = useState<ShippingRule | null>(null);
   const { toast } = useToast();
-
-  const [formData, setFormData] = useState({
-    rule_name: "",
-    priority: 0,
-    is_active: true,
-  });
-
-  const [conditionGroup, setConditionGroup] = useState({
+  const [rules, setRules] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState<any>(null);
+  const [ruleName, setRuleName] = useState("");
+  const [priority, setPriority] = useState(0);
+  const [isActive, setIsActive] = useState(true);
+  const [primaryAccountId, setPrimaryAccountId] = useState<string>("");
+  const [fallbackAccounts, setFallbackAccounts] = useState<Array<{ id: string; priority: number }>>([]);
+  const [conditions, setConditions] = useState<any>({
     id: "root",
-    operator: "AND" as "AND" | "OR",
+    operator: "AND",
     conditions: [],
     groups: [],
   });
 
   useEffect(() => {
     fetchRules();
+    fetchAccounts();
   }, []);
+
+  const fetchAccounts = async () => {
+    const { data } = await supabase
+      .from("carrier_accounts")
+      .select("*")
+      .eq("status", "active")
+      .order("account_name");
+    if (data) setAccounts(data);
+  };
 
   const fetchRules = async () => {
     const { data, error } = await supabase
