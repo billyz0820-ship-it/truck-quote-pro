@@ -29,8 +29,13 @@ import RebillManagement from "./pages/rebills/RebillManagement";
 import KnowledgeBase from "./pages/knowledge/KnowledgeBase";
 import NotificationManagement from "./pages/notifications/NotificationManagement";
 import EmailManagement from "./pages/emails/EmailManagement";
-
 import UserManagement from "./pages/users/UserManagement";
+import CarrierAccounts from "./pages/carrier/CarrierAccounts";
+import PricingTemplates from "./pages/carrier/PricingTemplates";
+import AccountCosts from "./pages/carrier/AccountCosts";
+import PriceComparison from "./pages/carrier/PriceComparison";
+import RemoteAreas from "./pages/carrier/RemoteAreas";
+import ShippingRules from "./pages/carrier/ShippingRules";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +71,12 @@ const App = () => (
             <Route path="emails" element={<EmailManagement />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="rebills" element={<RebillManagement />} />
+            <Route path="carrier/accounts" element={<CarrierAccounts />} />
+            <Route path="carrier/templates" element={<PricingTemplates />} />
+            <Route path="carrier/costs" element={<AccountCosts />} />
+            <Route path="carrier/comparison" element={<PriceComparison />} />
+            <Route path="carrier/remote-areas" element={<RemoteAreas />} />
+            <Route path="carrier/rules" element={<ShippingRules />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

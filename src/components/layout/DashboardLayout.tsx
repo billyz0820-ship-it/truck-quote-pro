@@ -46,7 +46,8 @@ import {
   ChevronDown,
   Ticket,
   Receipt,
-  Users
+  Users,
+  PackageCheck
 } from "lucide-react";
 
 const DashboardLayout = () => {
@@ -75,6 +76,18 @@ const DashboardLayout = () => {
     { title: "邮件管理", url: "/dashboard/emails", icon: FileText },
     { title: "返单管理", url: "/dashboard/rebills", icon: Receipt },
     { title: "用户管理", url: "/dashboard/users", icon: Users },
+    { 
+      title: "快递管理", 
+      icon: PackageCheck,
+      subItems: [
+        { title: "快递账号", url: "/dashboard/carrier/accounts", icon: Truck },
+        { title: "账套管理", url: "/dashboard/carrier/templates", icon: FileText },
+        { title: "账号成本", url: "/dashboard/carrier/costs", icon: DollarSign },
+        { title: "价格比较", url: "/dashboard/carrier/comparison", icon: Receipt },
+        { title: "偏远地址", url: "/dashboard/carrier/remote-areas", icon: Package },
+        { title: "打单规则", url: "/dashboard/carrier/rules", icon: Settings },
+      ]
+    },
   ];
 
   const isActive = (path: string) => location.pathname === path;

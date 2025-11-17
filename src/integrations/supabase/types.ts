@@ -120,6 +120,170 @@ export type Database = {
           },
         ]
       }
+      carrier_account_costs: {
+        Row: {
+          account_id: string
+          ahs_dim: Json
+          ahs_packing: Json
+          ahs_weight: Json
+          base_prices: Json
+          created_at: string
+          dim_factor: number | null
+          effective_date: string
+          fuel_charge: number | null
+          id: string
+          oversize_commercial: Json
+          oversize_residential: Json
+          peak_surcharges: Json
+          remote_area_fees: Json
+          residential_fees: Json
+          unauthorized_fee: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          created_at?: string
+          dim_factor?: number | null
+          effective_date: string
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          created_at?: string
+          dim_factor?: number | null
+          effective_date?: string
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrier_account_costs_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "carrier_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carrier_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          api_credentials: Json | null
+          carrier: string
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          api_credentials?: Json | null
+          carrier: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          api_credentials?: Json | null
+          carrier?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      carrier_official_prices: {
+        Row: {
+          ahs_dim: Json
+          ahs_packing: Json
+          ahs_weight: Json
+          base_prices: Json
+          carrier: string
+          created_at: string
+          dim_factor: number | null
+          effective_date: string
+          fuel_charge: number | null
+          id: string
+          oversize_commercial: Json
+          oversize_residential: Json
+          peak_surcharges: Json
+          remote_area_fees: Json
+          residential_fees: Json
+          unauthorized_fee: number | null
+          updated_at: string
+        }
+        Insert: {
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          carrier: string
+          created_at?: string
+          dim_factor?: number | null
+          effective_date: string
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          carrier?: string
+          created_at?: string
+          dim_factor?: number | null
+          effective_date?: string
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cost_imports: {
         Row: {
           actual_cost: number
@@ -202,6 +366,51 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_carrier_pricing: {
+        Row: {
+          carrier: string
+          created_at: string
+          custom_prices: Json
+          customer_id: string
+          id: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          custom_prices?: Json
+          customer_id: string
+          id?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          custom_prices?: Json
+          customer_id?: string
+          id?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_carrier_pricing_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_carrier_pricing_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -783,6 +992,69 @@ export type Database = {
           },
         ]
       }
+      pricing_templates: {
+        Row: {
+          ahs_dim: Json
+          ahs_packing: Json
+          ahs_weight: Json
+          base_prices: Json
+          carrier: string
+          created_at: string
+          description: string | null
+          dim_factor: number | null
+          fuel_charge: number | null
+          id: string
+          oversize_commercial: Json
+          oversize_residential: Json
+          peak_surcharges: Json
+          remote_area_fees: Json
+          residential_fees: Json
+          template_name: string
+          unauthorized_fee: number | null
+          updated_at: string
+        }
+        Insert: {
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          carrier: string
+          created_at?: string
+          description?: string | null
+          dim_factor?: number | null
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          template_name: string
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          carrier?: string
+          created_at?: string
+          description?: string | null
+          dim_factor?: number | null
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          template_name?: string
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rebills: {
         Row: {
           actual_amount: number
@@ -844,6 +1116,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      remote_area_zones: {
+        Row: {
+          carrier: string
+          created_at: string
+          id: string
+          service_type: string | null
+          zip_code: string
+          zone_type: string
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          id?: string
+          service_type?: string | null
+          zip_code: string
+          zone_type: string
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          id?: string
+          service_type?: string | null
+          zip_code?: string
+          zone_type?: string
+        }
+        Relationships: []
       }
       return_orders: {
         Row: {
@@ -910,6 +1209,50 @@ export type Database = {
           zone?: string | null
         }
         Relationships: []
+      }
+      shipping_rules: {
+        Row: {
+          conditions: Json
+          created_at: string
+          fallback_accounts: Json
+          id: string
+          is_active: boolean
+          primary_account_id: string | null
+          priority: number
+          rule_name: string
+          updated_at: string
+        }
+        Insert: {
+          conditions?: Json
+          created_at?: string
+          fallback_accounts?: Json
+          id?: string
+          is_active?: boolean
+          primary_account_id?: string | null
+          priority?: number
+          rule_name: string
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          fallback_accounts?: Json
+          id?: string
+          is_active?: boolean
+          primary_account_id?: string | null
+          priority?: number
+          rule_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_rules_primary_account_id_fkey"
+            columns: ["primary_account_id"]
+            isOneToOne: false
+            referencedRelation: "carrier_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sub_accounts: {
         Row: {

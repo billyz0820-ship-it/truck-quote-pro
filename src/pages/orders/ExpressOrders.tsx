@@ -6,7 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit, Copy, Printer, Undo2, CornerUpLeft } from "lucide-react";
+import { Plus, Trash2, Edit, Copy, Printer, Undo2, CornerUpLeft, FileDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +15,7 @@ import { CreateExpressOrderForm } from "@/components/express/CreateExpressOrderF
 import { ExpressOrderFilters, FilterValues } from "@/components/express/ExpressOrderFilters";
 import { ExpressOrderImport } from "@/components/express/ExpressOrderImport";
 import { ExpressOrderExport } from "@/components/express/ExpressOrderExport";
+import { EditReturnOrderForm } from "@/components/express/EditReturnOrderForm";
 
 interface ExpressOrder {
   id: string;
@@ -78,6 +80,9 @@ export default function ExpressOrders() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [isEditReturnDialogOpen, setIsEditReturnDialogOpen] = useState(false);
+  const [editingReturnOrderId, setEditingReturnOrderId] = useState<string | null>(null);
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterValues>({
     startDate: undefined,
     endDate: undefined,
@@ -315,6 +320,63 @@ export default function ExpressOrders() {
   const handleEdit = (orderId: string) => {
     setEditingOrderId(orderId);
     setIsEditDialogOpen(true);
+  };
+
+  const handleEditReturnOrder = (orderId: string) => {
+    setEditingReturnOrderId(orderId);
+    setIsEditReturnDialogOpen(true);
+  };
+
+  const handleSelectOrder = (orderId: string) => {
+    setSelectedOrders(prev =>
+      prev.includes(orderId)
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedOrders.length === filteredOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(filteredOrders.map(o => o.id));
+    }
+  };
+
+  const handleBatchPrint = async () => {
+    if (selectedOrders.length === 0) {
+      toast({
+        title: "请选择订单",
+        description: "请先选择要打印的订单",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "批量打印",
+      description: `正在为 ${selectedOrders.length} 个订单打印标签...`,
+    });
+    
+    // 这里可以实现实际的批量打印逻辑
+    setSelectedOrders([]);
+  };
+
+  const handleBatchExport = () => {
+    if (selectedOrders.length === 0) {
+      toast({
+        title: "请选择订单",
+        description: "请先选择要导出的订单",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // 触发导出功能
+    toast({
+      title: "正在导出",
+      description: `正在导出 ${selectedOrders.length} 个订单...`,
+    });
   };
 
   const handlePrintLabel = async (order: ExpressOrder) => {
@@ -638,10 +700,14 @@ export default function ExpressOrders() {
                         <TableCell>{order.zone || "-"}</TableCell>
                         <TableCell>${order.shipping_fee}</TableCell>
                         <TableCell>{order.address_type || "-"}</TableCell>
-                        <TableCell>{new Date(order.created_at).toLocaleString("zh-CN")}</TableCell>
-                        <TableCell>
-                          <Button size="sm" variant="outline">查看</Button>
-                        </TableCell>
+                         <TableCell>{new Date(order.created_at).toLocaleString("zh-CN")}</TableCell>
+                         <TableCell>
+                           <div className="flex gap-2">
+                             <Button size="sm" variant="outline" onClick={() => handleEditReturnOrder(order.id)}>
+                               <Edit className="h-4 w-4" />
+                             </Button>
+                           </div>
+                         </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -653,6 +719,14 @@ export default function ExpressOrders() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {activeTab !== "cancelled" && (
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
+                    )}
                     {renderTableHeaders().map((header, index) => (
                       <TableHead key={index}>{header}</TableHead>
                     ))}
@@ -674,6 +748,14 @@ export default function ExpressOrders() {
                   ) : (
                     filteredOrders.map((order) => (
                       <TableRow key={order.id}>
+                        {activeTab !== "cancelled" && (
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedOrders.includes(order.id)}
+                              onCheckedChange={() => handleSelectOrder(order.id)}
+                            />
+                          </TableCell>
+                        )}
                         {renderTableRow(order).map((cell, index) => (
                           <TableCell key={index}>{cell}</TableCell>
                         ))}
@@ -721,6 +803,27 @@ export default function ExpressOrders() {
               setEditingOrderId(null);
             }}
           />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isEditReturnDialogOpen} onOpenChange={setIsEditReturnDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>编辑退货订单</DialogTitle>
+          </DialogHeader>
+          {editingReturnOrderId && (
+            <EditReturnOrderForm
+              orderId={editingReturnOrderId}
+              onSuccess={() => {
+                setIsEditReturnDialogOpen(false);
+                setEditingReturnOrderId(null);
+                fetchReturnOrders();
+              }}
+              onCancel={() => {
+                setIsEditReturnDialogOpen(false);
+                setEditingReturnOrderId(null);
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
