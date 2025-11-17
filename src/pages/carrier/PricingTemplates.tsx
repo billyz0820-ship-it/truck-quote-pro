@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PricingConfigTabs } from "@/components/carrier/PricingConfigTabs";
 
 interface PricingTemplate {
   id: string;
@@ -31,6 +32,8 @@ export default function PricingTemplates() {
     description: "",
   });
 
+  const [pricingConfig, setPricingConfig] = useState<any>({});
+
   useEffect(() => {
     fetchTemplates();
   }, []);
@@ -51,10 +54,15 @@ export default function PricingTemplates() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const dataToSubmit = {
+      ...formData,
+      ...pricingConfig,
+    };
+
     if (editingTemplate) {
       const { error } = await supabase
         .from("pricing_templates")
-        .update(formData)
+        .update(dataToSubmit)
         .eq("id", editingTemplate.id);
 
       if (error) {
@@ -67,7 +75,7 @@ export default function PricingTemplates() {
         fetchTemplates();
       }
     } else {
-      const { error } = await supabase.from("pricing_templates").insert([formData]);
+      const { error } = await supabase.from("pricing_templates").insert([dataToSubmit]);
 
       if (error) {
         toast({ title: "创建失败", description: error.message, variant: "destructive" });
@@ -166,31 +174,10 @@ export default function PricingTemplates() {
                 />
               </div>
 
-              <Tabs defaultValue="base">
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="base">基础价格</TabsTrigger>
-                  <TabsTrigger value="ahs">AHS费用</TabsTrigger>
-                  <TabsTrigger value="oversize">超大件</TabsTrigger>
-                  <TabsTrigger value="residential">住宅费</TabsTrigger>
-                  <TabsTrigger value="remote">偏远地址</TabsTrigger>
-                </TabsList>
-                <TabsContent value="base" className="space-y-4">
-                  <p className="text-sm text-muted-foreground">配置2-8区的基础价格（1-150lbs）</p>
-                  {/* 这里可以添加具体的价格配置表单 */}
-                </TabsContent>
-                <TabsContent value="ahs" className="space-y-4">
-                  <p className="text-sm text-muted-foreground">配置AHS-Weight、AHS-Dim、AHS-Packing费用</p>
-                </TabsContent>
-                <TabsContent value="oversize" className="space-y-4">
-                  <p className="text-sm text-muted-foreground">配置超大件商业地址和住宅地址费用</p>
-                </TabsContent>
-                <TabsContent value="residential" className="space-y-4">
-                  <p className="text-sm text-muted-foreground">配置Residential费用（Ground和Home）</p>
-                </TabsContent>
-                <TabsContent value="remote" className="space-y-4">
-                  <p className="text-sm text-muted-foreground">配置DAS、Extend、Remote费用</p>
-                </TabsContent>
-              </Tabs>
+              <PricingConfigTabs 
+                config={pricingConfig}
+                onChange={setPricingConfig}
+              />
 
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
