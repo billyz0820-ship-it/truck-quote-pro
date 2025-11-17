@@ -9,6 +9,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { RuleConditionBuilder } from "@/components/carrier/RuleConditionBuilder";
 
 interface ShippingRule {
   id: string;
@@ -28,6 +29,13 @@ export default function ShippingRules() {
     rule_name: "",
     priority: 0,
     is_active: true,
+  });
+
+  const [conditionGroup, setConditionGroup] = useState({
+    id: "root",
+    operator: "AND" as "AND" | "OR",
+    conditions: [],
+    groups: [],
   });
 
   useEffect(() => {
@@ -50,10 +58,15 @@ export default function ShippingRules() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const dataToSubmit = {
+      ...formData,
+      conditions: conditionGroup,
+    };
+
     if (editingRule) {
       const { error } = await supabase
         .from("shipping_rules")
-        .update(formData)
+        .update(dataToSubmit)
         .eq("id", editingRule.id);
 
       if (error) {
@@ -66,7 +79,7 @@ export default function ShippingRules() {
         fetchRules();
       }
     } else {
-      const { error } = await supabase.from("shipping_rules").insert([formData]);
+      const { error } = await supabase.from("shipping_rules").insert([dataToSubmit]);
 
       if (error) {
         toast({ title: "创建失败", description: error.message, variant: "destructive" });
@@ -168,13 +181,12 @@ export default function ShippingRules() {
                 />
                 <Label>启用规则</Label>
               </div>
-              <div className="space-y-2">
-                <Label>规则条件</Label>
-                <p className="text-sm text-muted-foreground">
-                  配置规则条件：客户、仓库、服务类型等，支持使用与、或、包含、不包含等逻辑
-                </p>
-                {/* 这里可以添加更复杂的条件配置界面 */}
-              </div>
+
+              <RuleConditionBuilder 
+                value={conditionGroup}
+                onChange={setConditionGroup}
+              />
+
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   取消
