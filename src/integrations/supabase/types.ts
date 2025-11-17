@@ -845,6 +845,72 @@ export type Database = {
           },
         ]
       }
+      return_orders: {
+        Row: {
+          address: string
+          address_type: string | null
+          carrier: string
+          city: string
+          created_at: string
+          customer_code: string
+          customer_id: string
+          id: string
+          order_number: string
+          order_source: string | null
+          return_person: string
+          service_type: string
+          shipping_fee: number | null
+          state: string
+          status: string
+          updated_at: string
+          warehouse: string
+          zip_code: string
+          zone: string | null
+        }
+        Insert: {
+          address: string
+          address_type?: string | null
+          carrier: string
+          city: string
+          created_at?: string
+          customer_code: string
+          customer_id: string
+          id?: string
+          order_number: string
+          order_source?: string | null
+          return_person: string
+          service_type: string
+          shipping_fee?: number | null
+          state: string
+          status?: string
+          updated_at?: string
+          warehouse: string
+          zip_code: string
+          zone?: string | null
+        }
+        Update: {
+          address?: string
+          address_type?: string | null
+          carrier?: string
+          city?: string
+          created_at?: string
+          customer_code?: string
+          customer_id?: string
+          id?: string
+          order_number?: string
+          order_source?: string | null
+          return_person?: string
+          service_type?: string
+          shipping_fee?: number | null
+          state?: string
+          status?: string
+          updated_at?: string
+          warehouse?: string
+          zip_code?: string
+          zone?: string | null
+        }
+        Relationships: []
+      }
       sub_accounts: {
         Row: {
           created_at: string
