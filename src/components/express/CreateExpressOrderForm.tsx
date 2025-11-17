@@ -64,7 +64,7 @@ interface CreateExpressOrderFormProps {
   mode?: 'create' | 'edit';
 }
 
-export function CreateExpressOrderForm({ onSuccess, onCancel }: CreateExpressOrderFormProps) {
+export function CreateExpressOrderForm({ onSuccess, onCancel, orderId, mode = 'create' }: CreateExpressOrderFormProps) {
   const { toast } = useToast();
   const [isMetric, setIsMetric] = useState(false);
   const [packages, setPackages] = useState<PackageData[]>([
