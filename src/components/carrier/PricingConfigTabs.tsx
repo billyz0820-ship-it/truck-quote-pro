@@ -6,6 +6,19 @@ import { Plus, Trash2, Upload } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PriceImportDialog } from "./PriceImportDialog";
 
+interface PeakSurchargePeriod {
+  start_date: string;
+  end_date: string;
+  surcharges: {
+    economy: number;
+    hd_ground: number;
+    ahs: number;
+    oversize: number;
+    unauthorized: number;
+    residential: number;
+  };
+}
+
 interface PricingConfig {
   base_prices: Record<string, Record<string, number>>; // weight -> zone -> price
   ahs_weight: Record<string, number>;
@@ -30,6 +43,7 @@ interface PricingConfig {
     unauthorized: number;
     residential: number;
   };
+  peak_surcharge_periods?: PeakSurchargePeriod[];
 }
 
 interface PricingConfigTabsProps {
@@ -70,6 +84,36 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
   };
 
   const visibleWeights = weights.slice(visibleRange.start, visibleRange.end);
+
+  const addPeakPeriod = () => {
+    const periods = config.peak_surcharge_periods || [];
+    updateConfig("peak_surcharge_periods", [
+      ...periods,
+      {
+        start_date: "",
+        end_date: "",
+        surcharges: {
+          economy: 0,
+          hd_ground: 0,
+          ahs: 0,
+          oversize: 0,
+          unauthorized: 0,
+          residential: 0
+        }
+      }
+    ]);
+  };
+
+  const updatePeakPeriod = (index: number, field: keyof PeakSurchargePeriod, value: any) => {
+    const periods = [...(config.peak_surcharge_periods || [])];
+    periods[index] = { ...periods[index], [field]: value };
+    updateConfig("peak_surcharge_periods", periods);
+  };
+
+  const removePeakPeriod = (index: number) => {
+    const periods = config.peak_surcharge_periods || [];
+    updateConfig("peak_surcharge_periods", periods.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="space-y-6">
@@ -346,80 +390,134 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
 
       {/* 旺季附加费 */}
       <div className="space-y-4">
-        <h3 className="font-semibold">旺季附加费</h3>
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <Label>Economy</Label>
-            <Input 
-              type="number" 
-              step="0.01"
-              value={config.peak_surcharges?.economy || ""}
-              onChange={(e) => updateConfig("peak_surcharges", {
-                ...config.peak_surcharges,
-                economy: parseFloat(e.target.value) || 0
-              })}
-            />
-          </div>
-          <div>
-            <Label>HD & Ground</Label>
-            <Input 
-              type="number" 
-              step="0.01"
-              value={config.peak_surcharges?.hd_ground || ""}
-              onChange={(e) => updateConfig("peak_surcharges", {
-                ...config.peak_surcharges,
-                hd_ground: parseFloat(e.target.value) || 0
-              })}
-            />
-          </div>
-          <div>
-            <Label>AHS</Label>
-            <Input 
-              type="number" 
-              step="0.01"
-              value={config.peak_surcharges?.ahs || ""}
-              onChange={(e) => updateConfig("peak_surcharges", {
-                ...config.peak_surcharges,
-                ahs: parseFloat(e.target.value) || 0
-              })}
-            />
-          </div>
-          <div>
-            <Label>Oversize</Label>
-            <Input 
-              type="number" 
-              step="0.01"
-              value={config.peak_surcharges?.oversize || ""}
-              onChange={(e) => updateConfig("peak_surcharges", {
-                ...config.peak_surcharges,
-                oversize: parseFloat(e.target.value) || 0
-              })}
-            />
-          </div>
-          <div>
-            <Label>Unauthorized</Label>
-            <Input 
-              type="number" 
-              step="0.01"
-              value={config.peak_surcharges?.unauthorized || ""}
-              onChange={(e) => updateConfig("peak_surcharges", {
-                ...config.peak_surcharges,
-                unauthorized: parseFloat(e.target.value) || 0
-              })}
-            />
-          </div>
-          <div>
-            <Label>Residential</Label>
-            <Input 
-              type="number" 
-              step="0.01"
-              value={config.peak_surcharges?.residential || ""}
-              onChange={(e) => updateConfig("peak_surcharges", {
-                ...config.peak_surcharges,
-                residential: parseFloat(e.target.value) || 0
-              })}
-            />
-          </div>
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold">旺季附加费时间段配置</h3>
+          <Button onClick={addPeakPeriod} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            添加时间段
+          </Button>
+        </div>
+        
+        <div className="space-y-4">
+          {(config.peak_surcharge_periods || []).map((period, index) => (
+            <div key={index} className="border rounded-lg p-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <h4 className="font-medium">时间段 {index + 1}</h4>
+                <Button variant="ghost" size="sm" onClick={() => removePeakPeriod(index)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>开始日期</Label>
+                  <Input
+                    type="date"
+                    value={period.start_date}
+                    onChange={(e) => updatePeakPeriod(index, "start_date", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>结束日期</Label>
+                  <Input
+                    type="date"
+                    value={period.end_date}
+                    onChange={(e) => updatePeakPeriod(index, "end_date", e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">各类型附加费</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs">Economy</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={period.surcharges?.economy || ""}
+                      onChange={(e) => {
+                        const surcharges = { ...period.surcharges, economy: parseFloat(e.target.value) || 0 };
+                        updatePeakPeriod(index, "surcharges", surcharges);
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">HD & Ground</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={period.surcharges?.hd_ground || ""}
+                      onChange={(e) => {
+                        const surcharges = { ...period.surcharges, hd_ground: parseFloat(e.target.value) || 0 };
+                        updatePeakPeriod(index, "surcharges", surcharges);
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">AHS</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={period.surcharges?.ahs || ""}
+                      onChange={(e) => {
+                        const surcharges = { ...period.surcharges, ahs: parseFloat(e.target.value) || 0 };
+                        updatePeakPeriod(index, "surcharges", surcharges);
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Oversize</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={period.surcharges?.oversize || ""}
+                      onChange={(e) => {
+                        const surcharges = { ...period.surcharges, oversize: parseFloat(e.target.value) || 0 };
+                        updatePeakPeriod(index, "surcharges", surcharges);
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Unauthorized</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={period.surcharges?.unauthorized || ""}
+                      onChange={(e) => {
+                        const surcharges = { ...period.surcharges, unauthorized: parseFloat(e.target.value) || 0 };
+                        updatePeakPeriod(index, "surcharges", surcharges);
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Residential</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={period.surcharges?.residential || ""}
+                      onChange={(e) => {
+                        const surcharges = { ...period.surcharges, residential: parseFloat(e.target.value) || 0 };
+                        updatePeakPeriod(index, "surcharges", surcharges);
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {(!config.peak_surcharge_periods || config.peak_surcharge_periods.length === 0) && (
+            <div className="text-center py-8 text-muted-foreground border rounded-lg">
+              暂无旺季附加费时间段配置，点击上方按钮添加
+            </div>
+          )}
         </div>
       </div>
     </div>
