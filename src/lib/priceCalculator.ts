@@ -13,7 +13,7 @@ interface PackageInfo {
 }
 
 interface PricingConfig {
-  base_prices: Record<string, number>;
+  base_prices: Record<string, Record<string, number>>; // weight -> zone -> price
   ahs_weight: Record<string, number>;
   ahs_dim: Record<string, number>;
   ahs_packing: Record<string, number>;
@@ -177,9 +177,9 @@ export class PriceCalculator {
   }
 
   private getBasePrice(zone: string, weight: number): number {
-    // 简化版：直接返回zone对应的价格
-    // 实际应该根据重量区间查找对应价格
-    return this.config.base_prices[zone] || 0;
+    // 查找对应重量的价格
+    const weightKey = Math.ceil(weight).toString();
+    return this.config.base_prices[weightKey]?.[zone] || 0;
   }
 
   private checkAHS(packageInfo: PackageInfo, billableWeight: number): {

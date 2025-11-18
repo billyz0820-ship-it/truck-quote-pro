@@ -4,15 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 
-interface PriceEntry {
-  zone: string;
-  weight_from: number;
-  weight_to: number;
-  price: number;
-}
-
 interface PricingConfig {
-  base_prices: PriceEntry[];
+  base_prices: Record<string, Record<string, number>>; // weight -> zone -> price
   ahs_weight: Record<string, number>;
   ahs_dim: Record<string, number>;
   ahs_packing: Record<string, number>;
@@ -43,35 +36,64 @@ interface PricingConfigTabsProps {
 }
 
 export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) {
-  const zones = ["2", "3", "4", "5", "6", "7", "8"];
+  const zones = ["2", "3", "4", "5", "6", "7"];
+  const weights = Array.from({ length: 150 }, (_, i) => (i + 1).toString());
   
   const updateConfig = (key: keyof PricingConfig, value: any) => {
     onChange({ ...config, [key]: value });
+  };
+
+  const updateBasePrice = (weight: string, zone: string, price: number) => {
+    const basePrices = config.base_prices || {};
+    const weightPrices = basePrices[weight] || {};
+    updateConfig("base_prices", {
+      ...basePrices,
+      [weight]: {
+        ...weightPrices,
+        [zone]: price
+      }
+    });
   };
 
   return (
     <div className="space-y-6">
       {/* 基础价格配置 */}
       <div className="space-y-4">
-        <h3 className="font-semibold">基础价格（2-8区，1-150lbs）</h3>
-        <div className="space-y-2">
-          {zones.map((zone) => (
-            <div key={zone} className="grid grid-cols-4 gap-4 items-center">
-              <Label>Zone {zone}</Label>
-              <div>
-                <Label className="text-xs">起始重量(lbs)</Label>
-                <Input type="number" placeholder="1" />
-              </div>
-              <div>
-                <Label className="text-xs">结束重量(lbs)</Label>
-                <Input type="number" placeholder="150" />
-              </div>
-              <div>
-                <Label className="text-xs">价格($)</Label>
-                <Input type="number" step="0.01" placeholder="0.00" />
-              </div>
-            </div>
-          ))}
+        <h3 className="font-semibold">基础价格（按重量和区域）</h3>
+        <div className="border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-2 text-left font-medium border-r">Weight (lbs)</th>
+                  {zones.map((zone) => (
+                    <th key={zone} className="px-4 py-2 text-center font-medium border-r last:border-r-0">
+                      Zone-{zone}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-background">
+                {weights.map((weight) => (
+                  <tr key={weight} className="border-t hover:bg-muted/50">
+                    <td className="px-4 py-2 font-medium border-r">{weight}</td>
+                    {zones.map((zone) => (
+                      <td key={zone} className="px-2 py-1 border-r last:border-r-0">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          className="h-8 text-center border-0 bg-transparent focus-visible:ring-1"
+                          value={config.base_prices?.[weight]?.[zone] || ""}
+                          onChange={(e) => updateBasePrice(weight, zone, parseFloat(e.target.value) || 0)}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

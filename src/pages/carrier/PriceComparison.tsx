@@ -51,12 +51,29 @@ export default function PriceComparison() {
   };
 
   const handleCalculate = () => {
+    // 生成示例基础价格数据（重量1-150磅，Zone 2-8）
+    const generateBasePrices = (multiplier: number) => {
+      const prices: Record<string, Record<string, number>> = {};
+      for (let weight = 1; weight <= 150; weight++) {
+        prices[weight.toString()] = {
+          "2": (6.52 + weight * 0.05) * multiplier,
+          "3": (6.57 + weight * 0.05) * multiplier,
+          "4": (6.62 + weight * 0.05) * multiplier,
+          "5": (6.67 + weight * 0.05) * multiplier,
+          "6": (6.73 + weight * 0.05) * multiplier,
+          "7": (6.78 + weight * 0.05) * multiplier,
+          "8": (6.85 + weight * 0.05) * multiplier,
+        };
+      }
+      return prices;
+    };
+
     const mockAccounts = [
       {
         id: "1",
         name: "FedEx账号A",
         config: {
-          base_prices: { "2": 15.50, "3": 18.00, "4": 22.00, "5": 25.00, "6": 28.00, "7": 32.00, "8": 35.00 },
+          base_prices: generateBasePrices(1.0),
           ahs_weight: { "2": 45, "3": 50, "4": 55, "5": 60, "6": 65, "7": 70, "8": 75 },
           ahs_dim: { "2": 40, "3": 45, "4": 50, "5": 55, "6": 60, "7": 65, "8": 70 },
           ahs_packing: { "2": 30, "3": 35, "4": 40, "5": 45, "6": 50, "7": 55, "8": 60 },
@@ -85,7 +102,7 @@ export default function PriceComparison() {
         id: "2",
         name: "FedEx账号B",
         config: {
-          base_prices: { "2": 14.00, "3": 16.50, "4": 20.00, "5": 23.00, "6": 26.00, "7": 30.00, "8": 33.00 },
+          base_prices: generateBasePrices(0.9),
           ahs_weight: { "2": 40, "3": 45, "4": 50, "5": 55, "6": 60, "7": 65, "8": 70 },
           ahs_dim: { "2": 35, "3": 40, "4": 45, "5": 50, "6": 55, "7": 60, "8": 65 },
           ahs_packing: { "2": 25, "3": 30, "4": 35, "5": 40, "6": 45, "7": 50, "8": 55 },
@@ -114,7 +131,7 @@ export default function PriceComparison() {
         id: "official",
         name: "FedEx官方价",
         config: {
-          base_prices: { "2": 18.00, "3": 21.00, "4": 25.00, "5": 29.00, "6": 33.00, "7": 38.00, "8": 42.00 },
+          base_prices: generateBasePrices(1.15),
           ahs_weight: { "2": 50, "3": 55, "4": 60, "5": 65, "6": 70, "7": 75, "8": 80 },
           ahs_dim: { "2": 45, "3": 50, "4": 55, "5": 60, "6": 65, "7": 70, "8": 75 },
           ahs_packing: { "2": 35, "3": 40, "4": 45, "5": 50, "6": 55, "7": 60, "8": 65 },
