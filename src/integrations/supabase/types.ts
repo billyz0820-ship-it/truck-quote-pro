@@ -1550,6 +1550,47 @@ export type Database = {
           },
         ]
       }
+      ticket_status_changes: {
+        Row: {
+          changed_by: string
+          changed_by_name: string
+          created_at: string
+          id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          ticket_id: string
+        }
+        Insert: {
+          changed_by: string
+          changed_by_name: string
+          created_at?: string
+          id?: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          ticket_id: string
+        }
+        Update: {
+          changed_by?: string
+          changed_by_name?: string
+          created_at?: string
+          id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_status_changes_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           assigned_to: string | null
