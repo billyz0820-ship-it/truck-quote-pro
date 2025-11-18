@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { PriceImportDialog } from "./PriceImportDialog";
 
 interface PricingConfig {
   base_prices: Record<string, Record<string, number>>; // weight -> zone -> price
@@ -38,6 +40,8 @@ interface PricingConfigTabsProps {
 export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) {
   const zones = ["2", "3", "4", "5", "6", "7"];
   const weights = Array.from({ length: 150 }, (_, i) => (i + 1).toString());
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
   
   const updateConfig = (key: keyof PricingConfig, value: any) => {
     onChange({ ...config, [key]: value });
@@ -55,15 +59,33 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
     });
   };
 
+  const handleImportPrices = (prices: Record<string, Record<string, number>>) => {
+    updateConfig("base_prices", prices);
+  };
+
+  const loadMore = () => {
+    if (visibleRange.end < weights.length) {
+      setVisibleRange(prev => ({ ...prev, end: Math.min(prev.end + 50, weights.length) }));
+    }
+  };
+
+  const visibleWeights = weights.slice(visibleRange.start, visibleRange.end);
+
   return (
     <div className="space-y-6">
       {/* 基础价格配置 */}
       <div className="space-y-4">
-        <h3 className="font-semibold">基础价格（按重量和区域）</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">基础价格（按重量和区域）</h3>
+          <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
+            <Upload className="h-4 w-4 mr-2" />
+            批量导入
+          </Button>
+        </div>
         <div className="border rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          <ScrollArea className="h-[600px]">
             <table className="w-full text-sm">
-              <thead className="bg-muted">
+              <thead className="bg-muted sticky top-0 z-10">
                 <tr>
                   <th className="px-4 py-2 text-left font-medium border-r">Weight (lbs)</th>
                   {zones.map((zone) => (
@@ -74,7 +96,7 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
                 </tr>
               </thead>
               <tbody className="bg-background">
-                {weights.map((weight) => (
+                {visibleWeights.map((weight) => (
                   <tr key={weight} className="border-t hover:bg-muted/50">
                     <td className="px-4 py-2 font-medium border-r">{weight}</td>
                     {zones.map((zone) => (
@@ -93,9 +115,22 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
                 ))}
               </tbody>
             </table>
-          </div>
+            {visibleRange.end < weights.length && (
+              <div className="flex justify-center py-4">
+                <Button variant="outline" onClick={loadMore}>
+                  加载更多 ({visibleRange.end}/{weights.length})
+                </Button>
+              </div>
+            )}
+          </ScrollArea>
         </div>
       </div>
+
+      <PriceImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        onImport={handleImportPrices}
+      />
 
       {/* AHS费用 */}
       <div className="space-y-4">

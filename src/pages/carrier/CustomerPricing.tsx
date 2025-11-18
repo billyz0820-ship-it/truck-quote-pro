@@ -185,10 +185,11 @@ export default function CustomerPricing() {
 
             <div className="space-y-2">
               <Label>选择账套（可选）</Label>
-              <Select value={selectedTemplate} onValueChange={(val) => {
-                setSelectedTemplate(val);
-                if (val) {
-                  const template = templates.find(t => t.id === val);
+              <Select value={selectedTemplate || "none"} onValueChange={(val) => {
+                const actualValue = val === "none" ? "" : val;
+                setSelectedTemplate(actualValue);
+                if (actualValue) {
+                  const template = templates.find(t => t.id === actualValue);
                   if (template) {
                     setCustomPrices({
                       base_prices: template.base_prices,
@@ -205,13 +206,15 @@ export default function CustomerPricing() {
                       peak_surcharges: template.peak_surcharges,
                     });
                   }
+                } else {
+                  setCustomPrices({});
                 }
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="不使用账套，自定义配置" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">不使用账套</SelectItem>
+                  <SelectItem value="none">不使用账套</SelectItem>
                   {templates.filter(t => t.carrier === carrier).map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.template_name}
