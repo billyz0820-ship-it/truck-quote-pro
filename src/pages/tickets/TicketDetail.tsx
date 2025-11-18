@@ -13,9 +13,10 @@ import { format } from "date-fns";
 const TicketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [ticket, setTicket] = useState<any>(null);
   const [communications, setCommunications] = useState<any[]>([]);
+  const [statusChanges, setStatusChanges] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +30,7 @@ const TicketDetail = () => {
     try {
       setLoading(true);
       
-      const [ticketRes, commsRes] = await Promise.all([
+      const [ticketRes, commsRes, statusRes] = await Promise.all([
         supabase
           .from("tickets")
           .select("*")
@@ -39,14 +40,21 @@ const TicketDetail = () => {
           .from("ticket_communications")
           .select("*")
           .eq("ticket_id", id)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("ticket_status_changes")
+          .select("*")
+          .eq("ticket_id", id)
           .order("created_at", { ascending: true })
       ]);
 
       if (ticketRes.error) throw ticketRes.error;
       if (commsRes.error) throw commsRes.error;
+      if (statusRes.error) throw statusRes.error;
 
       setTicket(ticketRes.data);
       setCommunications(commsRes.data || []);
+      setStatusChanges(statusRes.data || []);
     } catch (error: any) {
       toast.error("加载工单详情失败: " + error.message);
       navigate("/dashboard/tickets");
@@ -78,22 +86,40 @@ const TicketDetail = () => {
     }
   };
 
-  const handleCompleteTicket = async () => {
-    if (!confirm("确定要完成此工单吗？")) return;
+  const handleStatusChange = async (newStatus: string, statusLabel: string) => {
+    if (!confirm(`确定要将工单状态更改为"${statusLabel}"吗？`)) return;
+    if (!user) return;
 
     try {
-      const { error } = await supabase
+      const oldStatus = ticket.status;
+      
+      // 更新工单状态
+      const { error: updateError } = await supabase
         .from("tickets")
         .update({ 
-          status: "resolved",
-          resolved_at: new Date().toISOString()
+          status: newStatus,
+          resolved_at: newStatus === "resolved" ? new Date().toISOString() : null,
+          assigned_to: newStatus === "in_progress" && !ticket.assigned_to ? user.id : ticket.assigned_to
         })
         .eq("id", id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      toast.success("工单已完成");
-      navigate("/dashboard/tickets");
+      // 记录状态变更
+      const { error: historyError } = await supabase
+        .from("ticket_status_changes")
+        .insert({
+          ticket_id: id,
+          old_status: oldStatus,
+          new_status: newStatus,
+          changed_by: user.id,
+          changed_by_name: user.email || "管理员"
+        });
+
+      if (historyError) throw historyError;
+
+      toast.success("状态已更新");
+      fetchTicketDetails();
     } catch (error: any) {
       toast.error("操作失败: " + error.message);
     }
@@ -269,18 +295,6 @@ const TicketDetail = () => {
               )}
             </CardContent>
           </Card>
-
-          {/* 操作按钮 */}
-          {ticket.status !== "resolved" && (
-            <Button 
-              className="w-full" 
-              size="lg"
-              onClick={handleCompleteTicket}
-            >
-              <CheckCircle className="h-5 w-5 mr-2" />
-              完成工单
-            </Button>
-          )}
         </div>
       </div>
     </div>
