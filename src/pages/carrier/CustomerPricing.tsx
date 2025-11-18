@@ -410,10 +410,18 @@ export default function CustomerPricing() {
                             )}
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="ghost" onClick={() => handleCopy(config)}>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => handleCopy(config)}
+                            >
                               <Copy className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => handleOpenDialog(config)}>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => handleOpenDialog(config)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
@@ -486,9 +494,14 @@ export default function CustomerPricing() {
                                     {config.effective_date_from || '开始'} ~ {config.effective_date_to || '结束'}
                                   </p>
                                 </div>
-                                <Button size="sm" variant="ghost" onClick={() => handleCopy(config)}>
-                                  <Copy className="h-4 w-4" />
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="ghost" disabled>
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" disabled>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           ))}

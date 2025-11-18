@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Upload } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PriceImportDialog } from "./PriceImportDialog";
+import { FedExAdditionalFees } from "./FedExAdditionalFees";
 
 interface SurchargeTimeItem {
   start_date: string;
@@ -36,6 +37,14 @@ interface PricingConfig {
     unauthorized: SurchargeTimeItem[];
     residential: SurchargeTimeItem[];
   };
+  signature_services?: {
+    direct_signature: number;
+    indirect_signature: number;
+    adult_signature: number;
+  };
+  delivery_intercept_fee?: number;
+  address_correction_fee?: number;
+  dangerous_goods_fee?: number;
 }
 
 interface PricingConfigTabsProps {
@@ -362,7 +371,7 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
       </div>
 
       {/* 其他费用 */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h3 className="font-semibold">其他费用</h3>
         <div className="grid grid-cols-3 gap-4">
           <div>
@@ -394,6 +403,14 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
             />
           </div>
         </div>
+
+        <FedExAdditionalFees
+          signatureServices={config.signature_services}
+          deliveryInterceptFee={config.delivery_intercept_fee}
+          addressCorrectionFee={config.address_correction_fee}
+          dangerousGoodsFee={config.dangerous_goods_fee}
+          onChange={updateConfig}
+        />
       </div>
 
       {/* 旺季附加费 - 每项独立配置时间段 */}

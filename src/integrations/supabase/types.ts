@@ -123,11 +123,14 @@ export type Database = {
       carrier_account_costs: {
         Row: {
           account_id: string
+          address_correction_fee: number | null
           ahs_dim: Json
           ahs_packing: Json
           ahs_weight: Json
           base_prices: Json
           created_at: string
+          dangerous_goods_fee: number | null
+          delivery_intercept_fee: number | null
           dim_factor: number | null
           effective_date: string
           fuel_charge: number | null
@@ -137,16 +140,20 @@ export type Database = {
           peak_surcharges: Json
           remote_area_fees: Json
           residential_fees: Json
+          signature_services: Json | null
           unauthorized_fee: number | null
           updated_at: string
         }
         Insert: {
           account_id: string
+          address_correction_fee?: number | null
           ahs_dim?: Json
           ahs_packing?: Json
           ahs_weight?: Json
           base_prices?: Json
           created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
           dim_factor?: number | null
           effective_date: string
           fuel_charge?: number | null
@@ -156,16 +163,20 @@ export type Database = {
           peak_surcharges?: Json
           remote_area_fees?: Json
           residential_fees?: Json
+          signature_services?: Json | null
           unauthorized_fee?: number | null
           updated_at?: string
         }
         Update: {
           account_id?: string
+          address_correction_fee?: number | null
           ahs_dim?: Json
           ahs_packing?: Json
           ahs_weight?: Json
           base_prices?: Json
           created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
           dim_factor?: number | null
           effective_date?: string
           fuel_charge?: number | null
@@ -175,6 +186,7 @@ export type Database = {
           peak_surcharges?: Json
           remote_area_fees?: Json
           residential_fees?: Json
+          signature_services?: Json | null
           unauthorized_fee?: number | null
           updated_at?: string
         }
@@ -226,12 +238,15 @@ export type Database = {
       }
       carrier_official_prices: {
         Row: {
+          address_correction_fee: number | null
           ahs_dim: Json
           ahs_packing: Json
           ahs_weight: Json
           base_prices: Json
           carrier: string
           created_at: string
+          dangerous_goods_fee: number | null
+          delivery_intercept_fee: number | null
           dim_factor: number | null
           effective_date: string
           fuel_charge: number | null
@@ -241,16 +256,20 @@ export type Database = {
           peak_surcharges: Json
           remote_area_fees: Json
           residential_fees: Json
+          signature_services: Json | null
           unauthorized_fee: number | null
           updated_at: string
         }
         Insert: {
+          address_correction_fee?: number | null
           ahs_dim?: Json
           ahs_packing?: Json
           ahs_weight?: Json
           base_prices?: Json
           carrier: string
           created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
           dim_factor?: number | null
           effective_date: string
           fuel_charge?: number | null
@@ -260,16 +279,20 @@ export type Database = {
           peak_surcharges?: Json
           remote_area_fees?: Json
           residential_fees?: Json
+          signature_services?: Json | null
           unauthorized_fee?: number | null
           updated_at?: string
         }
         Update: {
+          address_correction_fee?: number | null
           ahs_dim?: Json
           ahs_packing?: Json
           ahs_weight?: Json
           base_prices?: Json
           carrier?: string
           created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
           dim_factor?: number | null
           effective_date?: string
           fuel_charge?: number | null
@@ -279,6 +302,7 @@ export type Database = {
           peak_surcharges?: Json
           remote_area_fees?: Json
           residential_fees?: Json
+          signature_services?: Json | null
           unauthorized_fee?: number | null
           updated_at?: string
         }
@@ -1096,12 +1120,15 @@ export type Database = {
       }
       pricing_templates: {
         Row: {
+          address_correction_fee: number | null
           ahs_dim: Json
           ahs_packing: Json
           ahs_weight: Json
           base_prices: Json
           carrier: string
           created_at: string
+          dangerous_goods_fee: number | null
+          delivery_intercept_fee: number | null
           description: string | null
           dim_factor: number | null
           fuel_charge: number | null
@@ -1112,17 +1139,21 @@ export type Database = {
           peak_surcharges: Json
           remote_area_fees: Json
           residential_fees: Json
+          signature_services: Json | null
           template_name: string
           unauthorized_fee: number | null
           updated_at: string
         }
         Insert: {
+          address_correction_fee?: number | null
           ahs_dim?: Json
           ahs_packing?: Json
           ahs_weight?: Json
           base_prices?: Json
           carrier: string
           created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
           description?: string | null
           dim_factor?: number | null
           fuel_charge?: number | null
@@ -1133,17 +1164,21 @@ export type Database = {
           peak_surcharges?: Json
           remote_area_fees?: Json
           residential_fees?: Json
+          signature_services?: Json | null
           template_name: string
           unauthorized_fee?: number | null
           updated_at?: string
         }
         Update: {
+          address_correction_fee?: number | null
           ahs_dim?: Json
           ahs_packing?: Json
           ahs_weight?: Json
           base_prices?: Json
           carrier?: string
           created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
           description?: string | null
           dim_factor?: number | null
           fuel_charge?: number | null
@@ -1154,6 +1189,7 @@ export type Database = {
           peak_surcharges?: Json
           remote_area_fees?: Json
           residential_fees?: Json
+          signature_services?: Json | null
           template_name?: string
           unauthorized_fee?: number | null
           updated_at?: string
