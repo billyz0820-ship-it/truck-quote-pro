@@ -6,21 +6,14 @@ import { Plus, Trash2, Upload } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PriceImportDialog } from "./PriceImportDialog";
 
-interface PeakSurchargePeriod {
+interface SurchargeTimeItem {
   start_date: string;
   end_date: string;
-  surcharges: {
-    economy: number;
-    hd_ground: number;
-    ahs: number;
-    oversize: number;
-    unauthorized: number;
-    residential: number;
-  };
+  value: number;
 }
 
 interface PricingConfig {
-  base_prices: Record<string, Record<string, number>>; // weight -> zone -> price
+  base_prices: Record<string, Record<string, number>>;
   ahs_weight: Record<string, number>;
   ahs_dim: Record<string, number>;
   ahs_packing: Record<string, number>;
@@ -36,14 +29,13 @@ interface PricingConfig {
   fuel_charge: number;
   unauthorized_fee: number;
   peak_surcharges: {
-    economy: number;
-    hd_ground: number;
-    ahs: number;
-    oversize: number;
-    unauthorized: number;
-    residential: number;
+    economy: SurchargeTimeItem[];
+    hd_ground: SurchargeTimeItem[];
+    ahs: SurchargeTimeItem[];
+    oversize: SurchargeTimeItem[];
+    unauthorized: SurchargeTimeItem[];
+    residential: SurchargeTimeItem[];
   };
-  peak_surcharge_periods?: PeakSurchargePeriod[];
 }
 
 interface PricingConfigTabsProps {
@@ -85,35 +77,51 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
 
   const visibleWeights = weights.slice(visibleRange.start, visibleRange.end);
 
-  const addPeakPeriod = () => {
-    const periods = config.peak_surcharge_periods || [];
-    updateConfig("peak_surcharge_periods", [
-      ...periods,
-      {
-        start_date: "",
-        end_date: "",
-        surcharges: {
-          economy: 0,
-          hd_ground: 0,
-          ahs: 0,
-          oversize: 0,
-          unauthorized: 0,
-          residential: 0
+  const addPeakSurchargeItem = (type: keyof PricingConfig['peak_surcharges']) => {
+    const currentItems = config.peak_surcharges?.[type] || [];
+    updateConfig("peak_surcharges", {
+      ...config.peak_surcharges,
+      [type]: [
+        ...currentItems,
+        {
+          start_date: "",
+          end_date: "",
+          value: 0
         }
-      }
-    ]);
+      ]
+    });
   };
 
-  const updatePeakPeriod = (index: number, field: keyof PeakSurchargePeriod, value: any) => {
-    const periods = [...(config.peak_surcharge_periods || [])];
-    periods[index] = { ...periods[index], [field]: value };
-    updateConfig("peak_surcharge_periods", periods);
+  const updatePeakSurchargeItem = (
+    type: keyof PricingConfig['peak_surcharges'],
+    index: number,
+    field: keyof SurchargeTimeItem,
+    value: any
+  ) => {
+    const items = [...(config.peak_surcharges?.[type] || [])];
+    items[index] = { ...items[index], [field]: value };
+    updateConfig("peak_surcharges", {
+      ...config.peak_surcharges,
+      [type]: items
+    });
   };
 
-  const removePeakPeriod = (index: number) => {
-    const periods = config.peak_surcharge_periods || [];
-    updateConfig("peak_surcharge_periods", periods.filter((_, i) => i !== index));
+  const removePeakSurchargeItem = (type: keyof PricingConfig['peak_surcharges'], index: number) => {
+    const items = config.peak_surcharges?.[type] || [];
+    updateConfig("peak_surcharges", {
+      ...config.peak_surcharges,
+      [type]: items.filter((_, i) => i !== index)
+    });
   };
+
+  const peakSurchargeTypes = [
+    { key: 'economy' as const, label: 'Economy' },
+    { key: 'hd_ground' as const, label: 'HD & Ground' },
+    { key: 'ahs' as const, label: 'AHS' },
+    { key: 'oversize' as const, label: 'Oversize' },
+    { key: 'unauthorized' as const, label: 'Unauthorized' },
+    { key: 'residential' as const, label: 'Residential' }
+  ];
 
   return (
     <div className="space-y-6">
@@ -388,137 +396,73 @@ export function PricingConfigTabs({ config, onChange }: PricingConfigTabsProps) 
         </div>
       </div>
 
-      {/* 旺季附加费 */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold">旺季附加费时间段配置</h3>
-          <Button onClick={addPeakPeriod} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            添加时间段
-          </Button>
-        </div>
+      {/* 旺季附加费 - 每项独立配置时间段 */}
+      <div className="space-y-6">
+        <h3 className="font-semibold">旺季附加费配置（按类型独立配置时间段）</h3>
         
-        <div className="space-y-4">
-          {(config.peak_surcharge_periods || []).map((period, index) => (
-            <div key={index} className="border rounded-lg p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="font-medium">时间段 {index + 1}</h4>
-                <Button variant="ghost" size="sm" onClick={() => removePeakPeriod(index)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>开始日期</Label>
-                  <Input
-                    type="date"
-                    value={period.start_date}
-                    onChange={(e) => updatePeakPeriod(index, "start_date", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>结束日期</Label>
-                  <Input
-                    type="date"
-                    value={period.end_date}
-                    onChange={(e) => updatePeakPeriod(index, "end_date", e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">各类型附加费</Label>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-xs">Economy</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={period.surcharges?.economy || ""}
-                      onChange={(e) => {
-                        const surcharges = { ...period.surcharges, economy: parseFloat(e.target.value) || 0 };
-                        updatePeakPeriod(index, "surcharges", surcharges);
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">HD & Ground</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={period.surcharges?.hd_ground || ""}
-                      onChange={(e) => {
-                        const surcharges = { ...period.surcharges, hd_ground: parseFloat(e.target.value) || 0 };
-                        updatePeakPeriod(index, "surcharges", surcharges);
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">AHS</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={period.surcharges?.ahs || ""}
-                      onChange={(e) => {
-                        const surcharges = { ...period.surcharges, ahs: parseFloat(e.target.value) || 0 };
-                        updatePeakPeriod(index, "surcharges", surcharges);
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Oversize</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={period.surcharges?.oversize || ""}
-                      onChange={(e) => {
-                        const surcharges = { ...period.surcharges, oversize: parseFloat(e.target.value) || 0 };
-                        updatePeakPeriod(index, "surcharges", surcharges);
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Unauthorized</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={period.surcharges?.unauthorized || ""}
-                      onChange={(e) => {
-                        const surcharges = { ...period.surcharges, unauthorized: parseFloat(e.target.value) || 0 };
-                        updatePeakPeriod(index, "surcharges", surcharges);
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Residential</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={period.surcharges?.residential || ""}
-                      onChange={(e) => {
-                        const surcharges = { ...period.surcharges, residential: parseFloat(e.target.value) || 0 };
-                        updatePeakPeriod(index, "surcharges", surcharges);
-                      }}
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-              </div>
+        {peakSurchargeTypes.map(({ key, label }) => (
+          <div key={key} className="border rounded-lg p-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium">{label}</h4>
+              <Button onClick={() => addPeakSurchargeItem(key)} size="sm" variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                添加时间段
+              </Button>
             </div>
-          ))}
-          
-          {(!config.peak_surcharge_periods || config.peak_surcharge_periods.length === 0) && (
-            <div className="text-center py-8 text-muted-foreground border rounded-lg">
-              暂无旺季附加费时间段配置，点击上方按钮添加
+            
+            <div className="space-y-3">
+              {(config.peak_surcharges?.[key] || []).map((item: SurchargeTimeItem, index: number) => (
+                <div key={index} className="bg-muted/30 rounded-md p-3">
+                  <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
+                    <div>
+                      <Label className="text-xs">开始日期</Label>
+                      <Input
+                        type="date"
+                        value={item.start_date}
+                        onChange={(e) => updatePeakSurchargeItem(key, index, "start_date", e.target.value)}
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">结束日期</Label>
+                      <Input
+                        type="date"
+                        value={item.end_date}
+                        onChange={(e) => updatePeakSurchargeItem(key, index, "end_date", e.target.value)}
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">费用 ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={item.value}
+                        onChange={(e) => updatePeakSurchargeItem(key, index, "value", parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                        className="h-9"
+                      />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => removePeakSurchargeItem(key, index)}
+                      className="h-9"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              
+              {(!config.peak_surcharges?.[key] || config.peak_surcharges[key].length === 0) && (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  暂无配置，点击"添加时间段"开始配置
+                </p>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
