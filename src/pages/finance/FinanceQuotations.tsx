@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, AlertTriangle, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { QuotationExportDialog } from "@/components/carrier/QuotationExportDialog";
 
 interface CustomerPricing {
   id: string;
@@ -83,6 +84,7 @@ const FinanceQuotations = () => {
   const [selectedService, setSelectedService] = useState<string>("Ground");
   const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['base']));
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   useEffect(() => {
     if (userRole === 'admin') {
@@ -158,7 +160,13 @@ const FinanceQuotations = () => {
 
     switch (field.type) {
       case 'zone':
-        return data[field.key];
+        // For zone prices, show a summary or reference price
+        const zonePrices = data[field.key];
+        if (typeof zonePrices === 'object' && zonePrices !== null) {
+          // Show zone 2 weight 1 as reference
+          return zonePrices['2_1'] ? `$${zonePrices['2_1']}` : '已配置';
+        }
+        return '已配置';
       case 'percentage':
         return `${data[field.key]}%`;
       case 'number':
@@ -312,12 +320,21 @@ const FinanceQuotations = () => {
             <p className="text-sm text-muted-foreground">
               已选择 {selectedCustomers.size} 个客户进行对比
             </p>
-            <Button
-              variant="outline"
-              onClick={() => setSelectedCustomers(new Set())}
-            >
-              清除选择
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowExportDialog(true)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                导出对比
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedCustomers(new Set())}
+              >
+                清除选择
+              </Button>
+            </div>
           </div>
 
           <Card>
@@ -400,6 +417,13 @@ const FinanceQuotations = () => {
           <p className="text-muted-foreground">暂无当前生效的报价配置</p>
         </div>
       )}
+
+      <QuotationExportDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        configs={selectedConfigs}
+        fields={PRICING_FIELDS}
+      />
     </div>
   );
 };

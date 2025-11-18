@@ -1118,6 +1118,60 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_change_history: {
+        Row: {
+          change_reason: string | null
+          change_type: string
+          changed_at: string
+          changed_by: string
+          created_at: string
+          customer_id: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          pricing_config_id: string
+        }
+        Insert: {
+          change_reason?: string | null
+          change_type: string
+          changed_at?: string
+          changed_by: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          pricing_config_id: string
+        }
+        Update: {
+          change_reason?: string | null
+          change_type?: string
+          changed_at?: string
+          changed_by?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          pricing_config_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_change_history_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_change_history_pricing_config_id_fkey"
+            columns: ["pricing_config_id"]
+            isOneToOne: false
+            referencedRelation: "customer_carrier_pricing"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_templates: {
         Row: {
           address_correction_fee: number | null
