@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowUpCircle, ArrowDownCircle, RotateCcw } from "lucide-react";
+import { Search, ArrowUpCircle, ArrowDownCircle, RotateCcw, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import * as XLSX from 'xlsx';
 
 interface Transaction {
   id: string;
@@ -26,6 +28,8 @@ export default function TransactionRecords() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     fetchTransactions();
@@ -136,8 +140,37 @@ export default function TransactionRecords() {
     
     const matchesType = filterType === "all" || t.type === filterType;
     
-    return matchesSearch && matchesType;
+    const transactionDate = new Date(t.created_at);
+    const matchesStartDate = !startDate || transactionDate >= new Date(startDate);
+    const matchesEndDate = !endDate || transactionDate <= new Date(endDate + 'T23:59:59');
+    
+    return matchesSearch && matchesType && matchesStartDate && matchesEndDate;
   });
+
+  const handleExport = () => {
+    try {
+      const exportData = filteredTransactions.map(t => ({
+        '类型': t.type === 'recharge' ? '充值' : t.type === 'deduction' ? '扣费' : '退款',
+        '客户代码': t.customer_code,
+        '公司名称': t.company_name,
+        '金额': `${t.type === 'recharge' ? '+' : t.type === 'deduction' ? '-' : '+'}$${t.amount.toFixed(2)}`,
+        '订单号': t.order_number || '-',
+        '费用详情': t.fee_details || '-',
+        '时间': format(new Date(t.created_at), 'yyyy-MM-dd HH:mm')
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "流水记录");
+      
+      const fileName = `流水记录_${startDate || '全部'}_${endDate || '全部'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      toast.success("导出成功");
+    } catch (error: any) {
+      toast.error("导出失败: " + error.message);
+    }
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -214,10 +247,36 @@ export default function TransactionRecords() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>流水记录</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>流水记录</CardTitle>
+            <Button onClick={handleExport} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              导出Excel
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-4 flex-wrap">
+            <div className="flex gap-2">
+              <div>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="h-9"
+                  placeholder="开始日期"
+                />
+              </div>
+              <div>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="h-9"
+                  placeholder="结束日期"
+                />
+              </div>
+            </div>
             <div className="flex-1 flex gap-2">
               <Input
                 placeholder="搜索客户代码、公司名称或订单号..."

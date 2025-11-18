@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Search } from "lucide-react";
+import { FileText, Download, Search, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BillGenerationDialog } from "./BillGenerationDialog";
 
 interface Bill {
   id: string;
@@ -30,6 +31,7 @@ export const BillManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCustomer, setFilterCustomer] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -310,6 +312,12 @@ export const BillManagement = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <BillGenerationDialog
+        open={generateDialogOpen}
+        onOpenChange={setGenerateDialogOpen}
+        onSuccess={fetchData}
+      />
     </div>
   );
 };
