@@ -382,6 +382,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           notes: string | null
+          profitability_analysis: Json | null
           template_id: string | null
           updated_at: string
           version: number | null
@@ -397,6 +398,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           notes?: string | null
+          profitability_analysis?: Json | null
           template_id?: string | null
           updated_at?: string
           version?: number | null
@@ -412,6 +414,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           notes?: string | null
+          profitability_analysis?: Json | null
           template_id?: string | null
           updated_at?: string
           version?: number | null
@@ -429,6 +432,57 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "pricing_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_pricing_notifications: {
+        Row: {
+          created_at: string
+          customer_id: string
+          effective_date: string
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          pricing_config_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          effective_date: string
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type?: string
+          pricing_config_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          effective_date?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          pricing_config_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_pricing_notifications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_pricing_notifications_pricing_config_id_fkey"
+            columns: ["pricing_config_id"]
+            isOneToOne: false
+            referencedRelation: "customer_carrier_pricing"
             referencedColumns: ["id"]
           },
         ]

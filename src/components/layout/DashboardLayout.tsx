@@ -66,7 +66,14 @@ const DashboardLayout = () => {
         { title: "快递订单", url: "/dashboard/orders/express", icon: Package },
       ]
     },
-    { title: "财务", url: "/dashboard/finance", icon: DollarSign },
+    { 
+      title: "财务", 
+      icon: DollarSign,
+      subItems: [
+        { title: "财务概览", url: "/dashboard/finance", icon: DollarSign },
+        { title: "当前报价", url: "/dashboard/finance/quotations", icon: FileText },
+      ]
+    },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
     { title: "配置管理", url: "/dashboard/settings", icon: Settings },
     { title: "工单管理", url: "/dashboard/tickets", icon: FileText },
