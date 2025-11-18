@@ -20,9 +20,9 @@ const packageSchema = z.object({
   package_type: z.string().optional(),
   product_sku: z.string().optional(),
   weight: z.number().min(0.01, "重量必须大于0"),
-  length: z.number().optional(),
-  width: z.number().optional(),
-  height: z.number().optional(),
+  length: z.number().min(0.01, "长度必须大于0"),
+  width: z.number().min(0.01, "宽度必须大于0"),
+  height: z.number().min(0.01, "高度必须大于0"),
   declared_value: z.number().optional(),
   origin_country: z.string().default("CN"),
   insurance_fee: z.number().default(0),
@@ -36,13 +36,13 @@ const formSchema = z.object({
   warehouse: z.string().min(1, "发货仓库不能为空"),
   carrier: z.string().min(1, "物流商不能为空"),
   service_type: z.string().min(1, "物流服务不能为空"),
-  signature_service: z.string().optional(),
+  signature_service: z.string().default("NO"),
   reference_number: z.string().optional(),
   
   // 收件信息
   country: z.string().default("US"),
   recipient_name: z.string().min(1, "收件人不能为空"),
-  recipient_phone: z.string().optional(),
+  recipient_phone: z.string().min(1, "电话不能为空"),
   recipient_email: z.string().email("邮箱格式不正确").optional().or(z.literal("")),
   zip_code: z.string().min(1, "邮编不能为空"),
   state: z.string().min(1, "州不能为空"),
@@ -243,55 +243,68 @@ export function CreateExpressOrderForm({ onSuccess, onCancel, orderId, mode = 'c
         <CardHeader>
           <CardTitle className="text-lg">发货信息</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="order_number">订单号 *</Label>
-            <Input id="order_number" {...register("order_number")} />
+        <CardContent className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="order_number" className="text-sm">订单号 *</Label>
+            <Input id="order_number" {...register("order_number")} className="h-9" />
             {errors.order_number && (
-              <p className="text-sm text-destructive">{errors.order_number.message}</p>
+              <p className="text-xs text-destructive">{errors.order_number.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="customer_code">客户 *</Label>
-            <Input id="customer_code" {...register("customer_code")} />
+          <div className="space-y-1.5">
+            <Label htmlFor="customer_code" className="text-sm">客户 *</Label>
+            <Input id="customer_code" {...register("customer_code")} className="h-9" />
             {errors.customer_code && (
-              <p className="text-sm text-destructive">{errors.customer_code.message}</p>
+              <p className="text-xs text-destructive">{errors.customer_code.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="warehouse">发货仓库 *</Label>
-            <Input id="warehouse" {...register("warehouse")} />
+          <div className="space-y-1.5">
+            <Label htmlFor="warehouse" className="text-sm">发货仓库 *</Label>
+            <Input id="warehouse" {...register("warehouse")} className="h-9" />
             {errors.warehouse && (
-              <p className="text-sm text-destructive">{errors.warehouse.message}</p>
+              <p className="text-xs text-destructive">{errors.warehouse.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="carrier">物流商 *</Label>
-            <Input id="carrier" {...register("carrier")} placeholder="如: UPS, FedEx, USPS" />
+          <div className="space-y-1.5">
+            <Label htmlFor="carrier" className="text-sm">物流商 *</Label>
+            <Input id="carrier" {...register("carrier")} placeholder="如: UPS, FedEx, USPS" className="h-9" />
             {errors.carrier && (
-              <p className="text-sm text-destructive">{errors.carrier.message}</p>
+              <p className="text-xs text-destructive">{errors.carrier.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="service_type">物流服务 *</Label>
-            <Input id="service_type" {...register("service_type")} placeholder="如: Ground, Express" />
+          <div className="space-y-1.5">
+            <Label htmlFor="service_type" className="text-sm">物流服务 *</Label>
+            <Input id="service_type" {...register("service_type")} placeholder="如: Ground, Express" className="h-9" />
             {errors.service_type && (
-              <p className="text-sm text-destructive">{errors.service_type.message}</p>
+              <p className="text-xs text-destructive">{errors.service_type.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="signature_service">签名服务</Label>
-            <Input id="signature_service" {...register("signature_service")} />
+          <div className="space-y-1.5">
+            <Label htmlFor="signature_service" className="text-sm">签名服务</Label>
+            <Select 
+              defaultValue="NO" 
+              onValueChange={(value) => setValue("signature_service", value)}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NO">无需签名</SelectItem>
+                <SelectItem value="DIRECT">直接签名</SelectItem>
+                <SelectItem value="INDIRECT">间接签名</SelectItem>
+                <SelectItem value="ADULT">成人签名</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="reference_number">记录号</Label>
-            <Input id="reference_number" {...register("reference_number")} />
+          <div className="space-y-1.5">
+            <Label htmlFor="reference_number" className="text-sm">记录号</Label>
+            <Input id="reference_number" {...register("reference_number")} className="h-9" />
           </div>
         </CardContent>
       </Card>
@@ -441,62 +454,71 @@ export function CreateExpressOrderForm({ onSuccess, onCancel, orderId, mode = 'c
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>包裹类型</Label>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">包裹类型</Label>
                   <Input
                     value={pkg.package_type || ""}
                     onChange={(e) => updatePackage(index, "package_type", e.target.value)}
                     placeholder="如: Box, Envelope"
+                    className="h-9"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>产品货号</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">产品货号</Label>
                   <Input
                     value={pkg.product_sku || ""}
                     onChange={(e) => updatePackage(index, "product_sku", e.target.value)}
+                    className="h-9"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>重量 * ({isMetric ? "kg" : "lb"})</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">重量 * ({isMetric ? "kg" : "lb"})</Label>
                   <Input
                     type="number"
                     step="0.01"
                     value={pkg.weight || ""}
                     onChange={(e) => updatePackage(index, "weight", parseFloat(e.target.value) || 0)}
                     required
+                    className="h-9"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>长 ({isMetric ? "cm" : "in"})</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">长 * ({isMetric ? "cm" : "in"})</Label>
                   <Input
                     type="number"
                     step="0.1"
                     value={pkg.length || ""}
                     onChange={(e) => updatePackage(index, "length", parseFloat(e.target.value) || 0)}
+                    required
+                    className="h-9"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>宽 ({isMetric ? "cm" : "in"})</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">宽 * ({isMetric ? "cm" : "in"})</Label>
                   <Input
                     type="number"
                     step="0.1"
                     value={pkg.width || ""}
                     onChange={(e) => updatePackage(index, "width", parseFloat(e.target.value) || 0)}
+                    required
+                    className="h-9"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>高 ({isMetric ? "cm" : "in"})</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">高 * ({isMetric ? "cm" : "in"})</Label>
                   <Input
                     type="number"
                     step="0.1"
                     value={pkg.height || ""}
                     onChange={(e) => updatePackage(index, "height", parseFloat(e.target.value) || 0)}
+                    required
+                    className="h-9"
                   />
                 </div>
 

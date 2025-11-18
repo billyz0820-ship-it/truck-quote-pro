@@ -21,6 +21,7 @@ import OrderDetails from "./pages/orders/OrderDetails";
 import OrderDetailView from "./pages/orders/OrderDetailView";
 import Finance from "./pages/finance/Finance";
 import FinanceQuotations from "./pages/finance/FinanceQuotations";
+import TransactionRecords from "./pages/finance/TransactionRecords";
 import Settings from "./pages/settings/Settings";
 import TicketManagement from "./pages/tickets/TicketManagement";
 import TicketDetail from "./pages/tickets/TicketDetail";
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="orders/:id" element={<OrderDetailView />} />
             <Route path="finance" element={<Finance />} />
             <Route path="finance/quotations" element={<FinanceQuotations />} />
+            <Route path="finance/transactions" element={<TransactionRecords />} />
             <Route path="coupons" element={<CouponManagement />} />
             <Route path="settings" element={<Settings />} />
             <Route path="tickets" element={<TicketManagement />} />
