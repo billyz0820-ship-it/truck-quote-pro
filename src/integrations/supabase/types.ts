@@ -374,29 +374,47 @@ export type Database = {
         Row: {
           carrier: string
           created_at: string
+          created_by: string | null
           custom_prices: Json
           customer_id: string
+          effective_date_from: string | null
+          effective_date_to: string | null
           id: string
+          is_active: boolean | null
+          notes: string | null
           template_id: string | null
           updated_at: string
+          version: number | null
         }
         Insert: {
           carrier: string
           created_at?: string
+          created_by?: string | null
           custom_prices?: Json
           customer_id: string
+          effective_date_from?: string | null
+          effective_date_to?: string | null
           id?: string
+          is_active?: boolean | null
+          notes?: string | null
           template_id?: string | null
           updated_at?: string
+          version?: number | null
         }
         Update: {
           carrier?: string
           created_at?: string
+          created_by?: string | null
           custom_prices?: Json
           customer_id?: string
+          effective_date_from?: string | null
+          effective_date_to?: string | null
           id?: string
+          is_active?: boolean | null
+          notes?: string | null
           template_id?: string | null
           updated_at?: string
+          version?: number | null
         }
         Relationships: [
           {
@@ -1036,6 +1054,7 @@ export type Database = {
           id: string
           oversize_commercial: Json
           oversize_residential: Json
+          peak_surcharge_periods: Json | null
           peak_surcharges: Json
           remote_area_fees: Json
           residential_fees: Json
@@ -1056,6 +1075,7 @@ export type Database = {
           id?: string
           oversize_commercial?: Json
           oversize_residential?: Json
+          peak_surcharge_periods?: Json | null
           peak_surcharges?: Json
           remote_area_fees?: Json
           residential_fees?: Json
@@ -1076,6 +1096,7 @@ export type Database = {
           id?: string
           oversize_commercial?: Json
           oversize_residential?: Json
+          peak_surcharge_periods?: Json | null
           peak_surcharges?: Json
           remote_area_fees?: Json
           residential_fees?: Json
