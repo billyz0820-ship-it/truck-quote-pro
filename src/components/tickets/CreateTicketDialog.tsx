@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, X } from "lucide-react";
+import { Search, X, Upload, FileIcon, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CreateTicketDialogProps {
   open: boolean;
@@ -44,11 +45,14 @@ const EXPRESS_TICKET_TYPES = [
 ];
 
 export function CreateTicketDialog({ open, onOpenChange, onSuccess }: CreateTicketDialogProps) {
+  const { user } = useAuth();
   const [creating, setCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [searching, setSearching] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -123,6 +127,46 @@ export function CreateTicketDialog({ open, onOpenChange, onSuccess }: CreateTick
     }));
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setUploading(true);
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+        const filePath = `tickets/${fileName}`;
+
+        const { error: uploadError, data } = await supabase.storage
+          .from('order-documents')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('order-documents')
+          .getPublicUrl(filePath);
+
+        return { name: file.name, url: publicUrl };
+      });
+
+      const uploadedFileData = await Promise.all(uploadPromises);
+      setUploadedFiles(prev => [...prev, ...uploadedFileData]);
+      toast.success(`成功上传 ${uploadedFileData.length} 个文件`);
+    } catch (error: any) {
+      toast.error("文件上传失败: " + error.message);
+    } finally {
+      setUploading(false);
+      // Reset input
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleCreate = async () => {
     if (!selectedOrder) {
       toast.error("请先选择订单");
@@ -177,7 +221,8 @@ export function CreateTicketDialog({ open, onOpenChange, onSuccess }: CreateTick
             order_type: selectedOrder.type,
             tracking_number: selectedOrder.tracking_number,
             pro_number: selectedOrder.pro_number,
-            ticket_type: formData.ticket_type
+            ticket_type: formData.ticket_type,
+            files: uploadedFiles
           }
         });
 
@@ -196,6 +241,7 @@ export function CreateTicketDialog({ open, onOpenChange, onSuccess }: CreateTick
         carrier_name: ""
       });
       setSelectedOrder(null);
+      setUploadedFiles([]);
     } catch (error: any) {
       toast.error("创建工单失败: " + error.message);
     } finally {
@@ -353,6 +399,60 @@ export function CreateTicketDialog({ open, onOpenChange, onSuccess }: CreateTick
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
             />
+          </div>
+
+          {/* File Upload */}
+          <div>
+            <Label>附件上传</Label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  id="file-upload"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx,.xlsx,.xls"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                  disabled={uploading}
+                  className="w-full h-9"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploading ? "上传中..." : "上传附件"}
+                </Button>
+              </div>
+              
+              {uploadedFiles.length > 0 && (
+                <div className="border rounded-lg p-3 space-y-2">
+                  <p className="text-sm text-muted-foreground">已上传 {uploadedFiles.length} 个文件</p>
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <FileIcon className="h-4 w-4" />
+                        <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveFile(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-muted-foreground">
+                支持上传图片、PDF、Word、Excel文件
+              </p>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2">
