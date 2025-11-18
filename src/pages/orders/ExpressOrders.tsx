@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit, Copy, Printer, Undo2, CornerUpLeft, FileDown } from "lucide-react";
+import { Plus, Trash2, Edit, Copy, Printer, Undo2, CornerUpLeft, FileDown, Search } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ import { ExpressOrderFilters, FilterValues } from "@/components/express/ExpressO
 import { ExpressOrderImport } from "@/components/express/ExpressOrderImport";
 import { ExpressOrderExport } from "@/components/express/ExpressOrderExport";
 import { EditReturnOrderForm } from "@/components/express/EditReturnOrderForm";
+import { PrintLabelDialog } from "@/components/express/PrintLabelDialog";
 
 interface ExpressOrder {
   id: string;
@@ -89,6 +90,7 @@ export default function ExpressOrders() {
     customerCode: "",
     carrier: "",
   });
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {

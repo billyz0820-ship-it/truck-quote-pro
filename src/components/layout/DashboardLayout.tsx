@@ -72,6 +72,7 @@ const DashboardLayout = () => {
       subItems: [
         { title: "财务概览", url: "/dashboard/finance", icon: DollarSign },
         { title: "当前报价", url: "/dashboard/finance/quotations", icon: FileText },
+        { title: "流水记录", url: "/dashboard/finance/transactions", icon: Receipt },
       ]
     },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
