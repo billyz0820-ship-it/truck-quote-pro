@@ -52,7 +52,7 @@ export default function CustomerPricing() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("none");
   const [carrier, setCarrier] = useState("FedEx");
   const [customPrices, setCustomPrices] = useState<any>({});
   const [effectiveDateFrom, setEffectiveDateFrom] = useState<string>("");
@@ -131,7 +131,7 @@ export default function CustomerPricing() {
       setEditingConfig(config);
       setSelectedCustomer(config.customer_id);
       setCarrier(config.carrier);
-      setSelectedTemplate(config.template_id || "");
+      setSelectedTemplate(config.template_id || "none");
       setCustomPrices(config.custom_prices || {});
       setEffectiveDateFrom(config.effective_date_from || "");
       setEffectiveDateTo(config.effective_date_to || "");
@@ -140,7 +140,7 @@ export default function CustomerPricing() {
       setEditingConfig(null);
       setSelectedCustomer("");
       setCarrier("FedEx");
-      setSelectedTemplate("");
+      setSelectedTemplate("none");
       setCustomPrices({});
       setEffectiveDateFrom("");
       setEffectiveDateTo("");
@@ -152,7 +152,7 @@ export default function CustomerPricing() {
   const handleCopy = (config: PricingConfig) => {
     setSelectedCustomer("");
     setCarrier(config.carrier);
-    setSelectedTemplate(config.template_id || "");
+    setSelectedTemplate(config.template_id || "none");
     setCustomPrices(config.custom_prices || {});
     setEffectiveDateFrom("");
     setEffectiveDateTo("");
@@ -178,7 +178,7 @@ export default function CustomerPricing() {
       let pricingData = customPrices;
 
       // Load template data if selected
-      if (selectedTemplate) {
+      if (selectedTemplate && selectedTemplate !== "none") {
         const { data: templateData } = await supabase
           .from("pricing_templates")
           .select("*")
@@ -263,7 +263,7 @@ export default function CustomerPricing() {
         .insert({
           customer_id: selectedCustomer,
           carrier,
-          template_id: selectedTemplate || null,
+          template_id: selectedTemplate && selectedTemplate !== "none" ? selectedTemplate : null,
           custom_prices: pricingData,
           effective_date_from: effectiveDateFrom || null,
           effective_date_to: effectiveDateTo || null,
@@ -575,7 +575,7 @@ export default function CustomerPricing() {
                   <SelectValue placeholder="不使用账套" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">不使用账套</SelectItem>
+                  <SelectItem value="none">不使用账套</SelectItem>
                   {templates.filter(t => t.carrier === carrier).map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.template_name}
