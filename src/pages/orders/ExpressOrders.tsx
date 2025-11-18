@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit, Copy, Printer, Undo2, CornerUpLeft, FileDown, Search } from "lucide-react";
+import { Plus, Trash2, Edit, Copy, Printer, Undo2, CornerUpLeft, FileDown, Search, Download, Upload, Eye } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -91,6 +91,9 @@ export default function ExpressOrders() {
     carrier: "",
   });
   const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [selectedOrderForPrint, setSelectedOrderForPrint] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -559,6 +562,16 @@ export default function ExpressOrders() {
             <Button size="sm" variant="outline" onClick={() => handleEdit(order.id)}>
               <Edit className="h-4 w-4" />
             </Button>
+            <Button 
+              size="sm" 
+              onClick={() => {
+                setSelectedOrderForPrint(order.id);
+                setPrintDialogOpen(true);
+              }}
+            >
+              <Printer className="h-4 w-4 mr-1" />
+              打单
+            </Button>
             <Button size="sm" variant="destructive" onClick={() => handleDelete(order.id)}>
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -604,6 +617,15 @@ export default function ExpressOrders() {
             <Plus className="h-4 w-4" />
             新增
           </Button>
+          {activeTab === "pending_label" && selectedOrders.length > 0 && (
+            <Button onClick={() => {
+              setSelectedOrderIds(selectedOrders);
+              setPrintDialogOpen(true);
+            }}>
+              <Printer className="h-4 w-4 mr-2" />
+              批量打单 ({selectedOrders.length})
+            </Button>
+          )}
           <ExpressOrderImport onSuccess={fetchOrders} />
           <ExpressOrderExport orders={activeTab === "return" ? filteredReturnOrders : filteredOrders} />
         </div>
@@ -828,6 +850,32 @@ export default function ExpressOrders() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Batch Print Dialog */}
+      <PrintLabelDialog
+        open={printDialogOpen && selectedOrderIds.length > 0 && !selectedOrderForPrint}
+        onOpenChange={setPrintDialogOpen}
+        orderIds={selectedOrderIds}
+        onSuccess={() => {
+          fetchOrders();
+          setSelectedOrderIds([]);
+          setSelectedOrders([]);
+        }}
+      />
+      
+      {/* Single Print Dialog */}
+      <PrintLabelDialog
+        open={printDialogOpen && selectedOrderForPrint !== null}
+        onOpenChange={(open) => {
+          setPrintDialogOpen(open);
+          if (!open) setSelectedOrderForPrint(null);
+        }}
+        orderIds={selectedOrderForPrint ? [selectedOrderForPrint] : []}
+        onSuccess={() => {
+          fetchOrders();
+          setSelectedOrderForPrint(null);
+        }}
+      />
     </div>
   );
 }

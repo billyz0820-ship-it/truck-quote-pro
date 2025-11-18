@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Filter, MessageSquare } from "lucide-react";
+import { Search, Filter, MessageSquare, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { CreateTicketDialog } from "@/components/tickets/CreateTicketDialog";
 
 const TicketManagement = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const TicketManagement = () => {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchTickets();
@@ -89,9 +91,15 @@ const TicketManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">工单管理</h1>
-        <p className="text-muted-foreground">处理和跟踪所有工单事项</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">工单管理</h1>
+          <p className="text-muted-foreground">处理和跟踪所有工单事项</p>
+        </div>
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          创建工单
+        </Button>
       </div>
 
       {/* 搜索和筛选 */}
