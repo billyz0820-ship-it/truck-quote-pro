@@ -16,9 +16,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Search, AlertTriangle, ChevronDown, Copy, History } from "lucide-react";
+import { Plus, Edit, Search, AlertTriangle, ChevronDown, Copy, History, Eye } from "lucide-react";
 import { PricingConfigTabs } from "@/components/carrier/PricingConfigTabs";
 import { ProfitabilityAnalyzer } from "@/lib/profitabilityAnalyzer";
+import { PriceHistoryDialog } from "@/components/carrier/PriceHistoryDialog";
 
 interface CustomerGroup {
   customerId: string;
@@ -59,6 +60,8 @@ export default function CustomerPricing() {
   const [effectiveDateTo, setEffectiveDateTo] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [editingConfig, setEditingConfig] = useState<PricingConfig | null>(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [previewConfig, setPreviewConfig] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -495,11 +498,15 @@ export default function CustomerPricing() {
                                   </p>
                                 </div>
                                 <div className="flex gap-2">
-                                  <Button size="sm" variant="ghost" disabled>
-                                    <Copy className="h-4 w-4" />
-                                  </Button>
-                                  <Button size="sm" variant="ghost" disabled>
-                                    <Edit className="h-4 w-4" />
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setPreviewConfig(config);
+                                      setShowPreviewDialog(true);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </div>
@@ -624,6 +631,12 @@ export default function CustomerPricing() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <PriceHistoryDialog
+        open={showPreviewDialog}
+        onOpenChange={setShowPreviewDialog}
+        config={previewConfig}
+      />
     </div>
   );
 }
