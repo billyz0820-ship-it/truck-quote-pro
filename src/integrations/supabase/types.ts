@@ -390,11 +390,13 @@ export type Database = {
         Row: {
           amount: number
           coupon_code: string
+          coupon_type: string | null
           created_at: string
           created_by: string
           customer_id: string | null
           expire_at: string | null
           id: string
+          order_type: string | null
           status: string
           used_at: string | null
           voided_at: string | null
@@ -402,11 +404,13 @@ export type Database = {
         Insert: {
           amount: number
           coupon_code: string
+          coupon_type?: string | null
           created_at?: string
           created_by: string
           customer_id?: string | null
           expire_at?: string | null
           id?: string
+          order_type?: string | null
           status?: string
           used_at?: string | null
           voided_at?: string | null
@@ -414,11 +418,13 @@ export type Database = {
         Update: {
           amount?: number
           coupon_code?: string
+          coupon_type?: string | null
           created_at?: string
           created_by?: string
           customer_id?: string | null
           expire_at?: string | null
           id?: string
+          order_type?: string | null
           status?: string
           used_at?: string | null
           voided_at?: string | null
@@ -587,10 +593,12 @@ export type Database = {
           credit_limit: number | null
           customer_code: string
           customer_type: Database["public"]["Enums"]["customer_type"]
+          distributor_id: string | null
           id: string
           last_login_at: string | null
           payment_due_date: string | null
           payment_terms: number | null
+          phone: string | null
           status: Database["public"]["Enums"]["customer_status"]
           updated_at: string
         }
@@ -604,10 +612,12 @@ export type Database = {
           credit_limit?: number | null
           customer_code: string
           customer_type?: Database["public"]["Enums"]["customer_type"]
+          distributor_id?: string | null
           id?: string
           last_login_at?: string | null
           payment_due_date?: string | null
           payment_terms?: number | null
+          phone?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
           updated_at?: string
         }
@@ -621,11 +631,57 @@ export type Database = {
           credit_limit?: number | null
           customer_code?: string
           customer_type?: Database["public"]["Enums"]["customer_type"]
+          distributor_id?: string | null
           id?: string
           last_login_at?: string | null
           payment_due_date?: string | null
           payment_terms?: number | null
+          phone?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_distributor_id_fkey"
+            columns: ["distributor_id"]
+            isOneToOne: false
+            referencedRelation: "distributors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distributors: {
+        Row: {
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          invitation_code: string
+          phone: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          contact_name: string
+          created_at?: string
+          email: string
+          id?: string
+          invitation_code: string
+          phone: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          invitation_code?: string
+          phone?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -698,9 +754,11 @@ export type Database = {
           carrier: string
           city: string
           country: string
+          coupon_id: string | null
           created_at: string
           customer_code: string
           customer_id: string
+          discount_amount: number | null
           id: string
           label_printed_at: string | null
           logistics_account: string | null
@@ -730,9 +788,11 @@ export type Database = {
           carrier: string
           city: string
           country?: string
+          coupon_id?: string | null
           created_at?: string
           customer_code: string
           customer_id: string
+          discount_amount?: number | null
           id?: string
           label_printed_at?: string | null
           logistics_account?: string | null
@@ -762,9 +822,11 @@ export type Database = {
           carrier?: string
           city?: string
           country?: string
+          coupon_id?: string | null
           created_at?: string
           customer_code?: string
           customer_id?: string
+          discount_amount?: number | null
           id?: string
           label_printed_at?: string | null
           logistics_account?: string | null
@@ -787,7 +849,15 @@ export type Database = {
           zip_code?: string
           zone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "express_orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       express_packages: {
         Row: {
@@ -996,6 +1066,7 @@ export type Database = {
           bol_url: string | null
           cargo_description: string | null
           carrier_name: string | null
+          coupon_id: string | null
           created_at: string
           customer_code: string
           customer_id: string
@@ -1008,6 +1079,7 @@ export type Database = {
           delivery_notes: string | null
           delivery_state: string | null
           delivery_zip: string
+          discount_amount: number | null
           id: string
           order_number: string
           pallet_label_url: string | null
@@ -1036,6 +1108,7 @@ export type Database = {
           bol_url?: string | null
           cargo_description?: string | null
           carrier_name?: string | null
+          coupon_id?: string | null
           created_at?: string
           customer_code: string
           customer_id: string
@@ -1048,6 +1121,7 @@ export type Database = {
           delivery_notes?: string | null
           delivery_state?: string | null
           delivery_zip: string
+          discount_amount?: number | null
           id?: string
           order_number: string
           pallet_label_url?: string | null
@@ -1076,6 +1150,7 @@ export type Database = {
           bol_url?: string | null
           cargo_description?: string | null
           carrier_name?: string | null
+          coupon_id?: string | null
           created_at?: string
           customer_code?: string
           customer_id?: string
@@ -1088,6 +1163,7 @@ export type Database = {
           delivery_notes?: string | null
           delivery_state?: string | null
           delivery_zip?: string
+          discount_amount?: number | null
           id?: string
           order_number?: string
           pallet_label_url?: string | null
@@ -1111,6 +1187,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_customer_id_fkey"
             columns: ["customer_id"]
@@ -1632,6 +1715,33 @@ export type Database = {
         }
         Relationships: []
       }
+      system_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       temporary_credits: {
         Row: {
           amount: number
@@ -1822,6 +1932,7 @@ export type Database = {
     }
     Functions: {
       generate_customer_code: { Args: never; Returns: string }
+      generate_invitation_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
