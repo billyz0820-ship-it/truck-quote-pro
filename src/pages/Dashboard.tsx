@@ -4,32 +4,146 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DollarSign, Package, AlertCircle, FileText, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { RechargeDialog } from "@/components/finance/RechargeDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Dashboard = () => {
-  const { userRole } = useAuth();
-
-  if (userRole === "admin") {
-    return <AdminDashboard />;
-  } else {
-    return <CustomerDashboard />;
-  }
-};
-
-// Admin Dashboard - 管理端首页
-const AdminDashboard = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
+  const [customerData, setCustomerData] = useState<any>(null);
+  const [customerId, setCustomerId] = useState<string>("");
+
+  useEffect(() => {
+    fetchCustomerData();
+  }, [user]);
+
+  const fetchCustomerData = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: customerUser } = await supabase
+        .from("customer_users")
+        .select("customer_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (customerUser) {
+        setCustomerId(customerUser.customer_id);
+        
+        const { data: customer } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("id", customerUser.customer_id)
+          .single();
+
+        setCustomerData(customer);
+      }
+    } catch (error: any) {
+      console.error("Error fetching customer data:", error);
+    }
+  };
+
+  const paymentDaysRemaining = customerData?.payment_due_date
+    ? Math.ceil(
+        (new Date(customerData.payment_due_date).getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24)
+      )
+    : 0;
+
+  const availableCredit = customerData
+    ? (customerData.credit_limit || 0) - (customerData.balance || 0)
+    : 0;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">管理端首页 / Admin Dashboard</h1>
-        <p className="text-muted-foreground">查看所有客户数据和系统统计</p>
+        <h1 className="text-3xl font-bold">首页</h1>
+        <p className="text-muted-foreground">查看所有数据和系统统计</p>
       </div>
 
-      {/* 客户账期与欠款概览 */}
+      {/* Customer Financial Information */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">剩余账期</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {paymentDaysRemaining > 0 ? `${paymentDaysRemaining} 天` : '已过期'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {customerData?.payment_due_date 
+                ? `截止日期: ${new Date(customerData.payment_due_date).toLocaleDateString()}`
+                : '未设置'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">应付金额</CardTitle>
+            <AlertCircle className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              ${customerData?.balance?.toFixed(2) || '0.00'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              待付款金额
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">余额</CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${customerData?.balance?.toFixed(2) || '0.00'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              当前账户余额
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">可用额度</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-500">
+              ${availableCredit.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              信用额度: ${customerData?.credit_limit?.toFixed(2) || '0.00'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col justify-center">
+          <CardContent className="pt-6">
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={() => setRechargeDialogOpen(true)}
+            >
+              <Wallet className="h-4 w-4 mr-2" />
+              充值
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Admin Statistics */}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
