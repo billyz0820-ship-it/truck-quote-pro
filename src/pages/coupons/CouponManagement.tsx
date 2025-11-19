@@ -11,6 +11,7 @@ import { Ticket, Plus, RefreshCw, Ban } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import CouponSettings from "@/components/coupons/CouponSettings";
 
 interface Coupon {
   id: string;
@@ -322,7 +323,9 @@ const CouponManagement = () => {
             <CardTitle className="text-sm font-medium">总优惠券</CardTitle>
             <Ticket className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+      <CardContent>
+        <CouponSettings />
+        <div className="mt-6">
             <div className="text-2xl font-bold">{coupons.length}</div>
           </CardContent>
         </Card>

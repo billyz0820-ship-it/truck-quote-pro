@@ -67,17 +67,23 @@ export default function TransactionRecords() {
 
       if (orderError) throw orderError;
 
-      const deductions: Transaction[] = (orderData || []).map(o => ({
-        id: o.id,
-        type: 'deduction',
-        customer_id: o.customer_id,
-        customer_code: o.customers.customer_code,
-        company_name: o.customers.company_name,
-        amount: o.quoted_amount,
-        order_number: o.order_number,
-        fee_details: `订单费用: $${o.quoted_amount}`,
-        created_at: o.created_at,
-      }));
+      const deductions: Transaction[] = (orderData || []).map(o => {
+        let feeDetails = `订单费用: $${o.quoted_amount}`;
+        if (o.coupon_id && o.discount_amount) {
+          feeDetails += ` (已使用优惠券，优惠 $${o.discount_amount})`;
+        }
+        return {
+          id: o.id,
+          type: 'deduction',
+          customer_id: o.customer_id,
+          customer_code: o.customers.customer_code,
+          company_name: o.customers.company_name,
+          amount: o.quoted_amount,
+          order_number: o.order_number,
+          fee_details: feeDetails,
+          created_at: o.created_at,
+        };
+      });
 
       // Fetch deductions from express_orders
       const { data: expressData, error: expressError } = await supabase
@@ -88,17 +94,23 @@ export default function TransactionRecords() {
 
       if (expressError) throw expressError;
 
-      const expressDeductions: Transaction[] = (expressData || []).map(e => ({
-        id: e.id,
-        type: 'deduction',
-        customer_id: e.customer_id,
-        customer_code: e.customer_code,
-        company_name: e.customer_code, // We don't have company_name in express_orders
-        amount: e.shipping_fee,
-        order_number: e.order_number,
-        fee_details: `快递费用: $${e.shipping_fee}`,
-        created_at: e.created_at,
-      }));
+      const expressDeductions: Transaction[] = (expressData || []).map(e => {
+        let feeDetails = `快递费用: $${e.shipping_fee}`;
+        if (e.coupon_id && e.discount_amount) {
+          feeDetails += ` (已使用优惠券，优惠 $${e.discount_amount})`;
+        }
+        return {
+          id: e.id,
+          type: 'deduction',
+          customer_id: e.customer_id,
+          customer_code: e.customer_code,
+          company_name: e.customer_code,
+          amount: e.shipping_fee,
+          order_number: e.order_number,
+          fee_details: feeDetails,
+          created_at: e.created_at,
+        };
+      });
 
       // Fetch refunds from rebills
       const { data: rebillData, error: rebillError } = await supabase
