@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Plus, DollarSign, TrendingUp } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Plus, DollarSign, TrendingUp, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -42,12 +43,13 @@ interface Order {
 }
 
 const RebillManagement = () => {
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
   const [rebills, setRebills] = useState<Rebill[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState("truck-rebills");
 
   const [rebillForm, setRebillForm] = useState({
     order_id: "",
@@ -124,38 +126,33 @@ const RebillManagement = () => {
 
     const actualAmount = calculateActualAmount();
     if (actualAmount <= 0) {
-      toast.error("请至少填写一项费用");
+      toast.error("请输入实际费用");
       return;
     }
 
     try {
       setCreating(true);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("用户未登录");
-
+      
       const difference = calculateDifference();
-
-      const insertData = {
-        order_id: rebillForm.order_id,
-        customer_id: selectedOrder.customer_id,
-        original_amount: Number(selectedOrder.quoted_amount),
-        actual_amount: actualAmount,
-        difference: difference,
-        base_fee: Number(rebillForm.base_fee) || null,
-        fuel_surcharge: Number(rebillForm.fuel_surcharge) || null,
-        long_haul_fee: Number(rebillForm.long_haul_fee) || null,
-        other_fees: Number(rebillForm.other_fees) || null,
-        created_by: user.id,
-      };
 
       const { error } = await supabase
         .from('rebills')
-        .insert([insertData]);
+        .insert({
+          order_id: rebillForm.order_id,
+          customer_id: selectedOrder.customer_id,
+          original_amount: Number(selectedOrder.quoted_amount),
+          actual_amount: actualAmount,
+          difference: difference,
+          base_fee: Number(rebillForm.base_fee) || null,
+          fuel_surcharge: Number(rebillForm.fuel_surcharge) || null,
+          long_haul_fee: Number(rebillForm.long_haul_fee) || null,
+          other_fees: Number(rebillForm.other_fees) || null,
+          created_by: user?.id || '',
+        });
 
       if (error) throw error;
 
-      toast.success("补费记录创建成功！");
+      toast.success("补费记录创建成功");
       setDialogOpen(false);
       setRebillForm({
         order_id: "",
@@ -166,18 +163,30 @@ const RebillManagement = () => {
       });
       setSelectedOrder(null);
       fetchData();
-
     } catch (error: any) {
-      toast.error("创建补费记录失败: " + error.message);
+      toast.error("创建失败: " + error.message);
     } finally {
       setCreating(false);
     }
   };
 
+  const getTotalStats = () => {
+    const totalRebills = rebills.length;
+    const totalDifference = rebills.reduce((sum, rebill) => sum + Number(rebill.difference), 0);
+    const avgDifference = totalRebills > 0 ? totalDifference / totalRebills : 0;
+
+    return { totalRebills, totalDifference, avgDifference };
+  };
+
+  const stats = getTotalStats();
+
   if (userRole !== 'admin') {
     return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-muted-foreground">您没有权限访问此页面</p>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">反弹账单</h1>
+          <p className="text-muted-foreground">您没有权限访问此页面</p>
+        </div>
       </div>
     );
   }
@@ -185,276 +194,280 @@ const RebillManagement = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <p className="text-muted-foreground">加载中...</p>
+        <div className="text-center">
+          <div className="text-lg text-muted-foreground">加载中...</div>
+        </div>
       </div>
     );
   }
-
-  const totalDifference = rebills.reduce((sum, r) => sum + Number(r.difference), 0);
-  const avgDifference = rebills.length > 0 ? totalDifference / rebills.length : 0;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">补费管理</h1>
-          <p className="text-muted-foreground">记录和管理订单额外费用</p>
+          <h1 className="text-3xl font-bold">反弹账单</h1>
+          <p className="text-muted-foreground">管理订单额外费用和运费差异</p>
         </div>
-
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              创建补费记录
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>创建补费记录</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>选择订单</Label>
-                <Select
-                  value={rebillForm.order_id}
-                  onValueChange={handleOrderSelect}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择订单" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {orders.map((order) => (
-                      <SelectItem key={order.id} value={order.id}>
-                        {order.order_number} - {order.customers.company_name} (原报价: ${Number(order.quoted_amount).toFixed(2)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedOrder && (
-                <div className="p-4 bg-muted rounded-lg">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">订单编号:</span>
-                      <p className="font-medium">{selectedOrder.order_number}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">客户:</span>
-                      <p className="font-medium">{selectedOrder.customers.company_name}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">原报价:</span>
-                      <p className="font-medium text-green-600">${Number(selectedOrder.quoted_amount).toFixed(2)}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>基础价 ($)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={rebillForm.base_fee}
-                    onChange={(e) => setRebillForm(prev => ({ ...prev, base_fee: e.target.value }))}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>燃油附加费 ($)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={rebillForm.fuel_surcharge}
-                    onChange={(e) => setRebillForm(prev => ({ ...prev, fuel_surcharge: e.target.value }))}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>长途附加费 ($)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={rebillForm.long_haul_fee}
-                    onChange={(e) => setRebillForm(prev => ({ ...prev, long_haul_fee: e.target.value }))}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>其他费用 ($)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={rebillForm.other_fees}
-                    onChange={(e) => setRebillForm(prev => ({ ...prev, other_fees: e.target.value }))}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-
-              {selectedOrder && (
-                <div className="p-4 bg-primary/5 border-2 border-primary/20 rounded-lg">
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">实际费用:</span>
-                      <p className="text-lg font-bold text-red-600">
-                        ${calculateActualAmount().toFixed(2)}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">差额:</span>
-                      <p className={`text-lg font-bold ${calculateDifference() >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {calculateDifference() >= 0 ? '+' : ''}${calculateDifference().toFixed(2)}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">差额比例:</span>
-                      <p className={`text-lg font-bold ${calculateDifference() >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {selectedOrder.quoted_amount > 0 
-                          ? `${((calculateDifference() / Number(selectedOrder.quoted_amount)) * 100).toFixed(1)}%`
-                          : '0%'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={creating}>
-                  取消
-                </Button>
-                <Button onClick={handleCreateRebill} disabled={creating || !selectedOrder}>
-                  {creating ? "创建中..." : "创建补费记录"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">补费记录总数</CardTitle>
+            <CardTitle className="text-sm font-medium">总补费记录</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{rebills.length}</div>
-            <p className="text-xs text-muted-foreground">历史记录</p>
+            <div className="text-2xl font-bold">{stats.totalRebills}</div>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">总差额</CardTitle>
+            <CardTitle className="text-sm font-medium">总差异金额</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${totalDifference >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-              {totalDifference >= 0 ? '+' : ''}${totalDifference.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">累计额外费用</p>
+            <div className="text-2xl font-bold">${stats.totalDifference.toFixed(2)}</div>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">平均差额</CardTitle>
+            <CardTitle className="text-sm font-medium">平均差异</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${avgDifference >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-              {avgDifference >= 0 ? '+' : ''}${avgDifference.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">每单平均</p>
+            <div className="text-2xl font-bold">${stats.avgDifference.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Rebills Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            补费记录列表
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>订单编号</TableHead>
-                <TableHead>客户</TableHead>
-                <TableHead>原报价</TableHead>
-                <TableHead>费用明细</TableHead>
-                <TableHead>实际费用</TableHead>
-                <TableHead>差额</TableHead>
-                <TableHead>差额比例</TableHead>
-                <TableHead>创建时间</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rebills.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
-                    暂无补费记录
-                  </TableCell>
-                </TableRow>
-              ) : (
-                rebills.map((rebill) => {
-                  const diffPercentage = rebill.original_amount > 0 
-                    ? ((Number(rebill.difference) / Number(rebill.original_amount)) * 100).toFixed(1)
-                    : '0';
-                  
-                  return (
-                    <TableRow key={rebill.id}>
-                      <TableCell className="font-medium">{rebill.order_id}</TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">{rebill.customers.customer_code}</div>
-                          <div className="text-muted-foreground">{rebill.customers.company_name}</div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="truck-rebills">卡车补费</TabsTrigger>
+          <TabsTrigger value="freight-difference">运费差异</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="truck-rebills" className="space-y-4">
+          <div className="flex justify-end">
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  创建补费记录
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>创建补费记录</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>选择订单</Label>
+                    <Select
+                      value={rebillForm.order_id}
+                      onValueChange={handleOrderSelect}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择订单" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {orders.map((order) => (
+                          <SelectItem key={order.id} value={order.id}>
+                            {order.order_number} - {order.customers.company_name} (原报价: ${Number(order.quoted_amount).toFixed(2)})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedOrder && (
+                    <div className="p-4 bg-muted rounded-lg">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">订单编号:</span>
+                          <p className="font-medium">{selectedOrder.order_number}</p>
                         </div>
-                      </TableCell>
-                      <TableCell className="font-medium text-green-600">
-                        ${Number(rebill.original_amount).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-xs space-y-1">
-                          {rebill.base_fee && <div>基础价: ${Number(rebill.base_fee).toFixed(2)}</div>}
-                          {rebill.fuel_surcharge && <div>燃油费: ${Number(rebill.fuel_surcharge).toFixed(2)}</div>}
-                          {rebill.long_haul_fee && <div>长途费: ${Number(rebill.long_haul_fee).toFixed(2)}</div>}
-                          {rebill.other_fees && <div>其他: ${Number(rebill.other_fees).toFixed(2)}</div>}
+                        <div>
+                          <span className="text-muted-foreground">客户:</span>
+                          <p className="font-medium">{selectedOrder.customers.company_name}</p>
                         </div>
+                        <div>
+                          <span className="text-muted-foreground">原报价:</span>
+                          <p className="font-medium text-green-600">${Number(selectedOrder.quoted_amount).toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>基础价 ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={rebillForm.base_fee}
+                        onChange={(e) => setRebillForm(prev => ({ ...prev, base_fee: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>燃油附加费 ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={rebillForm.fuel_surcharge}
+                        onChange={(e) => setRebillForm(prev => ({ ...prev, fuel_surcharge: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>长途附加费 ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={rebillForm.long_haul_fee}
+                        onChange={(e) => setRebillForm(prev => ({ ...prev, long_haul_fee: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>其他费用 ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={rebillForm.other_fees}
+                        onChange={(e) => setRebillForm(prev => ({ ...prev, other_fees: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  {selectedOrder && (
+                    <div className="p-4 bg-muted rounded-lg space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">实际总金额:</span>
+                        <span className="font-medium text-lg">${calculateActualAmount().toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">原报价:</span>
+                        <span className="font-medium">${Number(selectedOrder.quoted_amount).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t">
+                        <span className="text-sm font-medium">
+                          {calculateDifference() >= 0 ? '需补收:' : '需退费:'}
+                        </span>
+                        <span className={`font-bold text-lg ${calculateDifference() >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          ${Math.abs(calculateDifference()).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setDialogOpen(false)}
+                      disabled={creating}
+                    >
+                      取消
+                    </Button>
+                    <Button
+                      onClick={handleCreateRebill}
+                      disabled={creating || !rebillForm.order_id}
+                    >
+                      {creating ? "创建中..." : "创建补费记录"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>卡车补费记录</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>订单编号</TableHead>
+                    <TableHead>客户</TableHead>
+                    <TableHead>原报价</TableHead>
+                    <TableHead>实际金额</TableHead>
+                    <TableHead>差异</TableHead>
+                    <TableHead>基础价</TableHead>
+                    <TableHead>燃油费</TableHead>
+                    <TableHead>长途费</TableHead>
+                    <TableHead>其他费用</TableHead>
+                    <TableHead>创建时间</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rebills.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center text-muted-foreground">
+                        暂无补费记录
                       </TableCell>
-                      <TableCell className="font-medium text-red-600">
-                        ${Number(rebill.actual_amount).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={Number(rebill.difference) >= 0 ? 'destructive' : 'default'}>
-                          {Number(rebill.difference) >= 0 ? '+' : ''}${Number(rebill.difference).toFixed(2)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={Number(rebill.difference) >= 0 ? 'destructive' : 'default'}>
-                          {Number(rebill.difference) >= 0 ? '+' : ''}{diffPercentage}%
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(rebill.created_at).toLocaleDateString('zh-CN')}</TableCell>
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                  ) : (
+                    rebills.map((rebill) => (
+                      <TableRow key={rebill.id}>
+                        <TableCell className="font-medium">{rebill.order_id}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{rebill.customers.company_name}</div>
+                            <div className="text-sm text-muted-foreground">{rebill.customers.customer_code}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>${Number(rebill.original_amount).toFixed(2)}</TableCell>
+                        <TableCell className="font-medium">${Number(rebill.actual_amount).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Badge variant={Number(rebill.difference) >= 0 ? "destructive" : "default"}>
+                            {Number(rebill.difference) >= 0 ? '+' : ''}{Number(rebill.difference).toFixed(2)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{rebill.base_fee ? `$${Number(rebill.base_fee).toFixed(2)}` : '-'}</TableCell>
+                        <TableCell>{rebill.fuel_surcharge ? `$${Number(rebill.fuel_surcharge).toFixed(2)}` : '-'}</TableCell>
+                        <TableCell>{rebill.long_haul_fee ? `$${Number(rebill.long_haul_fee).toFixed(2)}` : '-'}</TableCell>
+                        <TableCell>{rebill.other_fees ? `$${Number(rebill.other_fees).toFixed(2)}` : '-'}</TableCell>
+                        <TableCell>{new Date(rebill.created_at).toLocaleDateString('zh-CN')}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="freight-difference" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>运费差异管理</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">导入承运商账单，对比系统订单，发现并处理运费差异</p>
+                </div>
+                <Button>
+                  <Upload className="h-4 w-4 mr-2" />
+                  导入账单
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-muted-foreground">
+                <Upload className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>请导入承运商账单表格以开始对比</p>
+                <p className="text-sm mt-2">支持 Excel、CSV 格式文件</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
