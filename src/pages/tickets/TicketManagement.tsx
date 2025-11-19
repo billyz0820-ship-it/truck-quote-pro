@@ -184,6 +184,12 @@ const TicketManagement = () => {
           </CardContent>
         </Card>
       </Tabs>
+
+      <CreateTicketDialog 
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={fetchTickets}
+      />
     </div>
   );
 };
