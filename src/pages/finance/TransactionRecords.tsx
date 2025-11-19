@@ -108,20 +108,20 @@ export default function TransactionRecords() {
 
       if (rebillError) throw rebillError;
 
-      const refunds: Transaction[] = (rebillData || []).map(r => ({
+      const rebillTransactions: Transaction[] = (rebillData || []).map(r => ({
         id: r.id,
-        type: 'refund',
+        type: r.difference > 0 ? 'deduction' : 'refund', // 差额为正数是补收，负数是退费
         customer_id: r.customer_id,
         customer_code: r.customers.customer_code,
         company_name: r.customers.company_name,
-        amount: r.difference,
+        amount: Math.abs(r.difference),
         order_number: r.order_id,
-        fee_details: `差额退款: $${r.difference}`,
+        fee_details: `补费差额: ${r.difference > 0 ? '+' : ''}$${r.difference}`,
         created_at: r.created_at,
       }));
 
       // Combine all transactions and sort by date
-      const allTransactions = [...recharges, ...deductions, ...expressDeductions, ...refunds]
+      const allTransactions = [...recharges, ...deductions, ...expressDeductions, ...rebillTransactions]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       setTransactions(allTransactions);
