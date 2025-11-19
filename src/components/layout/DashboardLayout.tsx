@@ -92,10 +92,19 @@ const DashboardLayout = () => {
         { title: "账套管理", url: "/dashboard/carrier/templates", icon: FileText },
         { title: "账号成本", url: "/dashboard/carrier/costs", icon: DollarSign },
         { title: "价格比较", url: "/dashboard/carrier/comparison", icon: Receipt },
-        { title: "偏远地址", url: "/dashboard/carrier/remote-areas", icon: Package },
         { title: "打单规则", url: "/dashboard/carrier/rules", icon: Settings },
         { title: "客户报价", url: "/dashboard/carrier/customer-pricing", icon: Settings },
         { title: "计算历史", url: "/dashboard/carrier/price-history", icon: Settings },
+      ]
+    },
+    { 
+      title: "物流设置", 
+      icon: Settings,
+      subItems: [
+        { title: "物流触发", url: "/dashboard/logistics/triggers", icon: Settings },
+        { title: "物流服务", url: "/dashboard/logistics/services", icon: Package },
+        { title: "偏远地址", url: "/dashboard/logistics/remote-areas", icon: Package },
+        { title: "渠道配置", url: "/dashboard/logistics/channels", icon: Settings },
       ]
     },
   ];

@@ -40,6 +40,9 @@ import RemoteAreas from "./pages/carrier/RemoteAreas";
 import ShippingRules from "./pages/carrier/ShippingRules";
 import CustomerPricing from "./pages/carrier/CustomerPricing";
 import PriceHistory from "./pages/carrier/PriceHistory";
+import LogisticsTriggers from "./pages/logistics/LogisticsTriggers";
+import LogisticsServices from "./pages/logistics/LogisticsServices";
+import ChannelConfigs from "./pages/logistics/ChannelConfigs";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +88,10 @@ const App = () => (
             <Route path="carrier/rules" element={<ShippingRules />} />
             <Route path="carrier/customer-pricing" element={<CustomerPricing />} />
             <Route path="carrier/price-history" element={<PriceHistory />} />
+            <Route path="logistics/triggers" element={<LogisticsTriggers />} />
+            <Route path="logistics/services" element={<LogisticsServices />} />
+            <Route path="logistics/remote-areas" element={<RemoteAreas />} />
+            <Route path="logistics/channels" element={<ChannelConfigs />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

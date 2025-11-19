@@ -308,6 +308,45 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_configs: {
+        Row: {
+          carrier: string
+          channel_code: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_active: boolean
+          logistics_service: string
+          platform: string
+          updated_at: string
+          warehouse: string
+        }
+        Insert: {
+          carrier: string
+          channel_code: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_active?: boolean
+          logistics_service: string
+          platform: string
+          updated_at?: string
+          warehouse: string
+        }
+        Update: {
+          carrier?: string
+          channel_code?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_active?: boolean
+          logistics_service?: string
+          platform?: string
+          updated_at?: string
+          warehouse?: string
+        }
+        Relationships: []
+      }
       cost_imports: {
         Row: {
           actual_cost: number
@@ -845,6 +884,72 @@ export type Database = {
         }
         Relationships: []
       }
+      logistics_services: {
+        Row: {
+          carrier: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          service_code: string
+          service_name: string
+          updated_at: string
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          service_code: string
+          service_name: string
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          service_code?: string
+          service_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      logistics_triggers: {
+        Row: {
+          carrier: string
+          conditions: Json
+          created_at: string
+          fee_amount: number
+          id: string
+          is_active: boolean
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          carrier: string
+          conditions?: Json
+          created_at?: string
+          fee_amount: number
+          id?: string
+          is_active?: boolean
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string
+          conditions?: Json
+          created_at?: string
+          fee_amount?: number
+          id?: string
+          is_active?: boolean
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           content: string
@@ -1311,6 +1416,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recharge_records: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          payment_method: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          updated_at: string
+          voucher_url: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          payment_method: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          voucher_url: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          payment_method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          voucher_url?: string
+        }
+        Relationships: []
       }
       remote_area_zones: {
         Row: {
