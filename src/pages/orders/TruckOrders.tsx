@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, Eye } from "lucide-react";
+import { Plus, Search, Filter, Eye, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ interface Order {
   reference_number: string | null;
   pro_number: string | null;
   bol_number: string | null;
+  bol_url: string | null;
   sku: string | null;
   pickup_zip: string;
   delivery_zip: string;
@@ -271,26 +272,38 @@ const OrderList = () => {
                             </Button>
                           )}
                           {order.status === "placed" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                if (!confirm("确定要取消此订单吗？")) return;
-                                try {
-                                  const { error } = await supabase
-                                    .from('orders')
-                                    .update({ status: 'cancelled' })
-                                    .eq('id', order.id);
-                                  if (error) throw error;
-                                  toast.success("订单已取消");
-                                  fetchOrders();
-                                } catch (error: any) {
-                                  toast.error("取消失败: " + error.message);
-                                }
-                              }}
-                            >
-                              取消
-                            </Button>
+                            <>
+                              {order.bol_url && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(order.bol_url!, '_blank')}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  下载BOL
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  if (!confirm("确定要取消此订单吗？")) return;
+                                  try {
+                                    const { error } = await supabase
+                                      .from('orders')
+                                      .update({ status: 'cancelled' })
+                                      .eq('id', order.id);
+                                    if (error) throw error;
+                                    toast.success("订单已取消");
+                                    fetchOrders();
+                                  } catch (error: any) {
+                                    toast.error("取消失败: " + error.message);
+                                  }
+                                }}
+                              >
+                                取消
+                              </Button>
+                            </>
                           )}
                         </div>
                       </TableCell>

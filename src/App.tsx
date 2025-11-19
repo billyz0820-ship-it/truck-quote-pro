@@ -70,6 +70,7 @@ const App = () => (
             <Route path="finance" element={<Finance />} />
             <Route path="finance/quotations" element={<FinanceQuotations />} />
             <Route path="finance/transactions" element={<TransactionRecords />} />
+            <Route path="finance/rebills" element={<RebillManagement />} />
             <Route path="coupons" element={<CouponManagement />} />
             <Route path="settings" element={<Settings />} />
             <Route path="tickets" element={<TicketManagement />} />
@@ -79,7 +80,6 @@ const App = () => (
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="emails" element={<EmailManagement />} />
             <Route path="users" element={<UserManagement />} />
-            <Route path="rebills" element={<RebillManagement />} />
             <Route path="carrier/accounts" element={<CarrierAccounts />} />
             <Route path="carrier/templates" element={<PricingTemplates />} />
             <Route path="carrier/costs" element={<AccountCosts />} />

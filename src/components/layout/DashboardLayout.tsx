@@ -73,6 +73,7 @@ const DashboardLayout = () => {
         { title: "财务概览", url: "/dashboard/finance", icon: DollarSign },
         { title: "当前报价", url: "/dashboard/finance/quotations", icon: FileText },
         { title: "流水记录", url: "/dashboard/finance/transactions", icon: Receipt },
+        { title: "反弹账单", url: "/dashboard/finance/rebills", icon: Receipt },
       ]
     },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
@@ -82,7 +83,6 @@ const DashboardLayout = () => {
     { title: "知识库", url: "/dashboard/knowledge", icon: FileText },
     { title: "通知管理", url: "/dashboard/notifications", icon: FileText },
     { title: "邮件管理", url: "/dashboard/emails", icon: FileText },
-    { title: "返单管理", url: "/dashboard/rebills", icon: Receipt },
     { title: "用户管理", url: "/dashboard/users", icon: Users },
     { 
       title: "快递管理", 
