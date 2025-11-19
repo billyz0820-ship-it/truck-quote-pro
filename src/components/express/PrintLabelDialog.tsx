@@ -24,7 +24,7 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
         .from('express_orders')
         .update({ 
           label_printed_at: new Date().toISOString(),
-          status: 'printed'
+          status: 'labeled'
         })
         .in('id', orderIds);
 
