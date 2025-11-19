@@ -59,13 +59,22 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">首页</h1>
-        <p className="text-muted-foreground">查看所有数据和系统统计</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">首页</h1>
+          <p className="text-muted-foreground">查看所有数据和系统统计</p>
+        </div>
+        <Button 
+          onClick={() => setRechargeDialogOpen(true)}
+          size="lg"
+        >
+          <Wallet className="h-4 w-4 mr-2" />
+          充值
+        </Button>
       </div>
 
       {/* Customer Financial Information */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">剩余账期</CardTitle>
@@ -125,19 +134,6 @@ const Dashboard = () => {
             <p className="text-xs text-muted-foreground">
               信用额度: ${customerData?.credit_limit?.toFixed(2) || '0.00'}
             </p>
-          </CardContent>
-        </Card>
-
-        <Card className="flex flex-col justify-center">
-          <CardContent className="pt-6">
-            <Button 
-              className="w-full" 
-              size="lg"
-              onClick={() => setRechargeDialogOpen(true)}
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              充值
-            </Button>
           </CardContent>
         </Card>
       </div>

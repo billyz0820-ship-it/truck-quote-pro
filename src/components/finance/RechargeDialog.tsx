@@ -18,6 +18,7 @@ interface RechargeDialogProps {
 export const RechargeDialog = ({ open, onOpenChange, customerId, onSuccess }: RechargeDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("USD");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [voucherFile, setVoucherFile] = useState<File | null>(null);
 
@@ -63,6 +64,7 @@ export const RechargeDialog = ({ open, onOpenChange, customerId, onSuccess }: Re
       toast.success("充值申请已提交");
       onOpenChange(false);
       setAmount("");
+      setCurrency("USD");
       setPaymentMethod("");
       setVoucherFile(null);
       onSuccess?.();
@@ -97,14 +99,26 @@ export const RechargeDialog = ({ open, onOpenChange, customerId, onSuccess }: Re
 
           <div className="space-y-2">
             <Label htmlFor="amount">充值金额 *</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">美金 (USD)</SelectItem>
+                  <SelectItem value="CNY">人民币 (CNY)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="flex-1"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
