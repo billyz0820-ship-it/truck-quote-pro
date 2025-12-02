@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Truck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { authApi } from "@/utils/api";
 
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: "",
+    userName: "",
     password: ""
   });
 
@@ -17,10 +18,34 @@ const Login = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const loginUser = async (userName: string, password: string) => {
+    try {
+      const data = await authApi.login({ userName, password });
+      
+      // 可以在这里保存token到localStorage
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+      }
+      
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 这里添加登录逻辑
-    navigate("/dashboard");
+    setIsLoading(true);
+
+    try {
+      await loginUser(formData.userName, formData.password);
+      navigate("/dashboard");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -44,8 +69,8 @@ const Login = () => {
                 id="email"
                 type="email"
                 placeholder="请输入您的邮箱"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+                value={formData.userName}
+                onChange={(e) => handleInputChange("userName", e.target.value)}
                 required
               />
             </div>
