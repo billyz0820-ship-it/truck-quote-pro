@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const TicketDetail = () => {
   const { id } = useParams();
@@ -67,6 +68,7 @@ const TicketDetail = () => {
     if (!newMessage.trim() || !user) return;
 
     try {
+      // Insert the communication message
       const { error } = await supabase
         .from("ticket_communications")
         .insert([{
@@ -78,11 +80,72 @@ const TicketDetail = () => {
 
       if (error) throw error;
 
+      // If ticket is open, change status to in_progress after reply
+      if (ticket.status === 'open') {
+        const { error: updateError } = await supabase
+          .from("tickets")
+          .update({ 
+            status: 'in_progress',
+            assigned_to: ticket.assigned_to || user.id
+          })
+          .eq("id", id);
+
+        if (updateError) throw updateError;
+
+        // Record status change
+        await supabase
+          .from("ticket_status_changes")
+          .insert({
+            ticket_id: id,
+            old_status: 'open',
+            new_status: 'in_progress',
+            changed_by: user.id,
+            changed_by_name: user.email || "管理员",
+            notes: "回复消息后自动变更为处理中"
+          });
+      }
+
       setNewMessage("");
       fetchTicketDetails();
       toast.success("消息已发送");
     } catch (error: any) {
       toast.error("发送消息失败: " + error.message);
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!confirm("确定要完成此工单吗？")) return;
+    if (!user) return;
+
+    try {
+      const oldStatus = ticket.status;
+      
+      const { error: updateError } = await supabase
+        .from("tickets")
+        .update({ 
+          status: 'resolved',
+          resolved_at: new Date().toISOString()
+        })
+        .eq("id", id);
+
+      if (updateError) throw updateError;
+
+      const { error: historyError } = await supabase
+        .from("ticket_status_changes")
+        .insert({
+          ticket_id: id,
+          old_status: oldStatus,
+          new_status: 'resolved',
+          changed_by: user.id,
+          changed_by_name: user.email || "管理员"
+        });
+
+      if (historyError) throw historyError;
+
+      toast.success("工单已完成");
+      fetchTicketDetails();
+    } catch (error: any) {
+      toast.error("操作失败: " + error.message);
     }
   };
 
@@ -93,7 +156,6 @@ const TicketDetail = () => {
     try {
       const oldStatus = ticket.status;
       
-      // 更新工单状态
       const { error: updateError } = await supabase
         .from("tickets")
         .update({ 
@@ -105,7 +167,6 @@ const TicketDetail = () => {
 
       if (updateError) throw updateError;
 
-      // 记录状态变更
       const { error: historyError } = await supabase
         .from("ticket_status_changes")
         .insert({
@@ -164,13 +225,18 @@ const TicketDetail = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate("/dashboard/tickets")}
-          className="p-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/dashboard/tickets")}
+              className="p-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>返回</TooltipContent>
+        </Tooltip>
         <div className="flex-1">
           <h1 className="text-3xl font-bold">工单详情</h1>
           <p className="text-muted-foreground">工单编号: {ticket.ticket_number}</p>
@@ -179,7 +245,6 @@ const TicketDetail = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* 订单信息 */}
           <Card>
             <CardHeader>
               <CardTitle>订单信息</CardTitle>
@@ -218,7 +283,6 @@ const TicketDetail = () => {
             </CardContent>
           </Card>
 
-          {/* 沟通记录 */}
           <Card>
             <CardHeader>
               <CardTitle>沟通记录</CardTitle>
@@ -250,10 +314,21 @@ const TicketDetail = () => {
                     onChange={(e) => setNewMessage(e.target.value)}
                     rows={3}
                   />
-                  <div className="flex justify-end">
+                  <div className="flex justify-between">
                     <Button onClick={handleSendMessage}>
                       发送消息
                     </Button>
+                    {userRole === 'admin' && ticket.status === 'in_progress' && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button onClick={handleComplete} variant="default" className="bg-green-600 hover:bg-green-700">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            完成工单
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>将工单标记为已完成</TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 </div>
               )}
@@ -261,9 +336,7 @@ const TicketDetail = () => {
           </Card>
         </div>
 
-        {/* 右侧栏 */}
         <div className="space-y-6">
-          {/* 附件 */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

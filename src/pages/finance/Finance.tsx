@@ -284,6 +284,7 @@ const Finance = () => {
           <TabsTrigger value="vouchers">付款凭证</TabsTrigger>
           <TabsTrigger value="profit">利润分析</TabsTrigger>
           <TabsTrigger value="bills">账单管理</TabsTrigger>
+          <TabsTrigger value="commission">分销商佣金</TabsTrigger>
         </TabsList>
 
         <TabsContent value="customers">
@@ -482,6 +483,24 @@ const Finance = () => {
 
         <TabsContent value="bills">
           <BillManagement />
+        </TabsContent>
+
+        <TabsContent value="commission">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                分销商佣金单
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-center py-8">
+                分销商佣金功能将根据分销商配置的提成比例，按每单利润自动计算佣金。
+                <br />
+                请先在配置管理中设置分销商的卡车/快递订单提成比例。
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
