@@ -1905,6 +1905,136 @@ export type Database = {
         }
         Relationships: []
       }
+      truck_carrier_pricing: {
+        Row: {
+          accessorial_charges: Json
+          base_prices: Json
+          carrier_id: string
+          created_at: string
+          effective_date: string
+          id: string
+          is_active: boolean
+          pricing_name: string
+          service_surcharges: Json
+          updated_at: string
+          zone_table: Json
+        }
+        Insert: {
+          accessorial_charges?: Json
+          base_prices?: Json
+          carrier_id: string
+          created_at?: string
+          effective_date?: string
+          id?: string
+          is_active?: boolean
+          pricing_name: string
+          service_surcharges?: Json
+          updated_at?: string
+          zone_table?: Json
+        }
+        Update: {
+          accessorial_charges?: Json
+          base_prices?: Json
+          carrier_id?: string
+          created_at?: string
+          effective_date?: string
+          id?: string
+          is_active?: boolean
+          pricing_name?: string
+          service_surcharges?: Json
+          updated_at?: string
+          zone_table?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_carrier_pricing_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "truck_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      truck_carrier_ratings: {
+        Row: {
+          carrier_id: string
+          created_at: string
+          delivery_timeliness: number
+          id: string
+          loss_rate: number
+          overall_score: number | null
+          pickup_punctuality: number
+          rated_by: string | null
+          transit_timeliness: number
+          updated_at: string
+        }
+        Insert: {
+          carrier_id: string
+          created_at?: string
+          delivery_timeliness?: number
+          id?: string
+          loss_rate?: number
+          overall_score?: number | null
+          pickup_punctuality?: number
+          rated_by?: string | null
+          transit_timeliness?: number
+          updated_at?: string
+        }
+        Update: {
+          carrier_id?: string
+          created_at?: string
+          delivery_timeliness?: number
+          id?: string
+          loss_rate?: number
+          overall_score?: number | null
+          pickup_punctuality?: number
+          rated_by?: string | null
+          transit_timeliness?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_carrier_ratings_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "truck_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      truck_carriers: {
+        Row: {
+          avatar_url: string | null
+          carrier_name: string
+          created_at: string
+          id: string
+          is_system: boolean
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          carrier_name: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          carrier_name?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

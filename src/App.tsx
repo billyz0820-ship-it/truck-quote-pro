@@ -44,6 +44,8 @@ import PriceHistory from "./pages/carrier/PriceHistory";
 import LogisticsTriggers from "./pages/logistics/LogisticsTriggers";
 import LogisticsServices from "./pages/logistics/LogisticsServices";
 import ChannelConfigs from "./pages/logistics/ChannelConfigs";
+import TruckCarrierManagement from "./pages/truck/TruckCarrierManagement";
+import TruckCarrierPricing from "./pages/truck/TruckCarrierPricing";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +96,8 @@ const App = () => (
             <Route path="logistics/services" element={<LogisticsServices />} />
             <Route path="logistics/remote-areas" element={<RemoteAreas />} />
             <Route path="logistics/channels" element={<ChannelConfigs />} />
+            <Route path="truck/carriers" element={<TruckCarrierManagement />} />
+            <Route path="truck/pricing/:carrierId" element={<TruckCarrierPricing />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
