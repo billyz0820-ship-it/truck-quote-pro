@@ -6,11 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, Eye, Download } from "lucide-react";
+import { Plus, Search, Filter, Eye, Download, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Order {
   id: string;
@@ -21,7 +22,15 @@ interface Order {
   bol_url: string | null;
   sku: string | null;
   pickup_zip: string;
+  pickup_address: string | null;
+  pickup_city: string | null;
+  pickup_state: string | null;
+  pickup_contact_name: string | null;
   delivery_zip: string;
+  delivery_address: string | null;
+  delivery_city: string | null;
+  delivery_state: string | null;
+  delivery_contact_name: string | null;
   cargo_description: string | null;
   status: string;
   quoted_amount: number;
@@ -35,7 +44,7 @@ const OrderList = () => {
   const [searchType, setSearchType] = useState("all");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("quoted");
 
   useEffect(() => {
     if (customerId || userRole === 'admin') {
@@ -48,7 +57,6 @@ const OrderList = () => {
       setLoading(true);
       let query = supabase.from('orders').select('*');
       
-      // 如果是客户，只显示自己的订单
       if (userRole !== 'admin' && customerId) {
         query = query.eq('customer_id', customerId);
       }
@@ -65,20 +73,20 @@ const OrderList = () => {
   };
 
   const getOrderStatuses = () => {
-    const allCount = orders.length;
+    const allCount = orders.filter(o => o.status !== 'deleted').length;
     const statusCounts = orders.reduce((acc, order) => {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     return [
-      { value: "all", label: "全部订单", count: allCount },
       { value: "quoted", label: "已报价", count: statusCounts.quoted || 0 },
       { value: "placed", label: "已下单", count: statusCounts.placed || 0 },
       { value: "picked-up", label: "已提货", count: statusCounts["picked-up"] || 0 },
       { value: "in-transit", label: "运输中", count: statusCounts["in-transit"] || 0 },
       { value: "delivered", label: "已送达", count: statusCounts.delivered || 0 },
       { value: "cancelled", label: "已取消", count: statusCounts.cancelled || 0 },
+      { value: "all", label: "全部订单", count: allCount },
     ];
   };
 
@@ -98,35 +106,20 @@ const OrderList = () => {
   };
 
   const filteredOrders = orders.filter(order => {
-    // 已删除的订单不在全部订单中显示
-    if (activeTab === "all" && order.status === "deleted") {
-      return false;
-    }
-    
-    // Filter by tab
-    if (activeTab !== "all" && order.status !== activeTab) {
-      return false;
-    }
-
+    if (activeTab === "all" && order.status === "deleted") return false;
+    if (activeTab !== "all" && order.status !== activeTab) return false;
     if (!searchTerm) return true;
     
     const term = searchTerm.toLowerCase();
     
     switch (searchType) {
-      case "order":
-        return order.order_number.toLowerCase().includes(term);
-      case "reference":
-        return order.reference_number?.toLowerCase().includes(term);
-      case "pro":
-        return order.pro_number?.toLowerCase().includes(term);
-      case "bol":
-        return order.bol_number?.toLowerCase().includes(term);
-      case "sku":
-        return order.sku?.toLowerCase().includes(term);
-      case "pickup":
-        return order.pickup_zip.includes(term);
-      case "delivery":
-        return order.delivery_zip.includes(term);
+      case "order": return order.order_number.toLowerCase().includes(term);
+      case "reference": return order.reference_number?.toLowerCase().includes(term);
+      case "pro": return order.pro_number?.toLowerCase().includes(term);
+      case "bol": return order.bol_number?.toLowerCase().includes(term);
+      case "sku": return order.sku?.toLowerCase().includes(term);
+      case "pickup": return order.pickup_zip.includes(term);
+      case "delivery": return order.delivery_zip.includes(term);
       default:
         return (
           order.order_number.toLowerCase().includes(term) ||
@@ -139,6 +132,36 @@ const OrderList = () => {
         );
     }
   });
+
+  const handleDelete = async (orderId: string) => {
+    if (!confirm("确定要删除此报价吗？")) return;
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'deleted' })
+        .eq('id', orderId);
+      if (error) throw error;
+      toast.success("报价已删除");
+      fetchOrders();
+    } catch (error: any) {
+      toast.error("删除失败: " + error.message);
+    }
+  };
+
+  const handleCancel = async (orderId: string) => {
+    if (!confirm("确定要取消此订单吗？")) return;
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderId);
+      if (error) throw error;
+      toast.success("订单已取消");
+      fetchOrders();
+    } catch (error: any) {
+      toast.error("取消失败: " + error.message);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -153,7 +176,6 @@ const OrderList = () => {
         </Button>
       </div>
 
-      {/* 搜索和筛选 */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -191,7 +213,6 @@ const OrderList = () => {
         </CardContent>
       </Card>
 
-      {/* 订单状态标签页 */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           {getOrderStatuses().map((status) => (
@@ -216,8 +237,10 @@ const OrderList = () => {
                   <TableRow>
                     <TableHead>订单编号</TableHead>
                     <TableHead>参考编号</TableHead>
-                    <TableHead>起点</TableHead>
-                    <TableHead>终点</TableHead>
+                    <TableHead>发货人</TableHead>
+                    <TableHead>发货地址</TableHead>
+                    <TableHead>收货人</TableHead>
+                    <TableHead>收货地址</TableHead>
                     <TableHead>货物</TableHead>
                     <TableHead>PRO号</TableHead>
                     <TableHead>BOL号</TableHead>
@@ -232,77 +255,86 @@ const OrderList = () => {
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.order_number}</TableCell>
                       <TableCell>{order.reference_number || "-"}</TableCell>
-                      <TableCell>{order.pickup_zip}</TableCell>
-                      <TableCell>{order.delivery_zip}</TableCell>
+                      <TableCell>{order.pickup_contact_name || "-"}</TableCell>
+                      <TableCell>
+                        <div className="max-w-[150px]">
+                          <div className="truncate">{order.pickup_address || order.pickup_zip}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {order.pickup_city && order.pickup_state ? `${order.pickup_city}, ${order.pickup_state}` : order.pickup_zip}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{order.delivery_contact_name || "-"}</TableCell>
+                      <TableCell>
+                        <div className="max-w-[150px]">
+                          <div className="truncate">{order.delivery_address || order.delivery_zip}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {order.delivery_city && order.delivery_state ? `${order.delivery_city}, ${order.delivery_state}` : order.delivery_zip}
+                          </div>
+                        </div>
+                      </TableCell>
                       <TableCell>{order.cargo_description || "-"}</TableCell>
                       <TableCell>{order.pro_number || "-"}</TableCell>
                       <TableCell>{order.bol_number || "-"}</TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell className="font-medium">${order.quoted_amount.toFixed(2)}</TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleDateString('zh-CN')}</TableCell>
-                       <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => navigate(`/dashboard/orders/${order.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => navigate(`/dashboard/orders/${order.id}`)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>查看详情</TooltipContent>
+                          </Tooltip>
                           {order.status === "quoted" && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={async () => {
-                                if (!confirm("确定要删除此报价吗？")) return;
-                                try {
-                                  const { error } = await supabase
-                                    .from('orders')
-                                    .update({ status: 'deleted' })
-                                    .eq('id', order.id);
-                                  if (error) throw error;
-                                  toast.success("报价已删除");
-                                  fetchOrders();
-                                } catch (error: any) {
-                                  toast.error("删除失败: " + error.message);
-                                }
-                              }}
-                            >
-                              删除
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDelete(order.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>删除</TooltipContent>
+                            </Tooltip>
                           )}
                           {order.status === "placed" && (
                             <>
                               {order.bol_url && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => window.open(order.bol_url!, '_blank')}
-                                >
-                                  <Download className="h-4 w-4 mr-1" />
-                                  下载BOL
-                                </Button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(order.bol_url!, '_blank')}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>下载BOL</TooltipContent>
+                                </Tooltip>
                               )}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={async () => {
-                                  if (!confirm("确定要取消此订单吗？")) return;
-                                  try {
-                                    const { error } = await supabase
-                                      .from('orders')
-                                      .update({ status: 'cancelled' })
-                                      .eq('id', order.id);
-                                    if (error) throw error;
-                                    toast.success("订单已取消");
-                                    fetchOrders();
-                                  } catch (error: any) {
-                                    toast.error("取消失败: " + error.message);
-                                  }
-                                }}
-                              >
-                                取消
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleCancel(order.id)}
+                                  >
+                                    取消
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>取消订单</TooltipContent>
+                              </Tooltip>
                             </>
                           )}
                         </div>

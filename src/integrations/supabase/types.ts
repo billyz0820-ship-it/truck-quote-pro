@@ -656,10 +656,12 @@ export type Database = {
           contact_name: string
           created_at: string
           email: string
+          express_commission_rate: number | null
           id: string
           invitation_code: string
           phone: string
           status: string
+          truck_commission_rate: number | null
           updated_at: string
         }
         Insert: {
@@ -667,10 +669,12 @@ export type Database = {
           contact_name: string
           created_at?: string
           email: string
+          express_commission_rate?: number | null
           id?: string
           invitation_code: string
           phone: string
           status?: string
+          truck_commission_rate?: number | null
           updated_at?: string
         }
         Update: {
@@ -678,10 +682,12 @@ export type Database = {
           contact_name?: string
           created_at?: string
           email?: string
+          express_commission_rate?: number | null
           id?: string
           invitation_code?: string
           phone?: string
           status?: string
+          truck_commission_rate?: number | null
           updated_at?: string
         }
         Relationships: []

@@ -6,7 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit, Copy, Printer, Undo2, CornerUpLeft, FileDown, Search, Download, Upload, Eye } from "lucide-react";
+import { Plus, Trash2, Edit, Copy, Printer, Undo2, FileDown, Search, Download, Upload, Eye } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -559,22 +560,37 @@ export default function ExpressOrders() {
       case "pending_label":
         return (
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => handleEdit(order.id)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button 
-              size="sm" 
-              onClick={() => {
-                setSelectedOrderForPrint(order.id);
-                setPrintDialogOpen(true);
-              }}
-            >
-              <Printer className="h-4 w-4 mr-1" />
-              打单
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => handleDelete(order.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="sm" variant="outline" onClick={() => handleEdit(order.id)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>编辑</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    setSelectedOrderForPrint(order.id);
+                    setPrintDialogOpen(true);
+                  }}
+                >
+                  <Printer className="h-4 w-4 mr-1" />
+                  打单
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>打印标签</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="sm" variant="destructive" onClick={() => handleDelete(order.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>删除</TooltipContent>
+            </Tooltip>
           </div>
         );
       case "labeled":
@@ -582,23 +598,35 @@ export default function ExpressOrders() {
       case "delivered":
         return (
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => handlePrintLabel(order)}>
-              <Printer className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => handleRevert(order.id)}>
-              <Undo2 className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => handleConvertToReturn(order)}>
-              <CornerUpLeft className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="sm" variant="outline" onClick={() => handlePrintLabel(order)}>
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>打印标签</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="sm" variant="outline" onClick={() => handleRevert(order.id)}>
+                  <Undo2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>撤回</TooltipContent>
+            </Tooltip>
           </div>
         );
       case "cancelled":
         return (
-          <Button size="sm" variant="outline" onClick={() => handleCopy(order)}>
-            <Copy className="h-4 w-4 mr-1" />
-            复制
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="sm" variant="outline" onClick={() => handleCopy(order)}>
+                <Copy className="h-4 w-4 mr-1" />
+                复制
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>复制订单</TooltipContent>
+          </Tooltip>
         );
       default:
         return null;
@@ -659,10 +687,7 @@ export default function ExpressOrders() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="all">
-            全部 ({counts.all})
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="pending_label">
             待打单 ({counts.pending_label})
           </TabsTrigger>
@@ -678,119 +703,63 @@ export default function ExpressOrders() {
           <TabsTrigger value="cancelled">
             取消 ({counts.cancelled})
           </TabsTrigger>
-          <TabsTrigger value="return">
-            退货订单 ({counts.return})
+          <TabsTrigger value="all">
+            全部 ({counts.all})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
-          {activeTab === "return" ? (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {renderTableHeaders().map((header, index) => (
-                      <TableHead key={index}>{header}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={16} className="text-center py-8">
-                        加载中...
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredReturnOrders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={16} className="text-center py-8 text-muted-foreground">
-                        暂无退货订单
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredReturnOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell>{order.order_number}</TableCell>
-                        <TableCell>{order.customer_code}</TableCell>
-                        <TableCell>{order.return_person}</TableCell>
-                        <TableCell>{order.carrier}</TableCell>
-                        <TableCell>{order.service_type}</TableCell>
-                        <TableCell>{order.order_source || "-"}</TableCell>
-                        <TableCell>{order.warehouse}</TableCell>
-                        <TableCell>{order.zip_code}</TableCell>
-                        <TableCell>{order.state}</TableCell>
-                        <TableCell>{order.city}</TableCell>
-                        <TableCell>{order.address}</TableCell>
-                        <TableCell>{order.zone || "-"}</TableCell>
-                        <TableCell>${order.shipping_fee}</TableCell>
-                        <TableCell>{order.address_type || "-"}</TableCell>
-                         <TableCell>{new Date(order.created_at).toLocaleString("zh-CN")}</TableCell>
-                         <TableCell>
-                           <div className="flex gap-2">
-                             <Button size="sm" variant="outline" onClick={() => handleEditReturnOrder(order.id)}>
-                               <Edit className="h-4 w-4" />
-                             </Button>
-                           </div>
-                         </TableCell>
-                      </TableRow>
-                    ))
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {activeTab !== "cancelled" && (
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
                   )}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
+                  {renderTableHeaders().map((header, index) => (
+                    <TableHead key={index}>{header}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
                   <TableRow>
-                    {activeTab !== "cancelled" && (
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
-                          onCheckedChange={handleSelectAll}
-                        />
-                      </TableHead>
-                    )}
-                    {renderTableHeaders().map((header, index) => (
-                      <TableHead key={index}>{header}</TableHead>
-                    ))}
+                    <TableCell colSpan={20} className="text-center py-8">
+                      加载中...
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={20} className="text-center py-8">
-                        加载中...
-                      </TableCell>
+                ) : filteredOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={20} className="text-center py-8 text-muted-foreground">
+                      暂无订单
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      {activeTab !== "cancelled" && (
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedOrders.includes(order.id)}
+                            onCheckedChange={() => handleSelectOrder(order.id)}
+                          />
+                        </TableCell>
+                      )}
+                      {renderTableRow(order).map((cell, index) => (
+                        <TableCell key={index}>{cell}</TableCell>
+                      ))}
+                      <TableCell>{renderActions(order)}</TableCell>
                     </TableRow>
-                  ) : filteredOrders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={20} className="text-center py-8 text-muted-foreground">
-                        暂无订单
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        {activeTab !== "cancelled" && (
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedOrders.includes(order.id)}
-                              onCheckedChange={() => handleSelectOrder(order.id)}
-                            />
-                          </TableCell>
-                        )}
-                        {renderTableRow(order).map((cell, index) => (
-                          <TableCell key={index}>{cell}</TableCell>
-                        ))}
-                        <TableCell>{renderActions(order)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </TabsContent>
       </Tabs>
 

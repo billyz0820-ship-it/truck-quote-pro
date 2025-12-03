@@ -39,7 +39,6 @@ import {
   DollarSign, 
   Settings, 
   FileText, 
-  ShoppingCart,
   Truck,
   LogOut,
   User,
@@ -47,7 +46,9 @@ import {
   Ticket,
   Receipt,
   Users,
-  PackageCheck
+  PackageCheck,
+  CornerUpLeft,
+  ArrowLeftRight
 } from "lucide-react";
 
 const DashboardLayout = () => {
@@ -64,6 +65,7 @@ const DashboardLayout = () => {
       subItems: [
         { title: "卡车订单", url: "/dashboard/orders/truck", icon: Truck },
         { title: "快递订单", url: "/dashboard/orders/express", icon: Package },
+        { title: "退货订单", url: "/dashboard/orders/return", icon: CornerUpLeft },
       ]
     },
     { 
@@ -74,12 +76,12 @@ const DashboardLayout = () => {
         { title: "当前报价", url: "/dashboard/finance/quotations", icon: FileText },
         { title: "流水记录", url: "/dashboard/finance/transactions", icon: Receipt },
         { title: "反弹账单", url: "/dashboard/finance/rebills", icon: Receipt },
+        { title: "运费差异", url: "/dashboard/finance/freight-difference", icon: ArrowLeftRight },
       ]
     },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
     { title: "配置管理", url: "/dashboard/settings", icon: Settings },
     { title: "工单管理", url: "/dashboard/tickets", icon: FileText },
-    { title: "产品模块", url: "/dashboard/products", icon: ShoppingCart },
     { title: "知识库", url: "/dashboard/knowledge", icon: FileText },
     { title: "通知管理", url: "/dashboard/notifications", icon: FileText },
     { title: "邮件管理", url: "/dashboard/emails", icon: FileText },

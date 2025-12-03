@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Edit, Snowflake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Distributor {
   id: string;
@@ -18,6 +19,8 @@ interface Distributor {
   email: string;
   invitation_code: string;
   status: string;
+  truck_commission_rate: number | null;
+  express_commission_rate: number | null;
   created_at: string;
 }
 
@@ -30,7 +33,9 @@ export default function DistributorManagement() {
     company_name: "",
     contact_name: "",
     phone: "",
-    email: ""
+    email: "",
+    truck_commission_rate: 0,
+    express_commission_rate: 0
   });
 
   useEffect(() => {
@@ -68,21 +73,31 @@ export default function DistributorManagement() {
 
     try {
       if (editingId) {
-        // Update existing distributor
         const { error } = await supabase
           .from('distributors')
-          .update(formData)
+          .update({
+            company_name: formData.company_name,
+            contact_name: formData.contact_name,
+            phone: formData.phone,
+            email: formData.email,
+            truck_commission_rate: formData.truck_commission_rate,
+            express_commission_rate: formData.express_commission_rate
+          })
           .eq('id', editingId);
 
         if (error) throw error;
         toast.success("更新成功");
       } else {
-        // Create new distributor with auto-generated invitation code
         const invitationCode = await generateInvitationCode();
         const { error } = await supabase
           .from('distributors')
           .insert({
-            ...formData,
+            company_name: formData.company_name,
+            contact_name: formData.contact_name,
+            phone: formData.phone,
+            email: formData.email,
+            truck_commission_rate: formData.truck_commission_rate,
+            express_commission_rate: formData.express_commission_rate,
             invitation_code: invitationCode
           });
 
@@ -92,7 +107,7 @@ export default function DistributorManagement() {
 
       setDialogOpen(false);
       setEditingId(null);
-      setFormData({ company_name: "", contact_name: "", phone: "", email: "" });
+      setFormData({ company_name: "", contact_name: "", phone: "", email: "", truck_commission_rate: 0, express_commission_rate: 0 });
       fetchDistributors();
     } catch (error: any) {
       toast.error("操作失败: " + error.message);
@@ -105,7 +120,9 @@ export default function DistributorManagement() {
       company_name: distributor.company_name,
       contact_name: distributor.contact_name,
       phone: distributor.phone,
-      email: distributor.email
+      email: distributor.email,
+      truck_commission_rate: distributor.truck_commission_rate || 0,
+      express_commission_rate: distributor.express_commission_rate || 0
     });
     setDialogOpen(true);
   };
@@ -134,7 +151,7 @@ export default function DistributorManagement() {
           setDialogOpen(open);
           if (!open) {
             setEditingId(null);
-            setFormData({ company_name: "", contact_name: "", phone: "", email: "" });
+            setFormData({ company_name: "", contact_name: "", phone: "", email: "", truck_commission_rate: 0, express_commission_rate: 0 });
           }
         }}>
           <DialogTrigger asChild>
@@ -177,6 +194,34 @@ export default function DistributorManagement() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>卡车订单提成比例 (%)</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={formData.truck_commission_rate}
+                    onChange={(e) => setFormData({ ...formData, truck_commission_rate: Number(e.target.value) })}
+                    placeholder="按利润百分比"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">按每单利润计算</p>
+                </div>
+                <div>
+                  <Label>快递订单提成比例 (%)</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={formData.express_commission_rate}
+                    onChange={(e) => setFormData({ ...formData, express_commission_rate: Number(e.target.value) })}
+                    placeholder="按利润百分比"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">按每单利润计算</p>
+                </div>
+              </div>
               <Button onClick={handleSubmit} className="w-full">
                 {editingId ? '更新' : '添加'}
               </Button>
@@ -193,6 +238,8 @@ export default function DistributorManagement() {
               <TableHead>电话</TableHead>
               <TableHead>邮箱</TableHead>
               <TableHead>邀请码</TableHead>
+              <TableHead>卡车提成</TableHead>
+              <TableHead>快递提成</TableHead>
               <TableHead>状态</TableHead>
               <TableHead>操作</TableHead>
             </TableRow>
@@ -200,11 +247,11 @@ export default function DistributorManagement() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">加载中...</TableCell>
+                <TableCell colSpan={9} className="text-center">加载中...</TableCell>
               </TableRow>
             ) : distributors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">暂无数据</TableCell>
+                <TableCell colSpan={9} className="text-center">暂无数据</TableCell>
               </TableRow>
             ) : (
               distributors.map((distributor) => (
@@ -216,6 +263,8 @@ export default function DistributorManagement() {
                   <TableCell>
                     <Badge variant="outline">{distributor.invitation_code}</Badge>
                   </TableCell>
+                  <TableCell>{distributor.truck_commission_rate || 0}%</TableCell>
+                  <TableCell>{distributor.express_commission_rate || 0}%</TableCell>
                   <TableCell>
                     <Badge variant={distributor.status === 'active' ? 'default' : 'secondary'}>
                       {distributor.status === 'active' ? '正常' : '冻结'}
@@ -223,20 +272,30 @@ export default function DistributorManagement() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(distributor)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={distributor.status === 'active' ? 'destructive' : 'default'}
-                        onClick={() => handleFreeze(distributor.id, distributor.status)}
-                      >
-                        <Snowflake className="h-4 w-4" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(distributor)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>编辑</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant={distributor.status === 'active' ? 'destructive' : 'default'}
+                            onClick={() => handleFreeze(distributor.id, distributor.status)}
+                          >
+                            <Snowflake className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{distributor.status === 'active' ? '冻结' : '激活'}</TooltipContent>
+                      </Tooltip>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -15,6 +15,7 @@ import DashboardLayout from "./components/layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import TruckOrders from "./pages/orders/TruckOrders";
 import ExpressOrders from "./pages/orders/ExpressOrders";
+import ReturnOrders from "./pages/orders/ReturnOrders";
 import CreateOrder from "./pages/orders/CreateOrder";
 import QuoteResults from "./pages/orders/QuoteResults";
 import OrderDetails from "./pages/orders/OrderDetails";
@@ -22,10 +23,10 @@ import OrderDetailView from "./pages/orders/OrderDetailView";
 import Finance from "./pages/finance/Finance";
 import FinanceQuotations from "./pages/finance/FinanceQuotations";
 import TransactionRecords from "./pages/finance/TransactionRecords";
+import FreightDifference from "./pages/finance/FreightDifference";
 import Settings from "./pages/settings/Settings";
 import TicketManagement from "./pages/tickets/TicketManagement";
 import TicketDetail from "./pages/tickets/TicketDetail";
-import ProductModule from "./pages/products/ProductModule";
 import CouponManagement from "./pages/coupons/CouponManagement";
 import RebillManagement from "./pages/rebills/RebillManagement";
 import KnowledgeBase from "./pages/knowledge/KnowledgeBase";
@@ -63,6 +64,7 @@ const App = () => (
             <Route index element={<Dashboard />} />
             <Route path="orders/truck" element={<TruckOrders />} />
             <Route path="orders/express" element={<ExpressOrders />} />
+            <Route path="orders/return" element={<ReturnOrders />} />
             <Route path="orders/create" element={<CreateOrder />} />
             <Route path="orders/quote" element={<QuoteResults />} />
             <Route path="orders/details" element={<OrderDetails />} />
@@ -71,11 +73,11 @@ const App = () => (
             <Route path="finance/quotations" element={<FinanceQuotations />} />
             <Route path="finance/transactions" element={<TransactionRecords />} />
             <Route path="finance/rebills" element={<RebillManagement />} />
+            <Route path="finance/freight-difference" element={<FreightDifference />} />
             <Route path="coupons" element={<CouponManagement />} />
             <Route path="settings" element={<Settings />} />
             <Route path="tickets" element={<TicketManagement />} />
             <Route path="tickets/:id" element={<TicketDetail />} />
-            <Route path="products" element={<ProductModule />} />
             <Route path="knowledge" element={<KnowledgeBase />} />
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="emails" element={<EmailManagement />} />
