@@ -26,6 +26,7 @@ interface Customer {
   id: string;
   customer_code: string;
   company_name: string;
+  phone: string | null;
   balance: number;
   credit_limit: number;
   customer_type: string;
@@ -299,6 +300,7 @@ const Finance = () => {
                   <TableRow>
                     <TableHead>客户编码</TableHead>
                     <TableHead>公司名称</TableHead>
+                    <TableHead>电话</TableHead>
                     <TableHead>客户类型</TableHead>
                     <TableHead>当前余额</TableHead>
                     <TableHead>信用额度</TableHead>
@@ -313,6 +315,7 @@ const Finance = () => {
                       <TableRow key={customer.id}>
                         <TableCell className="font-medium">{customer.customer_code}</TableCell>
                         <TableCell>{customer.company_name}</TableCell>
+                        <TableCell>{customer.phone || '-'}</TableCell>
                         <TableCell>
                           <Badge variant={customer.customer_type === 'credit' ? 'default' : 'secondary'}>
                             {customer.customer_type === 'credit' ? '信用' : '预付'}

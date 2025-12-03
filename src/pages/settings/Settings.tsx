@@ -531,6 +531,7 @@ const Settings = () => {
           <TabsTrigger value="users">用户配置</TabsTrigger>
           <TabsTrigger value="customers">客户配置</TabsTrigger>
           <TabsTrigger value="subaccounts">子账号配置</TabsTrigger>
+          <TabsTrigger value="distributors">分销商配置</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -1238,6 +1239,10 @@ const Settings = () => {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="distributors">
+          <DistributorManagement />
         </TabsContent>
       </Tabs>
 
