@@ -48,7 +48,8 @@ import {
   Users,
   PackageCheck,
   CornerUpLeft,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Star
 } from "lucide-react";
 
 const DashboardLayout = () => {
@@ -107,6 +108,13 @@ const DashboardLayout = () => {
         { title: "物流服务", url: "/dashboard/logistics/services", icon: Package },
         { title: "偏远地址", url: "/dashboard/logistics/remote-areas", icon: Package },
         { title: "渠道配置", url: "/dashboard/logistics/channels", icon: Settings },
+      ]
+    },
+    { 
+      title: "卡车管理", 
+      icon: Truck,
+      subItems: [
+        { title: "承运商管理", url: "/dashboard/truck/carriers", icon: Truck },
       ]
     },
   ];
