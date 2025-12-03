@@ -316,6 +316,9 @@ const CouponManagement = () => {
         </Dialog>
       </div>
 
+      {/* Coupon Settings */}
+      <CouponSettings />
+
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -323,9 +326,7 @@ const CouponManagement = () => {
             <CardTitle className="text-sm font-medium">总优惠券</CardTitle>
             <Ticket className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-      <CardContent>
-        <CouponSettings />
-        <div className="mt-6">
+          <CardContent>
             <div className="text-2xl font-bold">{coupons.length}</div>
           </CardContent>
         </Card>

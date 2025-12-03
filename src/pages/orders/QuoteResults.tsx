@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Package, Clock, Shield, Truck } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Clock, Shield, Truck, Ticket } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CarrierQuote {
   id: string;
@@ -23,10 +25,44 @@ interface CarrierQuote {
   freeInsurance: number;
 }
 
+interface AvailableCoupon {
+  id: string;
+  coupon_code: string;
+  amount: number;
+}
+
 const QuoteResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { customerId } = useAuth();
   const orderData = location.state?.orderData;
+  const [availableCoupon, setAvailableCoupon] = useState<AvailableCoupon | null>(null);
+  const [useCoupon, setUseCoupon] = useState(false);
+
+  // 获取可用的卡车优惠券
+  useEffect(() => {
+    const fetchCoupon = async () => {
+      if (!customerId) return;
+      
+      const { data } = await supabase
+        .from('coupons')
+        .select('id, coupon_code, amount')
+        .eq('customer_id', customerId)
+        .eq('status', 'active')
+        .is('used_at', null)
+        .or('order_type.is.null,order_type.eq.truck')
+        .gt('expire_at', new Date().toISOString())
+        .order('amount', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        setAvailableCoupon(data);
+      }
+    };
+
+    fetchCoupon();
+  }, [customerId]);
 
   // 如果没有订单数据，返回创建页面
   if (!orderData) {
@@ -91,12 +127,27 @@ const QuoteResults = () => {
 
   const handleSelectQuote = (quote: CarrierQuote) => {
     // 将订单数据和选中的报价一起传递
+    const finalQuote = useCoupon && availableCoupon ? {
+      ...quote,
+      originalCost: quote.totalCost,
+      totalCost: Math.max(0, quote.totalCost - availableCoupon.amount),
+      couponApplied: availableCoupon
+    } : quote;
+
     navigate("/dashboard/orders/details", { 
       state: { 
         orderData,
-        selectedQuote: quote 
+        selectedQuote: finalQuote,
+        couponApplied: useCoupon ? availableCoupon : null
       } 
     });
+  };
+
+  const getDiscountedPrice = (originalPrice: number) => {
+    if (useCoupon && availableCoupon) {
+      return Math.max(0, originalPrice - availableCoupon.amount);
+    }
+    return originalPrice;
   };
 
   return (
@@ -158,6 +209,35 @@ const QuoteResults = () => {
         </CardContent>
       </Card>
 
+      {/* 优惠券提示 */}
+      {availableCoupon && (
+        <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Ticket className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-700 dark:text-green-400">
+                    您有一张 ${availableCoupon.amount} 的卡车运费优惠券可用
+                  </p>
+                  <p className="text-sm text-green-600 dark:text-green-500">
+                    券码: {availableCoupon.coupon_code}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={useCoupon ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUseCoupon(!useCoupon)}
+                className={useCoupon ? "bg-green-600 hover:bg-green-700" : "border-green-600 text-green-600"}
+              >
+                {useCoupon ? "已使用" : "使用优惠券"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 承运商报价 */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">承运商报价</h2>
@@ -175,8 +255,18 @@ const QuoteResults = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-primary">${quote.totalCost}</p>
-                  <p className="text-sm text-muted-foreground">总费用</p>
+                  {useCoupon && availableCoupon ? (
+                    <>
+                      <p className="text-lg text-muted-foreground line-through">${quote.totalCost}</p>
+                      <p className="text-2xl font-bold text-green-600">${getDiscountedPrice(quote.totalCost)}</p>
+                      <p className="text-sm text-green-600">已优惠 ${availableCoupon.amount}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-2xl font-bold text-primary">${quote.totalCost}</p>
+                      <p className="text-sm text-muted-foreground">总费用</p>
+                    </>
+                  )}
                 </div>
               </div>
             </CardHeader>
