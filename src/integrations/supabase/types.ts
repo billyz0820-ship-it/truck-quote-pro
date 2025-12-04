@@ -2124,6 +2124,30 @@ export type Database = {
         }
         Relationships: []
       }
+      zip_region_mapping: {
+        Row: {
+          created_at: string
+          id: string
+          region: string
+          updated_at: string
+          zip_prefix: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          region: string
+          updated_at?: string
+          zip_prefix: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          region?: string
+          updated_at?: string
+          zip_prefix?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
