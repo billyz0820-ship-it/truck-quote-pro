@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,17 +8,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, FileText } from "lucide-react";
 import { PricingConfigTabs } from "@/components/carrier/PricingConfigTabs";
 import { ProfitabilityAnalyzer } from "@/lib/profitabilityAnalyzer";
+import { useTab } from "@/contexts/TabContext";
 
 export default function CustomerPricingEdit() {
-  const navigate = useNavigate();
+  const { openTab, closeTab } = useTab();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const copyFrom = searchParams.get("copyFrom");
   const { toast } = useToast();
   const isEditing = !!id;
+  
+  const currentTabId = `/dashboard/carrier/customer-pricing${id ? `/${id}` : copyFrom ? `/new?copyFrom=${copyFrom}` : '/new'}`.replace(/\//g, "-");
+  
+  const handleGoBack = () => {
+    closeTab(currentTabId);
+    openTab({
+      title: "客户报价管理",
+      path: "/dashboard/carrier/customer-pricing",
+      icon: FileText,
+    });
+  };
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -65,7 +77,7 @@ export default function CustomerPricingEdit() {
 
     if (error) {
       toast({ title: "获取失败", description: error.message, variant: "destructive" });
-      navigate("/dashboard/carrier/customer-pricing");
+      handleGoBack();
     } else if (data) {
       if (isEditing) {
         setSelectedCustomer(data.customer_id);
@@ -222,7 +234,7 @@ export default function CustomerPricingEdit() {
       }
 
       toast({ title: "保存成功" });
-      navigate("/dashboard/carrier/customer-pricing");
+      handleGoBack();
     } catch (error: any) {
       toast({ title: "保存失败", description: error.message, variant: "destructive" });
     } finally {
@@ -241,7 +253,7 @@ export default function CustomerPricingEdit() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate("/dashboard/carrier/customer-pricing")}>
+        <Button variant="ghost" onClick={handleGoBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
@@ -343,7 +355,7 @@ export default function CustomerPricingEdit() {
         />
 
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => navigate("/dashboard/carrier/customer-pricing")}>
+          <Button type="button" variant="outline" onClick={handleGoBack}>
             取消
           </Button>
           <Button onClick={handleSave} disabled={saving}>

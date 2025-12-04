@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTab } from "@/contexts/TabContext";
 
 interface PricingTemplate {
   id: string;
@@ -16,9 +16,25 @@ interface PricingTemplate {
 }
 
 export default function PricingTemplates() {
-  const navigate = useNavigate();
+  const { openTab } = useTab();
   const [templates, setTemplates] = useState<PricingTemplate[]>([]);
   const { toast } = useToast();
+
+  const handleOpenNewTemplate = () => {
+    openTab({
+      title: "新增账套",
+      path: "/dashboard/carrier/templates/new",
+      icon: FileText,
+    });
+  };
+
+  const handleOpenEditTemplate = (id: string, name: string) => {
+    openTab({
+      title: `编辑: ${name}`,
+      path: `/dashboard/carrier/templates/${id}`,
+      icon: FileText,
+    });
+  };
 
   useEffect(() => {
     fetchTemplates();
@@ -57,7 +73,7 @@ export default function PricingTemplates() {
           <h1 className="text-3xl font-bold">账套管理</h1>
           <p className="text-muted-foreground mt-1">管理不同客户的报价账套</p>
         </div>
-        <Button onClick={() => navigate("/dashboard/carrier/templates/new")}>
+        <Button onClick={handleOpenNewTemplate}>
           <Plus className="h-4 w-4 mr-2" />
           新增账套
         </Button>
@@ -88,7 +104,7 @@ export default function PricingTemplates() {
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          onClick={() => navigate(`/dashboard/carrier/templates/${template.id}`)}
+                          onClick={() => handleOpenEditTemplate(template.id, template.template_name)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
