@@ -448,16 +448,16 @@ const CreateOrder = () => {
           </CardContent>
         </Card>
 
-        {/* 发货时间 */}
+        {/* 发货时间与配套服务（合并） */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary" />
-              发货时间
+              发货时间{shipmentType === "LTL" && " & 配套服务"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="pickupDate" className="text-sm">发货日期</Label>
                 <Input
@@ -484,53 +484,47 @@ const CreateOrder = () => {
                   </SelectContent>
                 </Select>
               </div>
+              {/* 发货配套服务（仅零担） */}
+              {shipmentType === "LTL" && (
+                <>
+                  <div className="flex items-end pb-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="doorPickup" 
+                        checked={pickupServices.doorPickup}
+                        onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, doorPickup: checked as boolean }))}
+                      />
+                      <label htmlFor="doorPickup" className="text-sm">上门取件</label>
+                    </div>
+                  </div>
+                  <div className="flex items-end pb-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="pickupLiftgate" 
+                        checked={pickupServices.liftgate}
+                        disabled={pickupAddressType === "commercial_no_dock"}
+                        onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, liftgate: checked as boolean }))}
+                      />
+                      <label htmlFor="pickupLiftgate" className="text-sm">
+                        卸货装置
+                        {pickupAddressType === "commercial_no_dock" && <span className="text-xs text-primary ml-1">(必选)</span>}
+                      </label>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* 发货配套服务（仅零担时显示） */}
-        {shipmentType === "LTL" && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">发货配套服务</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="doorPickup" 
-                    checked={pickupServices.doorPickup}
-                    onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, doorPickup: checked as boolean }))}
-                  />
-                  <label htmlFor="doorPickup" className="text-sm">上门取件</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="pickupLiftgate" 
-                    checked={pickupServices.liftgate}
-                    disabled={pickupAddressType === "commercial_no_dock"}
-                    onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, liftgate: checked as boolean }))}
-                  />
-                  <label htmlFor="pickupLiftgate" className="text-sm">
-                    卸货装置
-                    {pickupAddressType === "commercial_no_dock" && (
-                      <span className="text-xs text-primary ml-1">(无卸货口必选)</span>
-                    )}
-                  </label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* 收货配套服务（仅零担时显示） */}
         {shipmentType === "LTL" && (
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <CardTitle className="text-base">收货配套服务</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="flex flex-wrap gap-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="deliveryAppointment" 
@@ -547,10 +541,7 @@ const CreateOrder = () => {
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, residential: checked as boolean }))}
                   />
                   <label htmlFor="residential" className="text-sm">
-                    住宅配送
-                    {deliveryAddressType === "residential" && (
-                      <span className="text-xs text-primary ml-1">(住宅地址必选)</span>
-                    )}
+                    住宅配送{deliveryAddressType === "residential" && <span className="text-xs text-primary ml-1">(必选)</span>}
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -578,11 +569,8 @@ const CreateOrder = () => {
                   />
                   <label htmlFor="deliveryLiftgate" className="text-sm">
                     卸货装置
-                    {(deliveryAddressType === "commercial_no_dock" || deliveryAddressType === "residential") && (
-                      <span className="text-xs text-primary ml-1">
-                        ({deliveryAddressType === "residential" ? "住宅地址" : "无卸货口"}必选)
-                      </span>
-                    )}
+                    {(deliveryAddressType === "commercial_no_dock" || deliveryAddressType === "residential") && 
+                      <span className="text-xs text-primary ml-1">(必选)</span>}
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">

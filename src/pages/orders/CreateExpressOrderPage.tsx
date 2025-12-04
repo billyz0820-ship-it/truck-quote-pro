@@ -234,10 +234,10 @@ export default function CreateExpressOrderPage() {
             </div>
             <div className="space-y-2">
               <Label>签名服务</Label>
-              <Select value={formData.signature_service} onValueChange={(v) => setFormData({ ...formData, signature_service: v })}>
+              <Select value={formData.signature_service || "none"} onValueChange={(v) => setFormData({ ...formData, signature_service: v === "none" ? "" : v })}>
                 <SelectTrigger><SelectValue placeholder="无签名服务" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">无</SelectItem>
+                  <SelectItem value="none">无</SelectItem>
                   <SelectItem value="direct">直接签名</SelectItem>
                   <SelectItem value="indirect">间接签名</SelectItem>
                   <SelectItem value="adult">成人签名</SelectItem>
