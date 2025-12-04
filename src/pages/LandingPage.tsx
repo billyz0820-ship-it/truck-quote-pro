@@ -178,6 +178,51 @@ const DashboardMockup = () => {
   );
 };
 
+// 运费估算逻辑
+const calculateEstimate = (
+  serviceType: "truck" | "express",
+  originZip: string,
+  destZip: string,
+  pallets: string,
+  weight: string
+) => {
+  // 基于邮编前3位计算大致区域距离
+  const originRegion = parseInt(originZip.substring(0, 3)) || 0;
+  const destRegion = parseInt(destZip.substring(0, 3)) || 0;
+  const regionDiff = Math.abs(originRegion - destRegion);
+  
+  // 区域距离系数 (0-1)
+  const distanceFactor = Math.min(regionDiff / 500, 1);
+  
+  if (serviceType === "truck") {
+    const palletCount = parseInt(pallets) || 1;
+    // 卡车基础价格: $150-$300/托盘，根据距离浮动
+    const baseMin = 150 + distanceFactor * 100;
+    const baseMax = 300 + distanceFactor * 200;
+    const minPrice = Math.round(baseMin * palletCount);
+    const maxPrice = Math.round(baseMax * palletCount);
+    return {
+      minPrice,
+      maxPrice,
+      transitTime: distanceFactor > 0.5 ? "5-7" : "2-4",
+      carriers: ["XPO Logistics", "Old Dominion", "Saia"]
+    };
+  } else {
+    const weightLbs = parseFloat(weight) || 1;
+    // 快递基础价格: 根据重量和距离计算
+    const baseCost = 8 + weightLbs * 0.5;
+    const distanceMultiplier = 1 + distanceFactor * 0.8;
+    const minPrice = Math.round(baseCost * distanceMultiplier * 0.9 * 100) / 100;
+    const maxPrice = Math.round(baseCost * distanceMultiplier * 1.3 * 100) / 100;
+    return {
+      minPrice,
+      maxPrice,
+      transitTime: distanceFactor > 0.5 ? "3-5" : "1-3",
+      carriers: ["FedEx Ground", "UPS Ground", "USPS Priority"]
+    };
+  }
+};
+
 // 运费测算组件
 const FreightCalculator = () => {
   const navigate = useNavigate();
@@ -188,10 +233,21 @@ const FreightCalculator = () => {
     weight: "",
     pallets: "",
   });
+  const [result, setResult] = useState<{
+    minPrice: number;
+    maxPrice: number;
+    transitTime: string;
+    carriers: string[];
+  } | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const handleCalculate = () => {
     if (!formData.originZip || !formData.destZip) {
       toast.error("请填写起始和目的地邮编");
+      return;
+    }
+    if (formData.originZip.length < 5 || formData.destZip.length < 5) {
+      toast.error("请输入完整的5位邮编");
       return;
     }
     if (serviceType === "truck" && !formData.pallets) {
@@ -202,10 +258,105 @@ const FreightCalculator = () => {
       toast.error("请填写包裹重量");
       return;
     }
-    // 跳转到注册页面引导用户注册
-    navigate('/register');
-    toast.info("注册后即可获取精准运费报价");
+    
+    setIsCalculating(true);
+    // 模拟计算延迟
+    setTimeout(() => {
+      const estimate = calculateEstimate(
+        serviceType,
+        formData.originZip,
+        formData.destZip,
+        formData.pallets,
+        formData.weight
+      );
+      setResult(estimate);
+      setIsCalculating(false);
+    }, 800);
   };
+
+  const handleReset = () => {
+    setResult(null);
+    setFormData({ originZip: "", destZip: "", weight: "", pallets: "" });
+  };
+
+  // 显示结果界面
+  if (result) {
+    return (
+      <div className="bg-card rounded-2xl shadow-lg border border-border p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">预估报价</h3>
+              <p className="text-sm text-muted-foreground">
+                {serviceType === "truck" ? "卡车运输" : "快递服务"} · {formData.originZip} → {formData.destZip}
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleReset}>
+            重新测算
+          </Button>
+        </div>
+
+        {/* 价格展示 */}
+        <div className="bg-primary/5 rounded-xl p-6 mb-6 text-center">
+          <p className="text-sm text-muted-foreground mb-2">预估运费范围</p>
+          <div className="flex items-baseline justify-center gap-1">
+            <span className="text-3xl font-bold text-primary">${result.minPrice}</span>
+            <span className="text-xl text-muted-foreground mx-2">-</span>
+            <span className="text-3xl font-bold text-primary">${result.maxPrice}</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            预计时效：{result.transitTime} 个工作日
+          </p>
+        </div>
+
+        {/* 承运商选择 */}
+        <div className="mb-6">
+          <p className="text-sm font-medium text-foreground mb-3">可选承运商</p>
+          <div className="space-y-2">
+            {result.carriers.map((carrier, index) => (
+              <div key={carrier} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  {serviceType === "truck" ? (
+                    <Truck className="w-4 h-4 text-primary" />
+                  ) : (
+                    <Package className="w-4 h-4 text-primary" />
+                  )}
+                  <span className="text-sm text-foreground">{carrier}</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  ${Math.round(result.minPrice + (result.maxPrice - result.minPrice) * (index * 0.3))}+
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 注册引导 */}
+        <div className="bg-muted/30 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">注册获取精准报价</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                以上为预估价格，注册后可获取实时精准报价，新用户还可领取专属优惠券
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Button onClick={() => navigate('/register')} className="w-full">
+          免费注册获取精准报价
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card rounded-2xl shadow-lg border border-border p-8">
@@ -221,7 +372,10 @@ const FreightCalculator = () => {
 
       <RadioGroup 
         value={serviceType} 
-        onValueChange={(v) => setServiceType(v as "truck" | "express")}
+        onValueChange={(v) => {
+          setServiceType(v as "truck" | "express");
+          setResult(null);
+        }}
         className="grid grid-cols-2 gap-4 mb-6"
       >
         <div className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all ${serviceType === "truck" ? "border-primary bg-primary/5" : "border-border"}`}>
@@ -249,7 +403,8 @@ const FreightCalculator = () => {
             <Input 
               placeholder="如：90001" 
               value={formData.originZip}
-              onChange={(e) => setFormData({...formData, originZip: e.target.value})}
+              onChange={(e) => setFormData({...formData, originZip: e.target.value.replace(/\D/g, '').slice(0, 5)})}
+              maxLength={5}
             />
           </div>
           <div>
@@ -257,7 +412,8 @@ const FreightCalculator = () => {
             <Input 
               placeholder="如：10001" 
               value={formData.destZip}
-              onChange={(e) => setFormData({...formData, destZip: e.target.value})}
+              onChange={(e) => setFormData({...formData, destZip: e.target.value.replace(/\D/g, '').slice(0, 5)})}
+              maxLength={5}
             />
           </div>
         </div>
@@ -267,9 +423,11 @@ const FreightCalculator = () => {
             <Label className="text-sm text-muted-foreground mb-1.5 block">托盘数量</Label>
             <Input 
               type="number"
-              placeholder="请输入托盘数量" 
+              placeholder="请输入托盘数量 (1-26)" 
               value={formData.pallets}
               onChange={(e) => setFormData({...formData, pallets: e.target.value})}
+              min={1}
+              max={26}
             />
           </div>
         ) : (
@@ -280,13 +438,24 @@ const FreightCalculator = () => {
               placeholder="请输入重量" 
               value={formData.weight}
               onChange={(e) => setFormData({...formData, weight: e.target.value})}
+              min={0.1}
+              step={0.1}
             />
           </div>
         )}
 
-        <Button onClick={handleCalculate} className="w-full">
-          立即测算
-          <ArrowRight className="w-4 h-4 ml-2" />
+        <Button onClick={handleCalculate} className="w-full" disabled={isCalculating}>
+          {isCalculating ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span>
+              正在计算...
+            </>
+          ) : (
+            <>
+              立即测算
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
         </Button>
       </div>
     </div>
