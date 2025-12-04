@@ -44,10 +44,9 @@ const PLATFORMS = [
 ];
 
 const REGIONS = [
-  { value: "美东FBA仓", label: "美东FBA仓" },
-  { value: "美西FBA仓", label: "美西FBA仓" },
-  { value: "美中FBA仓", label: "美中FBA仓" },
-  { value: "其他", label: "其他" },
+  { value: "美西", label: "美西" },
+  { value: "美东", label: "美东" },
+  { value: "美中", label: "美中" },
 ];
 
 export default function PlatformWarehousePricingDetail() {
