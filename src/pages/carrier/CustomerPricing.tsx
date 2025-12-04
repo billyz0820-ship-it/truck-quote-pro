@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +12,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Search, AlertTriangle, ChevronDown, Copy, History, Eye } from "lucide-react";
+import { Plus, Edit, Search, AlertTriangle, ChevronDown, Copy, History, Eye, FileText } from "lucide-react";
 import { PriceHistoryDialog } from "@/components/carrier/PriceHistoryDialog";
+import { useTab } from "@/contexts/TabContext";
 
 interface CustomerGroup {
   customerId: string;
@@ -39,7 +39,7 @@ interface PricingConfig {
 }
 
 export default function CustomerPricing() {
-  const navigate = useNavigate();
+  const { openTab } = useTab();
   const { toast } = useToast();
   const [customerGroups, setCustomerGroups] = useState<CustomerGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -145,7 +145,11 @@ export default function CustomerPricing() {
           <h1 className="text-3xl font-bold">客户报价管理</h1>
           <p className="text-muted-foreground mt-2">按客户分组管理运费报价配置</p>
         </div>
-        <Button onClick={() => navigate("/dashboard/carrier/customer-pricing/new")}>
+        <Button onClick={() => openTab({
+          title: "新增客户报价",
+          path: "/dashboard/carrier/customer-pricing/new",
+          icon: FileText,
+        })}>
           <Plus className="h-4 w-4 mr-2" />
           新增配置
         </Button>
@@ -221,7 +225,11 @@ export default function CustomerPricing() {
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
-                                  onClick={() => navigate(`/dashboard/carrier/customer-pricing/new?copyFrom=${config.id}`)}
+                                  onClick={() => openTab({
+                                    title: `复制报价: ${config.carrier}`,
+                                    path: `/dashboard/carrier/customer-pricing/new?copyFrom=${config.id}`,
+                                    icon: FileText,
+                                  })}
                                 >
                                   <Copy className="h-4 w-4" />
                                 </Button>
@@ -233,7 +241,11 @@ export default function CustomerPricing() {
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
-                                  onClick={() => navigate(`/dashboard/carrier/customer-pricing/${config.id}`)}
+                                  onClick={() => openTab({
+                                    title: `编辑报价: ${config.carrier}`,
+                                    path: `/dashboard/carrier/customer-pricing/${config.id}`,
+                                    icon: FileText,
+                                  })}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -284,7 +296,11 @@ export default function CustomerPricing() {
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
-                                  onClick={() => navigate(`/dashboard/carrier/customer-pricing/${config.id}`)}
+                                  onClick={() => openTab({
+                                    title: `编辑报价: ${config.carrier}`,
+                                    path: `/dashboard/carrier/customer-pricing/${config.id}`,
+                                    icon: FileText,
+                                  })}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>

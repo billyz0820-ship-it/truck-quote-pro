@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, FileText } from "lucide-react";
 import { PricingConfigTabs } from "@/components/carrier/PricingConfigTabs";
+import { useTab } from "@/contexts/TabContext";
 
 export default function PricingTemplateEdit() {
-  const navigate = useNavigate();
+  const { openTab, closeTab, tabs } = useTab();
   const { id } = useParams();
   const { toast } = useToast();
   const isEditing = !!id;
+  
+  const currentTabId = `/dashboard/carrier/templates${id ? `/${id}` : '/new'}`.replace(/\//g, "-");
+  
+  const handleGoBack = () => {
+    // Close current tab and go to templates list
+    closeTab(currentTabId);
+    openTab({
+      title: "账套管理",
+      path: "/dashboard/carrier/templates",
+      icon: FileText,
+    });
+  };
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -42,7 +55,7 @@ export default function PricingTemplateEdit() {
 
     if (error) {
       toast({ title: "获取失败", description: error.message, variant: "destructive" });
-      navigate("/dashboard/carrier/templates");
+      handleGoBack();
     } else if (data) {
       setFormData({
         template_name: data.template_name,
@@ -97,7 +110,7 @@ export default function PricingTemplateEdit() {
         if (error) throw error;
         toast({ title: "创建成功" });
       }
-      navigate("/dashboard/carrier/templates");
+      handleGoBack();
     } catch (error: any) {
       toast({ title: "保存失败", description: error.message, variant: "destructive" });
     } finally {
@@ -116,7 +129,7 @@ export default function PricingTemplateEdit() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate("/dashboard/carrier/templates")}>
+        <Button variant="ghost" onClick={handleGoBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
@@ -174,7 +187,7 @@ export default function PricingTemplateEdit() {
         />
 
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => navigate("/dashboard/carrier/templates")}>
+          <Button type="button" variant="outline" onClick={handleGoBack}>
             取消
           </Button>
           <Button type="submit" disabled={saving}>
