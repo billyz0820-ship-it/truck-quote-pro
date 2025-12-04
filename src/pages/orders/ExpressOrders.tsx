@@ -18,6 +18,7 @@ import { ExpressOrderImport } from "@/components/express/ExpressOrderImport";
 import { ExpressOrderExport } from "@/components/express/ExpressOrderExport";
 import { EditReturnOrderForm } from "@/components/express/EditReturnOrderForm";
 import { PrintLabelDialog } from "@/components/express/PrintLabelDialog";
+import { LabelExportDialog } from "@/components/express/LabelExportDialog";
 
 interface ExpressOrder {
   id: string;
@@ -95,6 +96,7 @@ export default function ExpressOrders() {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectedOrderForPrint, setSelectedOrderForPrint] = useState<string | null>(null);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -608,6 +610,17 @@ export default function ExpressOrders() {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
+                <Button size="sm" variant="outline" onClick={() => {
+                  setSelectedOrders([order.id]);
+                  setExportDialogOpen(true);
+                }}>
+                  <FileDown className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>导出面单</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button size="sm" variant="outline" onClick={() => handleRevert(order.id)}>
                   <Undo2 className="h-4 w-4" />
                 </Button>
@@ -652,6 +665,12 @@ export default function ExpressOrders() {
             }}>
               <Printer className="h-4 w-4 mr-2" />
               批量打单 ({selectedOrders.length})
+            </Button>
+          )}
+          {(activeTab === "labeled" || activeTab === "in_transit" || activeTab === "delivered") && selectedOrders.length > 0 && (
+            <Button onClick={() => setExportDialogOpen(true)}>
+              <FileDown className="h-4 w-4 mr-2" />
+              批量导出面单 ({selectedOrders.length})
             </Button>
           )}
           <ExpressOrderImport onSuccess={fetchOrders} />
@@ -844,6 +863,13 @@ export default function ExpressOrders() {
           fetchOrders();
           setSelectedOrderForPrint(null);
         }}
+      />
+
+      <LabelExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        orderIds={selectedOrders}
+        orderType="express"
       />
     </div>
   );
