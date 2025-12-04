@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, Search, Printer, Trash2, FileDown, Undo2 } from "lucide-react";
+import { Edit, Search, Printer, Trash2, FileDown, Undo2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EditReturnOrderForm } from "@/components/express/EditReturnOrderForm";
+import { CreateReturnOrderForm } from "@/components/express/CreateReturnOrderForm";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { ExpressOrderFilters, FilterValues } from "@/components/express/ExpressOrderFilters";
@@ -46,6 +47,7 @@ export default function ReturnOrders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState("order_number");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterValues>({
@@ -334,6 +336,10 @@ export default function ReturnOrders() {
               批量导出面单 ({selectedOrders.length})
             </Button>
           )}
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            新增退货订单
+          </Button>
         </div>
       </div>
 
@@ -466,6 +472,21 @@ export default function ReturnOrders() {
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>新增退货订单</DialogTitle>
+          </DialogHeader>
+          <CreateReturnOrderForm
+            onSuccess={() => {
+              setIsCreateDialogOpen(false);
+              fetchOrders();
+            }}
+            onCancel={() => setIsCreateDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 
