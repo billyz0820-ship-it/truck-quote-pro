@@ -134,7 +134,7 @@ const QuoteResults = () => {
       couponApplied: availableCoupon
     } : quote;
 
-    navigate("/dashboard/orders/details", { 
+    navigate("/dashboard/orders/confirm", { 
       state: { 
         orderData,
         selectedQuote: finalQuote,
