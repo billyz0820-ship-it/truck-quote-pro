@@ -49,25 +49,32 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      {/* 背景装饰 */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-30" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-50" />
+      
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
-      <Card className="w-full max-w-md shadow-strong">
+      
+      <Card className="w-full max-w-md shadow-xl border-slate-200 bg-white relative z-10">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Truck className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">北美卡车经纪</span>
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <Truck className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-slate-800">智运物流</span>
           </div>
-          <CardTitle className="text-2xl">{t("login")}</CardTitle>
-          <CardDescription>
-            {t("email")}
+          <CardTitle className="text-2xl text-slate-800">{t("login")}</CardTitle>
+          <CardDescription className="text-slate-500">
+            欢迎回来，请登录您的账号
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <Label htmlFor="email">{t("email")}</Label>
+              <Label htmlFor="email" className="text-slate-700">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -75,10 +82,11 @@ const Login = () => {
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
+                className="border-slate-200 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
             <div>
-              <Label htmlFor="password">{t("password")}</Label>
+              <Label htmlFor="password" className="text-slate-700">{t("password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -86,27 +94,32 @@ const Login = () => {
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
                 required
+                className="border-slate-200 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
             <div className="flex items-center justify-between">
-              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+              <Link to="/forgot-password" className="text-sm text-blue-500 hover:text-blue-600 hover:underline">
                 {t("forgotPassword")}
               </Link>
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent" disabled={loading}>
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white" 
+              disabled={loading}
+            >
               {loading ? t("loading") : t("login")}
             </Button>
           </form>
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-500">
               还没有账户？{" "}
-              <Link to="/register" className="text-primary hover:underline">
+              <Link to="/register" className="text-blue-500 hover:text-blue-600 hover:underline">
                 {t("register")}
               </Link>
             </p>
           </div>
           <div className="mt-4 text-center">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
+            <Link to="/" className="text-sm text-slate-400 hover:text-slate-600">
               返回首页
             </Link>
           </div>

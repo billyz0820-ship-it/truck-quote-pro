@@ -127,17 +127,19 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex w-full">
+    <div className="min-h-screen flex w-full bg-slate-50">
       <AppSidebar menuItems={menuItems} isActive={isActive} />
       
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-4">
+        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4">
           <div className="flex items-center gap-4">
-            <SidebarTrigger />
+            <SidebarTrigger className="text-slate-600 hover:text-slate-800" />
             <div className="flex items-center gap-2">
-              <Truck className="h-6 w-6 text-primary" />
-              <span className="font-bold text-primary">北美卡车经纪</span>
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Truck className="h-5 w-5 text-white" />
+              </div>
+              <span className="font-bold text-slate-800">智运物流</span>
             </div>
           </div>
           
@@ -145,23 +147,23 @@ const DashboardLayout = () => {
             <LanguageSwitcher />
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>用</AvatarFallback>
+              <Button variant="ghost" className="flex items-center gap-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100">
+                <Avatar className="h-8 w-8 bg-blue-100">
+                  <AvatarFallback className="bg-blue-100 text-blue-600">用</AvatarFallback>
                 </Avatar>
                 <span className="hidden sm:inline">用户名</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>我的账户</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56 bg-white border-slate-200">
+              <DropdownMenuLabel className="text-slate-800">我的账户</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-slate-100" />
+              <DropdownMenuItem className="text-slate-600 hover:text-slate-800 hover:bg-slate-50">
                 <User className="mr-2 h-4 w-4" />
                 个人设置
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuSeparator className="bg-slate-100" />
+              <DropdownMenuItem onClick={handleLogout} className="text-slate-600 hover:text-slate-800 hover:bg-slate-50">
                 <LogOut className="mr-2 h-4 w-4" />
                 退出登录
               </DropdownMenuItem>
@@ -174,7 +176,7 @@ const DashboardLayout = () => {
         <TabBar />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 bg-secondary/10 overflow-auto">
+        <main className="flex-1 p-6 bg-slate-50 overflow-auto">
           <PageTransition>
             <Outlet />
           </PageTransition>
@@ -205,10 +207,10 @@ const AppSidebar = ({
   };
 
   return (
-    <Sidebar collapsible="icon" className="w-64">
-      <SidebarContent>
+    <Sidebar collapsible="icon" className="w-64 bg-white border-r border-slate-200">
+      <SidebarContent className="bg-white">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-base font-semibold px-4 py-3">导航菜单</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-base font-semibold px-4 py-3 text-slate-800">导航菜单</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
@@ -216,7 +218,7 @@ const AppSidebar = ({
                   {item.subItems ? (
                     <Collapsible defaultOpen className="group/collapsible">
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton className="h-12 px-4 cursor-pointer">
+                        <SidebarMenuButton className="h-12 px-4 cursor-pointer text-slate-600 hover:text-slate-800 hover:bg-slate-50">
                           <item.icon className="h-5 w-5" />
                           {state === "expanded" && (
                             <>
@@ -231,7 +233,11 @@ const AppSidebar = ({
                           {item.subItems.map((subItem: any) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton
-                                className={`h-10 cursor-pointer ${isActive(subItem.url) ? "bg-accent text-accent-foreground" : ""}`}
+                                className={`h-10 cursor-pointer ${
+                                  isActive(subItem.url) 
+                                    ? "bg-blue-50 text-blue-600" 
+                                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                                }`}
                                 onClick={() => handleNavClick(subItem)}
                               >
                                 <subItem.icon className="h-4 w-4" />
@@ -244,7 +250,11 @@ const AppSidebar = ({
                     </Collapsible>
                   ) : (
                     <SidebarMenuButton 
-                      className={`h-12 px-4 cursor-pointer ${item.url && isActive(item.url) ? "bg-accent text-accent-foreground" : ""}`}
+                      className={`h-12 px-4 cursor-pointer ${
+                        item.url && isActive(item.url) 
+                          ? "bg-blue-50 text-blue-600" 
+                          : "text-slate-600 hover:text-slate-800 hover:bg-slate-50"
+                      }`}
                       onClick={() => handleNavClick(item)}
                     >
                       <item.icon className="h-5 w-5" />
