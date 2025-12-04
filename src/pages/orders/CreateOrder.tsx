@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, MapPin, Package, Plus, Trash2, Copy, Calendar, Truck } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ArrowLeft, MapPin, Package, Plus, Trash2, Copy, Calendar, Truck, Warehouse } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +25,13 @@ interface Pallet {
   nmfcSub: string;
 }
 
+// 地址类型选项
+const ADDRESS_TYPES = [
+  { value: "commercial_dock", label: "商业地址带卸货口" },
+  { value: "commercial_no_dock", label: "商业地址无卸货口" },
+  { value: "residential", label: "住宅地址" },
+];
+
 const CreateOrder = () => {
   const navigate = useNavigate();
   const { customerId, userRole } = useAuth();
@@ -35,6 +43,15 @@ const CreateOrder = () => {
   
   // 运输类型
   const [shipmentType, setShipmentType] = useState<"FTL" | "LTL">("LTL");
+  
+  // 地址类型
+  const [pickupAddressType, setPickupAddressType] = useState<string>("commercial_dock");
+  const [deliveryAddressType, setDeliveryAddressType] = useState<string>("commercial_dock");
+  
+  // 平台仓库相关
+  const [isPlatformWarehouse, setIsPlatformWarehouse] = useState<boolean>(false);
+  const [warehouseCode, setWarehouseCode] = useState<string>("");
+  const [warehouseAddress, setWarehouseAddress] = useState<string>("");
   
   const [formData, setFormData] = useState({
     pickupZip: "",
@@ -66,6 +83,27 @@ const CreateOrder = () => {
     liftgate: false,
     hazmat: false,
   });
+  
+  // 根据地址类型自动设置服务
+  useEffect(() => {
+    // 发货地址无卸货口 -> 强制添加卸货装置
+    if (pickupAddressType === "commercial_no_dock") {
+      setPickupServices(prev => ({ ...prev, liftgate: true }));
+    }
+  }, [pickupAddressType]);
+  
+  useEffect(() => {
+    // 收货地址无卸货口 -> 强制添加卸货装置
+    // 收货地址住宅 -> 强制添加卸货装置和住宅配送
+    if (deliveryAddressType === "commercial_no_dock") {
+      setDeliveryServices(prev => ({ ...prev, liftgate: true }));
+    } else if (deliveryAddressType === "residential") {
+      setDeliveryServices(prev => ({ ...prev, liftgate: true, residential: true }));
+    }
+  }, [deliveryAddressType]);
+  
+  // 判断是否为商业地址（用于显示平台仓库选项）
+  const isDeliveryCommercial = deliveryAddressType === "commercial_dock" || deliveryAddressType === "commercial_no_dock";
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -164,6 +202,11 @@ const CreateOrder = () => {
         referenceNumber: formData.referenceNumber,
         cargoDescription: formData.cargoDescription,
         pallets,
+        pickupAddressType,
+        deliveryAddressType,
+        isPlatformWarehouse,
+        warehouseCode: isPlatformWarehouse ? warehouseCode : null,
+        warehouseAddress: isPlatformWarehouse ? warehouseAddress : null,
         pickupServices: shipmentType === "LTL" ? pickupServices : null,
         deliveryServices: shipmentType === "LTL" ? deliveryServices : null,
       };
@@ -307,6 +350,101 @@ const CreateOrder = () => {
                 />
               </div>
             </div>
+            
+            {/* 发货地址类型（仅零担显示） */}
+            {shipmentType === "LTL" && (
+              <div className="space-y-2 pt-2 border-t">
+                <Label className="text-sm font-medium">发货地址类型</Label>
+                <RadioGroup
+                  value={pickupAddressType}
+                  onValueChange={setPickupAddressType}
+                  className="grid grid-cols-3 gap-2"
+                >
+                  {ADDRESS_TYPES.map((type) => (
+                    <div key={type.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={type.value} id={`pickup-${type.value}`} />
+                      <Label htmlFor={`pickup-${type.value}`} className="text-sm cursor-pointer">{type.label}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+            
+            {/* 收货地址类型 */}
+            <div className="space-y-2 pt-2 border-t">
+              <Label className="text-sm font-medium">收货地址类型</Label>
+              <RadioGroup
+                value={deliveryAddressType}
+                onValueChange={(value) => {
+                  setDeliveryAddressType(value);
+                  // 如果切换为住宅，清空平台仓库设置
+                  if (value === "residential") {
+                    setIsPlatformWarehouse(false);
+                    setWarehouseCode("");
+                    setWarehouseAddress("");
+                  }
+                }}
+                className="grid grid-cols-3 gap-2"
+              >
+                {ADDRESS_TYPES.map((type) => (
+                  <div key={type.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={type.value} id={`delivery-${type.value}`} />
+                    <Label htmlFor={`delivery-${type.value}`} className="text-sm cursor-pointer">{type.label}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+            
+            {/* 平台仓库确认（商业地址时显示） */}
+            {isDeliveryCommercial && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Warehouse className="h-5 w-5 text-primary" />
+                    <Label className="text-sm font-medium">是否为平台仓库？</Label>
+                    <RadioGroup
+                      value={isPlatformWarehouse ? "yes" : "no"}
+                      onValueChange={(v) => setIsPlatformWarehouse(v === "yes")}
+                      className="flex gap-4 ml-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="not-platform" />
+                        <Label htmlFor="not-platform" className="text-sm cursor-pointer">否</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="is-platform" />
+                        <Label htmlFor="is-platform" className="text-sm cursor-pointer">是（如 Amazon FBA、Wayfair、Walmart）</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  {isPlatformWarehouse && (
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-sm">仓库编码 *</Label>
+                        <Input
+                          placeholder="例：ABE8、TEB6、CG01"
+                          value={warehouseCode}
+                          onChange={(e) => setWarehouseCode(e.target.value.toUpperCase())}
+                          className="h-9"
+                          required={isPlatformWarehouse}
+                        />
+                        <p className="text-xs text-muted-foreground">系统将优先匹配平台仓专送报价</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-sm">仓库地址</Label>
+                        <Input
+                          placeholder="仓库详细地址"
+                          value={warehouseAddress}
+                          onChange={(e) => setWarehouseAddress(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </CardContent>
         </Card>
 
@@ -370,9 +508,15 @@ const CreateOrder = () => {
                   <Checkbox 
                     id="pickupLiftgate" 
                     checked={pickupServices.liftgate}
+                    disabled={pickupAddressType === "commercial_no_dock"}
                     onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, liftgate: checked as boolean }))}
                   />
-                  <label htmlFor="pickupLiftgate" className="text-sm">卸货装置</label>
+                  <label htmlFor="pickupLiftgate" className="text-sm">
+                    卸货装置
+                    {pickupAddressType === "commercial_no_dock" && (
+                      <span className="text-xs text-primary ml-1">(无卸货口必选)</span>
+                    )}
+                  </label>
                 </div>
               </div>
             </CardContent>
@@ -399,9 +543,15 @@ const CreateOrder = () => {
                   <Checkbox 
                     id="residential" 
                     checked={deliveryServices.residential}
+                    disabled={deliveryAddressType === "residential"}
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, residential: checked as boolean }))}
                   />
-                  <label htmlFor="residential" className="text-sm">住宅配送</label>
+                  <label htmlFor="residential" className="text-sm">
+                    住宅配送
+                    {deliveryAddressType === "residential" && (
+                      <span className="text-xs text-primary ml-1">(住宅地址必选)</span>
+                    )}
+                  </label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -423,9 +573,17 @@ const CreateOrder = () => {
                   <Checkbox 
                     id="deliveryLiftgate" 
                     checked={deliveryServices.liftgate}
+                    disabled={deliveryAddressType === "commercial_no_dock" || deliveryAddressType === "residential"}
                     onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, liftgate: checked as boolean }))}
                   />
-                  <label htmlFor="deliveryLiftgate" className="text-sm">卸货装置</label>
+                  <label htmlFor="deliveryLiftgate" className="text-sm">
+                    卸货装置
+                    {(deliveryAddressType === "commercial_no_dock" || deliveryAddressType === "residential") && (
+                      <span className="text-xs text-primary ml-1">
+                        ({deliveryAddressType === "residential" ? "住宅地址" : "无卸货口"}必选)
+                      </span>
+                    )}
+                  </label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox 

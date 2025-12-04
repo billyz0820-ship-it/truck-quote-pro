@@ -1282,6 +1282,68 @@ export type Database = {
           },
         ]
       }
+      platform_warehouse_pricing: {
+        Row: {
+          carrier_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          max_dimensions: string | null
+          max_pallets: number
+          min_pallets: number
+          platform: string
+          price: number
+          pricing_name: string
+          region: string
+          transit_time: string | null
+          updated_at: string
+          warehouse_address: string | null
+          warehouse_code: string
+        }
+        Insert: {
+          carrier_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_dimensions?: string | null
+          max_pallets?: number
+          min_pallets?: number
+          platform: string
+          price: number
+          pricing_name: string
+          region: string
+          transit_time?: string | null
+          updated_at?: string
+          warehouse_address?: string | null
+          warehouse_code: string
+        }
+        Update: {
+          carrier_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_dimensions?: string | null
+          max_pallets?: number
+          min_pallets?: number
+          platform?: string
+          price?: number
+          pricing_name?: string
+          region?: string
+          transit_time?: string | null
+          updated_at?: string
+          warehouse_address?: string | null
+          warehouse_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_warehouse_pricing_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "truck_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_calculation_history: {
         Row: {
           calculation_type: string

@@ -114,6 +114,7 @@ const DashboardLayout = () => {
       icon: Truck,
       subItems: [
         { title: "承运商管理", url: "/dashboard/truck/carriers", icon: Truck },
+        { title: "平台仓专送", url: "/dashboard/truck/platform-warehouse", icon: Package },
       ]
     },
   ];
