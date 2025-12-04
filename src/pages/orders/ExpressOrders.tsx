@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit, Copy, Printer, Undo2, FileDown, Search, Download, Upload, Eye } from "lucide-react";
+import { Plus, Trash2, Edit, Copy, Printer, Undo2, FileDown, Search, Download, Upload, Eye, Package } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,7 @@ import { ExpressOrderExport } from "@/components/express/ExpressOrderExport";
 import { EditReturnOrderForm } from "@/components/express/EditReturnOrderForm";
 import { PrintLabelDialog } from "@/components/express/PrintLabelDialog";
 import { LabelExportDialog } from "@/components/express/LabelExportDialog";
+import { useTab } from "@/contexts/TabContext";
 
 interface ExpressOrder {
   id: string;
@@ -74,13 +75,13 @@ interface ReturnOrder {
 }
 
 export default function ExpressOrders() {
+  const { openTab } = useTab();
   const [orders, setOrders] = useState<ExpressOrder[]>([]);
   const [returnOrders, setReturnOrders] = useState<ReturnOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState("order_number");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [isEditReturnDialogOpen, setIsEditReturnDialogOpen] = useState(false);
@@ -654,7 +655,11 @@ export default function ExpressOrders() {
           <p className="text-muted-foreground">管理所有快递订单</p>
         </div>
         <div className="flex gap-2">
-          <Button className="gap-2" onClick={() => setShowCreateDialog(true)}>
+          <Button className="gap-2" onClick={() => openTab({
+            title: "新增快递订单",
+            path: "/dashboard/orders/express/new",
+            icon: Package,
+          })}>
             <Plus className="h-4 w-4" />
             新增
           </Button>
@@ -781,21 +786,6 @@ export default function ExpressOrders() {
           </div>
         </TabsContent>
       </Tabs>
-
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-6xl">
-          <DialogHeader>
-            <DialogTitle>新增快递订单</DialogTitle>
-          </DialogHeader>
-          <CreateExpressOrderForm
-            onSuccess={() => {
-              setShowCreateDialog(false);
-              fetchOrders();
-            }}
-            onCancel={() => setShowCreateDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-6xl">

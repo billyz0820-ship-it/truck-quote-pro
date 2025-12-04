@@ -16,6 +16,8 @@ import NotFound from "./pages/NotFound";
 import TruckOrders from "./pages/orders/TruckOrders";
 import ExpressOrders from "./pages/orders/ExpressOrders";
 import ReturnOrders from "./pages/orders/ReturnOrders";
+import CreateExpressOrderPage from "./pages/orders/CreateExpressOrderPage";
+import CreateReturnOrderPage from "./pages/orders/CreateReturnOrderPage";
 import CreateOrder from "./pages/orders/CreateOrder";
 import QuoteResults from "./pages/orders/QuoteResults";
 import OrderDetails from "./pages/orders/OrderDetails";
@@ -36,6 +38,7 @@ import UserManagement from "./pages/users/UserManagement";
 import CarrierAccounts from "./pages/carrier/CarrierAccounts";
 import PricingTemplates from "./pages/carrier/PricingTemplates";
 import AccountCosts from "./pages/carrier/AccountCosts";
+import AccountCostEdit from "./pages/carrier/AccountCostEdit";
 import PriceComparison from "./pages/carrier/PriceComparison";
 import RemoteAreas from "./pages/carrier/RemoteAreas";
 import ShippingRules from "./pages/carrier/ShippingRules";
@@ -68,10 +71,11 @@ const App = () => (
             <Route index element={<Dashboard />} />
             <Route path="orders/truck" element={<TruckOrders />} />
             <Route path="orders/express" element={<ExpressOrders />} />
+            <Route path="orders/express/new" element={<CreateExpressOrderPage />} />
             <Route path="orders/return" element={<ReturnOrders />} />
+            <Route path="orders/return/new" element={<CreateReturnOrderPage />} />
             <Route path="orders/create" element={<CreateOrder />} />
             <Route path="orders/quote" element={<QuoteResults />} />
-            <Route path="orders/details" element={<OrderDetails />} />
             <Route path="orders/:id" element={<OrderDetailView />} />
             <Route path="finance" element={<Finance />} />
             <Route path="finance/quotations" element={<FinanceQuotations />} />
@@ -91,6 +95,8 @@ const App = () => (
             <Route path="carrier/templates/new" element={<PricingTemplateEdit />} />
             <Route path="carrier/templates/:id" element={<PricingTemplateEdit />} />
             <Route path="carrier/costs" element={<AccountCosts />} />
+            <Route path="carrier/costs/:accountId/new" element={<AccountCostEdit />} />
+            <Route path="carrier/costs/:accountId/:costId" element={<AccountCostEdit />} />
             <Route path="carrier/comparison" element={<PriceComparison />} />
             <Route path="carrier/remote-areas" element={<RemoteAreas />} />
             <Route path="carrier/rules" element={<ShippingRules />} />
