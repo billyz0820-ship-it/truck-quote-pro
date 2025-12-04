@@ -79,6 +79,7 @@ const App = () => (
             <Route path="orders/return/new" element={<CreateReturnOrderPage />} />
             <Route path="orders/create" element={<CreateOrder />} />
             <Route path="orders/quote" element={<QuoteResults />} />
+            <Route path="orders/confirm" element={<OrderDetails />} />
             <Route path="orders/:id" element={<OrderDetailView />} />
             <Route path="finance" element={<Finance />} />
             <Route path="finance/quotations" element={<FinanceQuotations />} />
