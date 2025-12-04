@@ -46,6 +46,8 @@ import LogisticsServices from "./pages/logistics/LogisticsServices";
 import ChannelConfigs from "./pages/logistics/ChannelConfigs";
 import TruckCarrierManagement from "./pages/truck/TruckCarrierManagement";
 import TruckCarrierPricing from "./pages/truck/TruckCarrierPricing";
+import PricingTemplateEdit from "./pages/carrier/PricingTemplateEdit";
+import CustomerPricingEdit from "./pages/carrier/CustomerPricingEdit";
 
 const queryClient = new QueryClient();
 
@@ -86,11 +88,15 @@ const App = () => (
             <Route path="users" element={<UserManagement />} />
             <Route path="carrier/accounts" element={<CarrierAccounts />} />
             <Route path="carrier/templates" element={<PricingTemplates />} />
+            <Route path="carrier/templates/new" element={<PricingTemplateEdit />} />
+            <Route path="carrier/templates/:id" element={<PricingTemplateEdit />} />
             <Route path="carrier/costs" element={<AccountCosts />} />
             <Route path="carrier/comparison" element={<PriceComparison />} />
             <Route path="carrier/remote-areas" element={<RemoteAreas />} />
             <Route path="carrier/rules" element={<ShippingRules />} />
             <Route path="carrier/customer-pricing" element={<CustomerPricing />} />
+            <Route path="carrier/customer-pricing/new" element={<CustomerPricingEdit />} />
+            <Route path="carrier/customer-pricing/:id" element={<CustomerPricingEdit />} />
             <Route path="carrier/price-history" element={<PriceHistory />} />
             <Route path="logistics/triggers" element={<LogisticsTriggers />} />
             <Route path="logistics/services" element={<LogisticsServices />} />

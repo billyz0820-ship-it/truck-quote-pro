@@ -1,16 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PricingConfigTabs } from "@/components/carrier/PricingConfigTabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PricingTemplate {
   id: string;
@@ -21,18 +16,9 @@ interface PricingTemplate {
 }
 
 export default function PricingTemplates() {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState<PricingTemplate[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<PricingTemplate | null>(null);
   const { toast } = useToast();
-
-  const [formData, setFormData] = useState({
-    template_name: "",
-    carrier: "",
-    description: "",
-  });
-
-  const [pricingConfig, setPricingConfig] = useState<any>({});
 
   useEffect(() => {
     fetchTemplates();
@@ -51,53 +37,6 @@ export default function PricingTemplates() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const dataToSubmit = {
-      ...formData,
-      ...pricingConfig,
-    };
-
-    if (editingTemplate) {
-      const { error } = await supabase
-        .from("pricing_templates")
-        .update(dataToSubmit)
-        .eq("id", editingTemplate.id);
-
-      if (error) {
-        toast({ title: "更新失败", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "更新成功" });
-        setIsDialogOpen(false);
-        setEditingTemplate(null);
-        resetForm();
-        fetchTemplates();
-      }
-    } else {
-      const { error } = await supabase.from("pricing_templates").insert([dataToSubmit]);
-
-      if (error) {
-        toast({ title: "创建失败", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "创建成功" });
-        setIsDialogOpen(false);
-        resetForm();
-        fetchTemplates();
-      }
-    }
-  };
-
-  const handleEdit = (template: PricingTemplate) => {
-    setEditingTemplate(template);
-    setFormData({
-      template_name: template.template_name,
-      carrier: template.carrier,
-      description: template.description || "",
-    });
-    setIsDialogOpen(true);
-  };
-
   const handleDelete = async (id: string) => {
     if (!confirm("确认删除此账套？")) return;
 
@@ -111,14 +50,6 @@ export default function PricingTemplates() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      template_name: "",
-      carrier: "",
-      description: "",
-    });
-  };
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -126,68 +57,10 @@ export default function PricingTemplates() {
           <h1 className="text-3xl font-bold">账套管理</h1>
           <p className="text-muted-foreground mt-1">管理不同客户的报价账套</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setEditingTemplate(null); resetForm(); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              新增账套
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingTemplate ? "编辑账套" : "新增账套"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>账套名称 *</Label>
-                  <Input
-                    value={formData.template_name}
-                    onChange={(e) => setFormData({ ...formData, template_name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label>承运商 *</Label>
-                  <Select
-                    value={formData.carrier}
-                    onValueChange={(value) => setFormData({ ...formData, carrier: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择承运商" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FedEx">FedEx</SelectItem>
-                      <SelectItem value="UPS">UPS</SelectItem>
-                      <SelectItem value="USPS">USPS</SelectItem>
-                      <SelectItem value="DHL">DHL</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>描述</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <PricingConfigTabs 
-                config={pricingConfig}
-                onChange={setPricingConfig}
-              />
-
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  取消
-                </Button>
-                <Button type="submit">保存</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => navigate("/dashboard/carrier/templates/new")}>
+          <Plus className="h-4 w-4 mr-2" />
+          新增账套
+        </Button>
       </div>
 
       <div className="border rounded-lg">
@@ -210,12 +83,26 @@ export default function PricingTemplates() {
                 <TableCell>{new Date(template.created_at).toLocaleDateString("zh-CN")}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => handleEdit(template)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleDelete(template.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => navigate(`/dashboard/carrier/templates/${template.id}`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>编辑</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button size="sm" variant="ghost" onClick={() => handleDelete(template.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>删除</TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>
