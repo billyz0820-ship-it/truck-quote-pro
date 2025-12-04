@@ -1,24 +1,17 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, ChevronDown, ChevronUp } from "lucide-react";
-import { PricingConfigTabs } from "@/components/carrier/PricingConfigTabs";
+import { Plus, ChevronDown, ChevronUp, DollarSign, Edit } from "lucide-react";
+import { useTab } from "@/contexts/TabContext";
 
 export default function AccountCosts() {
   const { toast } = useToast();
+  const { openTab } = useTab();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [costs, setCosts] = useState<any[]>([]);
-  const [selectedAccount, setSelectedAccount] = useState("");
-  const [selectedCostId, setSelectedCostId] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showHistory, setShowHistory] = useState<string | false>(false);
-  const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().split("T")[0]);
-  const [prices, setPrices] = useState<any>({});
 
   useEffect(() => {
     fetchAccounts();
@@ -35,61 +28,16 @@ export default function AccountCosts() {
     if (data) setCosts(data);
   };
 
-  const handleOpenDialog = (accountId?: string, costId?: string) => {
-    if (accountId) {
-      setSelectedAccount(accountId);
-      setSelectedCostId(costId || null);
-      const existingCost = costId ? costs.find((c) => c.id === costId) : costs.find((c) => c.account_id === accountId);
-      if (existingCost) {
-        setEffectiveDate(existingCost.effective_date);
-        setPrices(existingCost);
-      }
-    } else {
-      setSelectedAccount("");
-      setSelectedCostId(null);
-      setEffectiveDate(new Date().toISOString().split("T")[0]);
-      setPrices({});
-    }
-    setIsDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!selectedAccount || !effectiveDate) {
-      toast({ title: "请选择账号和有效日期", variant: "destructive" });
-      return;
-    }
-
-    const data = {
-      account_id: selectedAccount,
-      effective_date: effectiveDate,
-      base_prices: prices.base_prices || {},
-      ahs_weight: prices.ahs_weight || {},
-      ahs_dim: prices.ahs_dim || {},
-      ahs_packing: prices.ahs_packing || {},
-      oversize_commercial: prices.oversize_commercial || {},
-      oversize_residential: prices.oversize_residential || {},
-      residential_fees: prices.residential_fees || {},
-      remote_area_fees: prices.remote_area_fees || {},
-      dim_factor: prices.dim_factor || null,
-      fuel_charge: prices.fuel_charge || null,
-      unauthorized_fee: prices.unauthorized_fee || null,
-      peak_surcharges: prices.peak_surcharges || {},
-    };
-
-    let error;
-    if (selectedCostId) {
-      ({ error } = await supabase.from("carrier_account_costs").update(data).eq("id", selectedCostId));
-    } else {
-      ({ error } = await supabase.from("carrier_account_costs").insert(data));
-    }
-
-    if (error) {
-      toast({ title: "保存失败", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "保存成功" });
-      setIsDialogOpen(false);
-      fetchCosts();
-    }
+  const handleOpenCostEdit = (accountId: string, costId?: string) => {
+    const account = accounts.find(a => a.id === accountId);
+    const path = costId 
+      ? `/dashboard/carrier/costs/${accountId}/${costId}`
+      : `/dashboard/carrier/costs/${accountId}/new`;
+    openTab({
+      title: costId ? `编辑成本 - ${account?.account_name}` : `配置成本 - ${account?.account_name}`,
+      path,
+      icon: DollarSign,
+    });
   };
 
   const getAccountCostHistory = (accountId: string) => {
@@ -118,7 +66,7 @@ export default function AccountCosts() {
                       历史版本 ({accountCosts.length})
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" onClick={() => handleOpenDialog(account.id)}>
+                  <Button variant="outline" size="sm" onClick={() => handleOpenCostEdit(account.id)}>
                     <Plus className="h-4 w-4 mr-1" />
                     {latestCost ? "新增版本" : "配置成本"}
                   </Button>
@@ -144,7 +92,10 @@ export default function AccountCosts() {
                               <div><span className="text-muted-foreground">燃油附加费：</span><span className="ml-2">{cost.fuel_charge}%</span></div>
                               <div><span className="text-muted-foreground">更新时间：</span><span className="ml-2">{new Date(cost.updated_at).toLocaleDateString()}</span></div>
                             </div>
-                            <Button variant="ghost" size="sm" onClick={() => handleOpenDialog(account.id, cost.id)}>查看/编辑</Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenCostEdit(account.id, cost.id)}>
+                              <Edit className="h-4 w-4 mr-1" />
+                              查看/编辑
+                            </Button>
                           </div>
                         ))}
                       </div>
@@ -156,24 +107,6 @@ export default function AccountCosts() {
           );
         })}
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>配置账号成本</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>有效日期 *</Label>
-              <Input type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} />
-              <p className="text-sm text-muted-foreground">每次价格调整都会创建新的历史版本</p>
-            </div>
-            <PricingConfigTabs config={prices} onChange={setPrices} />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>取消</Button>
-              <Button onClick={handleSave}>保存配置</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

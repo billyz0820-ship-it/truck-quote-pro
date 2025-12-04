@@ -97,7 +97,6 @@ const DashboardLayout = () => {
         { title: "价格比较", url: "/dashboard/carrier/comparison", icon: Receipt },
         { title: "打单规则", url: "/dashboard/carrier/rules", icon: Settings },
         { title: "客户报价", url: "/dashboard/carrier/customer-pricing", icon: Settings },
-        { title: "计算历史", url: "/dashboard/carrier/price-history", icon: Settings },
       ]
     },
     { 
