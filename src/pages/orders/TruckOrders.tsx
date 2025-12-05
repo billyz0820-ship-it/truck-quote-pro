@@ -101,7 +101,8 @@ const TruckOrders = () => {
 
     return [
       { value: "quoted", label: "已报价", count: statusCounts.quoted || 0 },
-      { value: "placed", label: "已下单", count: statusCounts.placed || 0 },
+      { value: "pending_review", label: "待审核", count: statusCounts.pending_review || 0 },
+      { value: "reviewed", label: "已审核", count: statusCounts.reviewed || 0 },
       { value: "picked-up", label: "已提货", count: statusCounts["picked-up"] || 0 },
       { value: "in-transit", label: "运输中", count: statusCounts["in-transit"] || 0 },
       { value: "delivered", label: "已送达", count: statusCounts.delivered || 0 },
@@ -113,7 +114,8 @@ const TruckOrders = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; className: string }> = {
       "quoted": { label: "已报价", className: "bg-blue-500" },
-      "placed": { label: "已下单", className: "bg-purple-500" },
+      "pending_review": { label: "待审核", className: "bg-purple-500" },
+      "reviewed": { label: "已审核", className: "bg-indigo-500" },
       "picked-up": { label: "已提货", className: "bg-yellow-500" },
       "in-transit": { label: "运输中", className: "bg-orange-500" },
       "delivered": { label: "已送达", className: "bg-green-500" },
@@ -396,7 +398,7 @@ const TruckOrders = () => {
                               </Tooltip>
                             </>
                           )}
-                          {order.status === "placed" && (
+                          {order.status === "pending_review" && (
                             <>
                               {order.bol_url && (
                                 <Tooltip>
