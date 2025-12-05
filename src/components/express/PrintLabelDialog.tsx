@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { InsufficientBalanceDialog } from "./InsufficientBalanceDialog";
+import { AgreementViewDialog } from "@/components/agreements/AgreementViewDialog";
+import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
 
 interface PrintLabelDialogProps {
   open: boolean;
@@ -20,6 +22,10 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
   const [customerBalance, setCustomerBalance] = useState<number>(0);
   const [totalShippingFee, setTotalShippingFee] = useState<number>(0);
   const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
+  const [showAgreementDialog, setShowAgreementDialog] = useState(false);
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  
+  const { isFirstOrder, hasAgreed, markAsAgreed } = useFirstOrderCheck(customerId);
 
   // Fetch order details and available coupons when dialog opens
   useEffect(() => {
@@ -44,6 +50,7 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
       const total = ordersData.reduce((sum, o) => sum + (o.shipping_fee || 0), 0);
       setTotalShippingFee(total);
       setOrderDetails(firstOrder);
+      setCustomerId(firstOrder.customer_id);
 
       // Fetch customer balance
       const { data: customerData } = await supabase
@@ -85,6 +92,12 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
   const finalAmount = totalShippingFee - discountAmount;
 
   const handlePrint = async () => {
+    // Check agreement for first order
+    if (isFirstOrder && !hasAgreed) {
+      setShowAgreementDialog(true);
+      return;
+    }
+    
     // Check balance before printing
     if (customerBalance < finalAmount) {
       setShowInsufficientDialog(true);
@@ -188,7 +201,7 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
               </Button>
               <Button onClick={handlePrint} disabled={printing}>
                 <Printer className="h-4 w-4 mr-2" />
-                {printing ? "打印中..." : "确认打印"}
+                {printing ? "打印中..." : isFirstOrder && !hasAgreed ? "签署协议并打印" : "确认打印"}
               </Button>
             </div>
           </div>
@@ -200,6 +213,12 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
         onOpenChange={setShowInsufficientDialog}
         currentBalance={customerBalance}
         requiredAmount={finalAmount}
+      />
+
+      <AgreementViewDialog
+        open={showAgreementDialog}
+        onOpenChange={setShowAgreementDialog}
+        onAccept={markAsAgreed}
       />
     </>
   );
