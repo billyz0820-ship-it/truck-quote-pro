@@ -4,6 +4,7 @@ import { Printer } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { InsufficientBalanceDialog } from "./InsufficientBalanceDialog";
 
 interface PrintLabelDialogProps {
   open: boolean;
@@ -14,9 +15,11 @@ interface PrintLabelDialogProps {
 
 export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: PrintLabelDialogProps) {
   const [printing, setPrinting] = useState(false);
-
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [couponInfo, setCouponInfo] = useState<any>(null);
+  const [customerBalance, setCustomerBalance] = useState<number>(0);
+  const [totalShippingFee, setTotalShippingFee] = useState<number>(0);
+  const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
 
   // Fetch order details and available coupons when dialog opens
   useEffect(() => {
@@ -27,21 +30,37 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
 
   const fetchOrderAndCoupon = async () => {
     try {
-      // Fetch order details
-      const { data: orderData, error: orderError } = await supabase
+      // Fetch all selected orders' shipping fees
+      const { data: ordersData, error: ordersError } = await supabase
         .from('express_orders')
         .select('shipping_fee, customer_id')
-        .eq('id', orderIds[0])
+        .in('id', orderIds);
+
+      if (ordersError) throw ordersError;
+      
+      const firstOrder = ordersData?.[0];
+      if (!firstOrder) return;
+
+      const total = ordersData.reduce((sum, o) => sum + (o.shipping_fee || 0), 0);
+      setTotalShippingFee(total);
+      setOrderDetails(firstOrder);
+
+      // Fetch customer balance
+      const { data: customerData } = await supabase
+        .from('customers')
+        .select('balance')
+        .eq('id', firstOrder.customer_id)
         .single();
 
-      if (orderError) throw orderError;
-      setOrderDetails(orderData);
+      if (customerData) {
+        setCustomerBalance(customerData.balance || 0);
+      }
 
-      // Fetch available coupon for this customer
+      // Fetch available coupon for this customer (auto-apply)
       const { data: couponData } = await supabase
         .from('coupons')
         .select('*')
-        .eq('customer_id', orderData.customer_id)
+        .eq('customer_id', firstOrder.customer_id)
         .eq('status', 'active')
         .eq('coupon_type', 'express')
         .is('used_at', null)
@@ -61,15 +80,23 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
     }
   };
 
+  // Calculate final amount after coupon
+  const discountAmount = couponInfo ? Math.min(couponInfo.amount, totalShippingFee) : 0;
+  const finalAmount = totalShippingFee - discountAmount;
+
   const handlePrint = async () => {
+    // Check balance before printing
+    if (customerBalance < finalAmount) {
+      setShowInsufficientDialog(true);
+      return;
+    }
+
     try {
       setPrinting(true);
       
       // If coupon is available, use it
-      if (couponInfo && orderDetails) {
-        const discountAmount = Math.min(couponInfo.amount, orderDetails.shipping_fee);
-        
-        // Update order with coupon
+      if (couponInfo && orderIds.length === 1) {
+        // Update order with coupon (only for single order)
         const { error: updateError } = await supabase
           .from('express_orders')
           .update({ 
@@ -77,7 +104,7 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
             status: 'labeled',
             coupon_id: couponInfo.id,
             discount_amount: discountAmount,
-            shipping_fee: orderDetails.shipping_fee - discountAmount
+            shipping_fee: finalAmount
           })
           .in('id', orderIds);
 
@@ -116,40 +143,64 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>打印面单</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          {couponInfo && orderDetails ? (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">
-                原运费为 <span className="text-primary">${orderDetails.shipping_fee.toFixed(2)}</span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                您有一张优惠券可直接抵扣，优惠价格为 <span className="font-bold text-primary">${(orderDetails.shipping_fee - Math.min(couponInfo.amount, orderDetails.shipping_fee)).toFixed(2)}</span>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                确认打印 <span className="font-bold">{orderIds.length}</span> 个订单的面单吗？
-              </p>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>打印面单</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Balance info */}
+            <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">当前余额</span>
+                <span className="font-medium">${customerBalance.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">运费总计</span>
+                <span>${totalShippingFee.toFixed(2)}</span>
+              </div>
+              {couponInfo && orderIds.length === 1 && (
+                <div className="flex justify-between text-green-600">
+                  <span>优惠券抵扣</span>
+                  <span>-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-1 font-medium">
+                <span>应付金额</span>
+                <span className="text-primary">${finalAmount.toFixed(2)}</span>
+              </div>
             </div>
-          ) : (
+
+            {couponInfo && orderIds.length === 1 && (
+              <p className="text-sm text-green-600">
+                已自动应用优惠券，节省 ${discountAmount.toFixed(2)}
+              </p>
+            )}
+
             <p className="text-sm text-muted-foreground">
               确认打印 <span className="font-bold">{orderIds.length}</span> 个订单的面单吗？
             </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              取消
-            </Button>
-            <Button onClick={handlePrint} disabled={printing}>
-              <Printer className="h-4 w-4 mr-2" />
-              {printing ? "打印中..." : "确认打印"}
-            </Button>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                取消
+              </Button>
+              <Button onClick={handlePrint} disabled={printing}>
+                <Printer className="h-4 w-4 mr-2" />
+                {printing ? "打印中..." : "确认打印"}
+              </Button>
+            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <InsufficientBalanceDialog
+        open={showInsufficientDialog}
+        onOpenChange={setShowInsufficientDialog}
+        currentBalance={customerBalance}
+        requiredAmount={finalAmount}
+      />
+    </>
   );
 }

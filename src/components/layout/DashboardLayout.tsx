@@ -49,7 +49,9 @@ import {
   PackageCheck,
   CornerUpLeft,
   ArrowLeftRight,
-  Star
+  Star,
+  FileSignature,
+  ScrollText
 } from "lucide-react";
 
 const DashboardLayout = () => {
@@ -116,6 +118,14 @@ const DashboardLayout = () => {
         { title: "承运商管理", url: "/dashboard/truck/carriers", icon: Truck },
         { title: "平台仓专送", url: "/dashboard/truck/platform-warehouse", icon: Package },
         { title: "邮编地区映射", url: "/dashboard/truck/zip-region", icon: Settings },
+      ]
+    },
+    { 
+      title: "合同与协议", 
+      icon: FileSignature,
+      subItems: [
+        { title: "合同管理", url: "/dashboard/contracts", icon: ScrollText },
+        { title: "协议管理", url: "/dashboard/agreements", icon: FileText },
       ]
     },
   ];
