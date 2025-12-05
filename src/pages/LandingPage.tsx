@@ -489,7 +489,9 @@ const LandingPage = () => {
   ];
 
   const partners = [
-    "FedEx", "UPS", "USPS", "XPO Logistics", "Old Dominion", "Saia"
+    "FedEx", "UPS", "USPS", "XPO Logistics", "Old Dominion", "Saia", 
+    "Estes Express", "ABF Freight", "R+L Carriers", "YRC Freight", 
+    "Southeastern Freight", "AAA Cooper", "Averitt Express", "Dayton Freight"
   ];
 
   const processSteps = [
@@ -617,16 +619,18 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* 合作伙伴 */}
-      <section className="py-12 border-y border-border bg-muted/30">
+      {/* 合作伙伴 - 滚动展示 */}
+      <section className="py-12 border-y border-border bg-muted/30 overflow-hidden">
         <div className="container mx-auto px-6">
           <p className="text-center text-sm text-muted-foreground mb-6">合作物流伙伴</p>
-          <div className="flex flex-wrap items-center justify-center gap-12">
-            {partners.map((partner) => (
-              <div key={partner} className="text-lg font-semibold text-muted-foreground/60 hover:text-muted-foreground transition-colors">
-                {partner}
-              </div>
-            ))}
+          <div className="relative">
+            <div className="flex animate-scroll-left gap-12">
+              {[...partners, ...partners].map((partner, index) => (
+                <div key={`${partner}-${index}`} className="text-lg font-semibold text-muted-foreground/60 hover:text-muted-foreground transition-colors whitespace-nowrap flex-shrink-0">
+                  {partner}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -887,9 +891,8 @@ const LandingPage = () => {
             </Button>
             <Button 
               size="lg" 
-              variant="outline"
               onClick={() => navigate('/login')}
-              className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
             >
               已有账号？立即登录
             </Button>
@@ -897,8 +900,55 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Contact Section */}
+      <section id="contact" className="py-16 bg-muted/30 border-t border-border">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-foreground mb-2">联系我们</h2>
+            <p className="text-muted-foreground">扫码添加微信，获取专属物流方案</p>
+          </div>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+            {/* QR Code */}
+            <div className="text-center">
+              <div className="w-40 h-40 bg-card border-2 border-border rounded-lg flex items-center justify-center mb-3">
+                <div className="text-center text-muted-foreground">
+                  <div className="w-32 h-32 bg-muted rounded grid grid-cols-5 gap-0.5 p-2">
+                    {/* Placeholder QR code pattern */}
+                    {Array.from({length: 25}).map((_, i) => (
+                      <div key={i} className={`aspect-square ${Math.random() > 0.5 ? 'bg-foreground' : 'bg-transparent'}`} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">扫码添加微信</p>
+            </div>
+            {/* Contact Info */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">联系人</p>
+                  <p className="font-semibold text-foreground">张经理</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Headphones className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">联系电话</p>
+                  <p className="font-semibold text-foreground">+1 (888) 888-8888</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="py-12 bg-card border-t border-border">
+      <footer className="py-8 bg-card border-t border-border">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">

@@ -7,8 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, MapPin, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const OrderDetails = () => {
   const navigate = useNavigate();
@@ -57,59 +55,16 @@ const OrderDetails = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    try {
-      setLoading(true);
-      
-      // 生成订单编号
-      const orderNumber = `ORD-${Date.now()}`;
-      
-      // 创建订单到数据库
-      const { data, error } = await supabase
-        .from('orders')
-        .insert({
-          order_number: orderNumber,
-          customer_id: orderData.customerId,
-          customer_code: orderData.customerCode,
-          pickup_zip: orderData.pickupZip,
-          delivery_zip: orderData.deliveryZip,
-          reference_number: orderData.referenceNumber || null,
-          cargo_description: orderData.cargoDescription || null,
-          quoted_amount: selectedQuote.totalCost,
-          carrier_name: selectedQuote.name,
-          status: 'placed',
-          shipment_type: orderData.shipmentType,
-          // 发货详细信息
-          pickup_address: pickupDetails.address,
-          pickup_city: pickupDetails.city,
-          pickup_state: pickupDetails.state,
-          pickup_address_type: pickupDetails.addressType,
-          pickup_contact_name: pickupDetails.contactName,
-          pickup_contact_phone: pickupDetails.contactPhone,
-          pickup_contact_email: pickupDetails.contactEmail,
-          pickup_notes: pickupDetails.notes || null,
-          // 收货详细信息
-          delivery_address: deliveryDetails.address,
-          delivery_city: deliveryDetails.city,
-          delivery_state: deliveryDetails.state,
-          delivery_address_type: deliveryDetails.addressType,
-          delivery_contact_name: deliveryDetails.contactName,
-          delivery_contact_phone: deliveryDetails.contactPhone,
-          delivery_contact_email: deliveryDetails.contactEmail,
-          delivery_notes: deliveryDetails.notes || null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast.success("订单创建成功！");
-      navigate(`/dashboard/orders/${data.id}`);
-    } catch (error: any) {
-      console.error("创建订单失败:", error);
-      toast.error("创建订单失败: " + error.message);
-    } finally {
-      setLoading(false);
-    }
+    // 跳转到确认页面
+    navigate("/dashboard/orders/order-confirm", {
+      state: {
+        orderData,
+        selectedQuote,
+        pickupDetails,
+        deliveryDetails,
+        couponApplied: location.state?.couponApplied
+      }
+    });
   };
 
   return (
@@ -395,8 +350,8 @@ const OrderDetails = () => {
           >
             返回
           </Button>
-          <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={loading}>
-            {loading ? "创建中..." : "确认并提交订单"}
+        <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={loading}>
+            确认
           </Button>
         </div>
       </form>

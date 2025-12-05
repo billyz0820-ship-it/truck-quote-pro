@@ -22,6 +22,7 @@ import CreateOrder from "./pages/orders/CreateOrder";
 import QuoteResults from "./pages/orders/QuoteResults";
 import OrderDetails from "./pages/orders/OrderDetails";
 import OrderDetailView from "./pages/orders/OrderDetailView";
+import OrderConfirmation from "./pages/orders/OrderConfirmation";
 import Finance from "./pages/finance/Finance";
 import FinanceQuotations from "./pages/finance/FinanceQuotations";
 import TransactionRecords from "./pages/finance/TransactionRecords";
@@ -80,6 +81,7 @@ const App = () => (
             <Route path="orders/create" element={<CreateOrder />} />
             <Route path="orders/quote" element={<QuoteResults />} />
             <Route path="orders/confirm" element={<OrderDetails />} />
+            <Route path="orders/order-confirm" element={<OrderConfirmation />} />
             <Route path="orders/:id" element={<OrderDetailView />} />
             <Route path="finance" element={<Finance />} />
             <Route path="finance/quotations" element={<FinanceQuotations />} />

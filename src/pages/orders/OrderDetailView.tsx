@@ -83,7 +83,7 @@ const OrderDetailView = () => {
       });
     } catch (error: any) {
       toast.error("加载订单详情失败: " + error.message);
-      navigate("/dashboard/orders");
+      navigate("/dashboard/orders/truck");
     } finally {
       setLoading(false);
     }
@@ -203,7 +203,7 @@ const OrderDetailView = () => {
         <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
-            onClick={() => navigate("/dashboard/orders")}
+            onClick={() => navigate("/dashboard/orders/truck")}
             className="p-2 h-9"
           >
             <ArrowLeft className="h-4 w-4" />
