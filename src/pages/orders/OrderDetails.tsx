@@ -4,9 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, MapPin, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+
+// 地址类型映射
+const ADDRESS_TYPE_LABELS: Record<string, string> = {
+  commercial_dock: "商业地址带卸货口",
+  commercial_no_dock: "商业地址无卸货口",
+  residential: "住宅地址",
+};
 
 const OrderDetails = () => {
   const navigate = useNavigate();
@@ -22,10 +28,10 @@ const OrderDetails = () => {
 
   const [pickupDetails, setPickupDetails] = useState({
     address: "",
-    city: "",
-    state: "",
+    city: orderData.pickupCity || "",
+    state: orderData.pickupState || "",
     zip: orderData.pickupZip || "",
-    addressType: "",
+    addressType: orderData.pickupAddressType || "",
     contactName: "",
     contactPhone: "",
     contactEmail: "",
@@ -34,10 +40,10 @@ const OrderDetails = () => {
 
   const [deliveryDetails, setDeliveryDetails] = useState({
     address: "",
-    city: "",
-    state: "",
+    city: orderData.deliveryCity || "",
+    state: orderData.deliveryState || "",
     zip: orderData.deliveryZip || "",
-    addressType: "",
+    addressType: orderData.deliveryAddressType || "",
     contactName: "",
     contactPhone: "",
     contactEmail: "",
@@ -124,47 +130,36 @@ const OrderDetails = () => {
                 <Label htmlFor="pickupCity">城市</Label>
                 <Input
                   id="pickupCity"
-                  placeholder="城市"
                   value={pickupDetails.city}
-                  onChange={(e) => handlePickupChange("city", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pickupState">州</Label>
                 <Input
                   id="pickupState"
-                  placeholder="州"
                   value={pickupDetails.state}
-                  onChange={(e) => handlePickupChange("state", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pickupZip">邮编</Label>
                 <Input
                   id="pickupZip"
-                  placeholder="邮编"
                   value={pickupDetails.zip}
-                  onChange={(e) => handlePickupChange("zip", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pickupAddressType">地址类型</Label>
-                <Select
-                  value={pickupDetails.addressType}
-                  onValueChange={(value) => handlePickupChange("addressType", value)}
-                >
-                  <SelectTrigger id="pickupAddressType">
-                    <SelectValue placeholder="选择地址类型" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="residential">住宅</SelectItem>
-                    <SelectItem value="commercial">商业</SelectItem>
-                    <SelectItem value="warehouse">仓库</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>地址类型</Label>
+                <Input
+                  value={ADDRESS_TYPE_LABELS[pickupDetails.addressType] || pickupDetails.addressType}
+                  disabled
+                  className="bg-muted"
+                />
               </div>
             </div>
 
@@ -244,47 +239,36 @@ const OrderDetails = () => {
                 <Label htmlFor="deliveryCity">城市</Label>
                 <Input
                   id="deliveryCity"
-                  placeholder="城市"
                   value={deliveryDetails.city}
-                  onChange={(e) => handleDeliveryChange("city", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="deliveryState">州</Label>
                 <Input
                   id="deliveryState"
-                  placeholder="州"
                   value={deliveryDetails.state}
-                  onChange={(e) => handleDeliveryChange("state", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="deliveryZip">邮编</Label>
                 <Input
                   id="deliveryZip"
-                  placeholder="邮编"
                   value={deliveryDetails.zip}
-                  onChange={(e) => handleDeliveryChange("zip", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deliveryAddressType">地址类型</Label>
-                <Select
-                  value={deliveryDetails.addressType}
-                  onValueChange={(value) => handleDeliveryChange("addressType", value)}
-                >
-                  <SelectTrigger id="deliveryAddressType">
-                    <SelectValue placeholder="选择地址类型" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="residential">住宅</SelectItem>
-                    <SelectItem value="commercial">商业</SelectItem>
-                    <SelectItem value="warehouse">仓库</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>地址类型</Label>
+                <Input
+                  value={ADDRESS_TYPE_LABELS[deliveryDetails.addressType] || deliveryDetails.addressType}
+                  disabled
+                  className="bg-muted"
+                />
               </div>
             </div>
 

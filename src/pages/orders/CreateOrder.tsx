@@ -45,7 +45,7 @@ const CreateOrder = () => {
   
   // 客户选择（仅管理员需要）
   const [customers, setCustomers] = useState<any[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(restoredData?.customerId || "");
   
   // 运输类型
   const [shipmentType, setShipmentType] = useState<"FTL" | "LTL">(restoredData?.shipmentType || "LTL");
@@ -127,13 +127,23 @@ const CreateOrder = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // 验证邮编格式: 5位数 或 5位数-4位数
+  const validateZipCode = (value: string): boolean => {
+    const zipPattern = /^\d{5}(-\d{4})?$/;
+    return zipPattern.test(value);
+  };
+
   // 邮编变更时自动查询城市和州
   const handleZipChange = async (field: 'pickupZip' | 'deliveryZip', value: string) => {
-    handleInputChange(field, value);
+    // 允许输入数字和连字符
+    const cleanValue = value.replace(/[^\d-]/g, '');
+    handleInputChange(field, cleanValue);
     
-    // 只有5位数时才查询
-    if (value.length === 5) {
-      const result = await lookupZipCode(value);
+    // 取前5位进行查询
+    const zip5 = cleanValue.substring(0, 5);
+    
+    if (zip5.length === 5) {
+      const result = await lookupZipCode(zip5);
       if (result) {
         if (field === 'pickupZip') {
           setPickupLocation({ city: result.city, state: result.stateCode });
@@ -141,7 +151,7 @@ const CreateOrder = () => {
           setDeliveryLocation({ city: result.city, state: result.stateCode });
         }
       }
-    } else if (value.length < 5) {
+    } else {
       // 清空位置信息
       if (field === 'pickupZip') {
         setPickupLocation({ city: "", state: "" });
@@ -149,6 +159,19 @@ const CreateOrder = () => {
         setDeliveryLocation({ city: "", state: "" });
       }
     }
+  };
+
+  // 验证托盘尺寸格式: 长*宽*高，每项必填，支持一位小数
+  const validateDimensions = (dimensions: string): boolean => {
+    if (!dimensions) return false;
+    const dimPattern = /^\d+(\.\d)?[*xX]\d+(\.\d)?[*xX]\d+(\.\d)?$/;
+    return dimPattern.test(dimensions);
+  };
+
+  // 格式化托盘尺寸
+  const formatDimensions = (value: string): string => {
+    // 将 x 或 X 替换为 *
+    return value.replace(/[xX]/g, '*');
   };
 
   const addPallet = () => {
@@ -179,8 +202,12 @@ const CreateOrder = () => {
   };
 
   const updatePallet = (id: string, field: keyof Pallet, value: string | number) => {
+    let processedValue = value;
+    if (field === 'dimensions' && typeof value === 'string') {
+      processedValue = formatDimensions(value);
+    }
     setPallets(prev => prev.map(pallet => 
-      pallet.id === id ? { ...pallet, [field]: value } : pallet
+      pallet.id === id ? { ...pallet, [field]: processedValue } : pallet
     ));
   };
 
@@ -218,10 +245,28 @@ const CreateOrder = () => {
       return;
     }
 
+    // 验证邮编格式
+    if (!validateZipCode(formData.pickupZip)) {
+      toast.error("发货邮编格式不正确，请输入5位数或5位数-4位数格式");
+      return;
+    }
+    if (!validateZipCode(formData.deliveryZip)) {
+      toast.error("收货邮编格式不正确，请输入5位数或5位数-4位数格式");
+      return;
+    }
+
     // 验证托盘数据
     if (pallets.length === 0) {
       toast.error("请至少添加一个托盘");
       return;
+    }
+
+    // 验证托盘尺寸格式
+    for (const pallet of pallets) {
+      if (!validateDimensions(pallet.dimensions)) {
+        toast.error(`托盘尺寸格式不正确，请使用 长*宽*高 格式（如 48*40*72）`);
+        return;
+      }
     }
 
     try {
@@ -357,14 +402,14 @@ const CreateOrder = () => {
                 <div className="relative">
                   <Input
                     id="pickupZip"
-                    placeholder="发货邮编"
+                    placeholder="12345 或 12345-6789"
                     value={formData.pickupZip}
                     onChange={(e) => handleZipChange("pickupZip", e.target.value)}
-                    maxLength={5}
+                    maxLength={10}
                     required
                     className="h-9"
                   />
-                  {zipLoading && formData.pickupZip.length === 5 && (
+                  {zipLoading && formData.pickupZip.length >= 5 && (
                     <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
                   )}
                 </div>
@@ -383,14 +428,14 @@ const CreateOrder = () => {
                 <div className="relative">
                   <Input
                     id="deliveryZip"
-                    placeholder="收货邮编"
+                    placeholder="12345 或 12345-6789"
                     value={formData.deliveryZip}
                     onChange={(e) => handleZipChange("deliveryZip", e.target.value)}
-                    maxLength={5}
+                    maxLength={10}
                     required
                     className="h-9"
                   />
-                  {zipLoading && formData.deliveryZip.length === 5 && (
+                  {zipLoading && formData.deliveryZip.length >= 5 && (
                     <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
                   )}
                 </div>
