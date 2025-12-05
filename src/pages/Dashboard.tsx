@@ -316,6 +316,13 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <RechargeDialog 
+        open={rechargeDialogOpen}
+        onOpenChange={setRechargeDialogOpen}
+        customerId={customerId}
+        onSuccess={fetchCustomerData}
+      />
     </div>
   );
 };
