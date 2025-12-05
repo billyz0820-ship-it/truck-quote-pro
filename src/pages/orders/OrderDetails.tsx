@@ -72,7 +72,7 @@ const OrderDetails = () => {
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/dashboard/orders/quote", { state: { orderData } })}
           className="p-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -345,7 +345,7 @@ const OrderDetails = () => {
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/dashboard/orders/quote", { state: { orderData } })}
             disabled={loading}
           >
             返回

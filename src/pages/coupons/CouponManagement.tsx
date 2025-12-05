@@ -277,14 +277,14 @@ const CouponManagement = () => {
               <div className="space-y-2">
                 <Label>分配给客户（可选）</Label>
                 <Select
-                  value={couponForm.customer_id}
-                  onValueChange={(value) => setCouponForm(prev => ({ ...prev, customer_id: value }))}
+                  value={couponForm.customer_id || "none"}
+                  onValueChange={(value) => setCouponForm(prev => ({ ...prev, customer_id: value === "none" ? "" : value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="选择客户或留空" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">不分配</SelectItem>
+                    <SelectItem value="none">不分配</SelectItem>
                     {customers.map((customer) => (
                       <SelectItem key={customer.id} value={customer.id}>
                         {customer.customer_code} - {customer.company_name}

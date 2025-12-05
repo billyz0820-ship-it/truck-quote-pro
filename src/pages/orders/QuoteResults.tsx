@@ -155,7 +155,7 @@ const QuoteResults = () => {
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
-          onClick={() => navigate("/dashboard/orders/create")}
+          onClick={() => navigate("/dashboard/orders/truck")}
           className="p-2"
         >
           <ArrowLeft className="h-4 w-4" />
