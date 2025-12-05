@@ -6,12 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, MapPin, Package, Plus, Trash2, Copy, Calendar, Truck, Warehouse } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, MapPin, Package, Plus, Trash2, Copy, Calendar, Truck, Warehouse, Loader2 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { RouteMap } from "@/components/RouteMap";
+import { useZipCodeLookup } from "@/hooks/useZipCodeLookup";
 
 interface Pallet {
   id: string;
@@ -34,37 +35,54 @@ const ADDRESS_TYPES = [
 
 const CreateOrder = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { customerId, userRole } = useAuth();
   const [loading, setLoading] = useState(false);
+  const { lookupZipCode, loading: zipLoading } = useZipCodeLookup();
+  
+  // 从路由状态恢复数据（从报价页面返回时）
+  const restoredData = location.state?.orderData;
   
   // 客户选择（仅管理员需要）
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   
   // 运输类型
-  const [shipmentType, setShipmentType] = useState<"FTL" | "LTL">("LTL");
+  const [shipmentType, setShipmentType] = useState<"FTL" | "LTL">(restoredData?.shipmentType || "LTL");
   
   // 地址类型
-  const [pickupAddressType, setPickupAddressType] = useState<string>("commercial_dock");
-  const [deliveryAddressType, setDeliveryAddressType] = useState<string>("commercial_dock");
+  const [pickupAddressType, setPickupAddressType] = useState<string>(restoredData?.pickupAddressType || "commercial_dock");
+  const [deliveryAddressType, setDeliveryAddressType] = useState<string>(restoredData?.deliveryAddressType || "commercial_dock");
   
   // 平台仓库相关
-  const [isPlatformWarehouse, setIsPlatformWarehouse] = useState<boolean>(false);
-  const [warehouseCode, setWarehouseCode] = useState<string>("");
-  const [warehouseAddress, setWarehouseAddress] = useState<string>("");
+  const [isPlatformWarehouse, setIsPlatformWarehouse] = useState<boolean>(restoredData?.isPlatformWarehouse || false);
+  const [warehouseCode, setWarehouseCode] = useState<string>(restoredData?.warehouseCode || "");
+  const [warehouseAddress, setWarehouseAddress] = useState<string>(restoredData?.warehouseAddress || "");
   
-  const [formData, setFormData] = useState({
-    pickupZip: "",
-    deliveryZip: "",
-    pickupDate: "",
-    pickupTimeSlot: "",
-    referenceNumber: "",
-    cargoDescription: "",
+  // ZIP code 对应的城市和州
+  const [pickupLocation, setPickupLocation] = useState({
+    city: restoredData?.pickupCity || "",
+    state: restoredData?.pickupState || ""
+  });
+  const [deliveryLocation, setDeliveryLocation] = useState({
+    city: restoredData?.deliveryCity || "",
+    state: restoredData?.deliveryState || ""
   });
   
-  const [pallets, setPallets] = useState<Pallet[]>([
-    { id: "1", count: 1, weight: 0, dimensions: "", class: "", itemCount: 0, value: 0, nmfc: "", nmfcSub: "" }
-  ]);
+  const [formData, setFormData] = useState({
+    pickupZip: restoredData?.pickupZip || "",
+    deliveryZip: restoredData?.deliveryZip || "",
+    pickupDate: restoredData?.pickupDate || "",
+    pickupTimeSlot: restoredData?.pickupTimeSlot || "",
+    referenceNumber: restoredData?.referenceNumber || "",
+    cargoDescription: restoredData?.cargoDescription || "",
+  });
+  
+  const [pallets, setPallets] = useState<Pallet[]>(
+    restoredData?.pallets?.length > 0 
+      ? restoredData.pallets 
+      : [{ id: "1", count: 1, weight: 0, dimensions: "", class: "", itemCount: 0, value: 0, nmfc: "", nmfcSub: "" }]
+  );
 
   const [unit, setUnit] = useState<"imperial" | "metric">("imperial");
   
@@ -107,6 +125,30 @@ const CreateOrder = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // 邮编变更时自动查询城市和州
+  const handleZipChange = async (field: 'pickupZip' | 'deliveryZip', value: string) => {
+    handleInputChange(field, value);
+    
+    // 只有5位数时才查询
+    if (value.length === 5) {
+      const result = await lookupZipCode(value);
+      if (result) {
+        if (field === 'pickupZip') {
+          setPickupLocation({ city: result.city, state: result.stateCode });
+        } else {
+          setDeliveryLocation({ city: result.city, state: result.stateCode });
+        }
+      }
+    } else if (value.length < 5) {
+      // 清空位置信息
+      if (field === 'pickupZip') {
+        setPickupLocation({ city: "", state: "" });
+      } else {
+        setDeliveryLocation({ city: "", state: "" });
+      }
+    }
   };
 
   const addPallet = () => {
@@ -196,7 +238,11 @@ const CreateOrder = () => {
         customerCode: customerData?.customer_code,
         shipmentType,
         pickupZip: formData.pickupZip,
+        pickupCity: pickupLocation.city,
+        pickupState: pickupLocation.state,
         deliveryZip: formData.deliveryZip,
+        deliveryCity: deliveryLocation.city,
+        deliveryState: deliveryLocation.state,
         pickupDate: formData.pickupDate,
         pickupTimeSlot: formData.pickupTimeSlot,
         referenceNumber: formData.referenceNumber,
@@ -305,27 +351,57 @@ const CreateOrder = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="pickupZip" className="text-sm">发货邮编</Label>
+                <div className="relative">
+                  <Input
+                    id="pickupZip"
+                    placeholder="发货邮编"
+                    value={formData.pickupZip}
+                    onChange={(e) => handleZipChange("pickupZip", e.target.value)}
+                    maxLength={5}
+                    required
+                    className="h-9"
+                  />
+                  {zipLoading && formData.pickupZip.length === 5 && (
+                    <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm">发货城市/州</Label>
                 <Input
-                  id="pickupZip"
-                  placeholder="发货邮编"
-                  value={formData.pickupZip}
-                  onChange={(e) => handleInputChange("pickupZip", e.target.value)}
-                  required
-                  className="h-9"
+                  value={pickupLocation.city && pickupLocation.state ? `${pickupLocation.city}, ${pickupLocation.state}` : ""}
+                  placeholder="输入邮编后自动填充"
+                  disabled
+                  className="h-9 bg-muted"
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="deliveryZip" className="text-sm">收货邮编</Label>
+                <div className="relative">
+                  <Input
+                    id="deliveryZip"
+                    placeholder="收货邮编"
+                    value={formData.deliveryZip}
+                    onChange={(e) => handleZipChange("deliveryZip", e.target.value)}
+                    maxLength={5}
+                    required
+                    className="h-9"
+                  />
+                  {zipLoading && formData.deliveryZip.length === 5 && (
+                    <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm">收货城市/州</Label>
                 <Input
-                  id="deliveryZip"
-                  placeholder="收货邮编"
-                  value={formData.deliveryZip}
-                  onChange={(e) => handleInputChange("deliveryZip", e.target.value)}
-                  required
-                  className="h-9"
+                  value={deliveryLocation.city && deliveryLocation.state ? `${deliveryLocation.city}, ${deliveryLocation.state}` : ""}
+                  placeholder="输入邮编后自动填充"
+                  disabled
+                  className="h-9 bg-muted"
                 />
               </div>
               <div className="space-y-1.5">

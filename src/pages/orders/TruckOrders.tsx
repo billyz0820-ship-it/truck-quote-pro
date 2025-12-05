@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, Eye, Download, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Eye, Download, Trash2, PlayCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -350,18 +350,51 @@ const TruckOrders = () => {
                             <TooltipContent>查看详情</TooltipContent>
                           </Tooltip>
                           {order.status === "quoted" && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => handleDelete(order.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>删除</TooltipContent>
-                            </Tooltip>
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => {
+                                      // 继续下单 - 恢复订单数据并跳转到报价页面
+                                      const orderData = {
+                                        customerId: order.customer_code ? undefined : order.id, // Will be fetched
+                                        customerCode: order.customer_code,
+                                        shipmentType: 'LTL',
+                                        pickupZip: order.pickup_zip,
+                                        pickupCity: order.pickup_city,
+                                        pickupState: order.pickup_state,
+                                        deliveryZip: order.delivery_zip,
+                                        deliveryCity: order.delivery_city,
+                                        deliveryState: order.delivery_state,
+                                        cargoDescription: order.cargo_description,
+                                        referenceNumber: order.reference_number,
+                                        pallets: order.pallet_info || [],
+                                      };
+                                      navigate("/dashboard/orders/quote", { 
+                                        state: { orderData, savedOrderId: order.id } 
+                                      });
+                                    }}
+                                  >
+                                    <PlayCircle className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>继续下单</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => handleDelete(order.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>删除</TooltipContent>
+                              </Tooltip>
+                            </>
                           )}
                           {order.status === "placed" && (
                             <>
