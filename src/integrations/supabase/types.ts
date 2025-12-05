@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      address_zip_zones: {
+        Row: {
+          address_id: string
+          created_at: string
+          id: string
+          zip_end: string
+          zip_start: string
+          zone: number
+        }
+        Insert: {
+          address_id: string
+          created_at?: string
+          id?: string
+          zip_end: string
+          zip_start: string
+          zone: number
+        }
+        Update: {
+          address_id?: string
+          created_at?: string
+          id?: string
+          zip_end?: string
+          zip_start?: string
+          zone?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "address_zip_zones_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "customer_addresses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       addresses: {
         Row: {
           address: string
@@ -525,6 +560,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      customer_addresses: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          address_type: string
+          city: string
+          company_name: string | null
+          contact_email: string | null
+          contact_name: string
+          contact_phone: string | null
+          country: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_default: boolean | null
+          state: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          address_type: string
+          city: string
+          company_name?: string | null
+          contact_email?: string | null
+          contact_name: string
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_default?: boolean | null
+          state: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          address_type?: string
+          city?: string
+          company_name?: string | null
+          contact_email?: string | null
+          contact_name?: string
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_default?: boolean | null
+          state?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: []
       }
       customer_agreements: {
         Row: {

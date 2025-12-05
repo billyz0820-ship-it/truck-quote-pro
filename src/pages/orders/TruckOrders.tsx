@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, Eye, Download, Trash2, PlayCircle } from "lucide-react";
+import { Plus, Search, Filter, Eye, Download, Trash2, PlayCircle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -185,6 +185,21 @@ const TruckOrders = () => {
       fetchOrders();
     } catch (error: any) {
       toast.error("取消失败: " + error.message);
+    }
+  };
+
+  const handleReview = async (orderId: string) => {
+    if (!confirm("确定要审核通过此订单吗？")) return;
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'reviewed' })
+        .eq('id', orderId);
+      if (error) throw error;
+      toast.success("订单已审核通过");
+      fetchOrders();
+    } catch (error: any) {
+      toast.error("审核失败: " + error.message);
     }
   };
 
@@ -412,6 +427,21 @@ const TruckOrders = () => {
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>下载BOL</TooltipContent>
+                                </Tooltip>
+                              )}
+                              {userRole === 'admin' && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="default"
+                                      size="sm"
+                                      onClick={() => handleReview(order.id)}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      审核
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>审核通过</TooltipContent>
                                 </Tooltip>
                               )}
                               <Tooltip>
