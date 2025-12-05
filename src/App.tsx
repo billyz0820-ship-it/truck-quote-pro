@@ -57,6 +57,8 @@ import PricingTemplateEdit from "./pages/carrier/PricingTemplateEdit";
 import CustomerPricingEdit from "./pages/carrier/CustomerPricingEdit";
 import ContractManagement from "./pages/contracts/ContractManagement";
 import AgreementManagement from "./pages/contracts/AgreementManagement";
+import AddressManagement from "./pages/settings/AddressManagement";
+import AddressZoneConfig from "./pages/settings/AddressZoneConfig";
 
 const queryClient = new QueryClient();
 
@@ -123,6 +125,8 @@ const App = () => (
             <Route path="truck/zip-region" element={<ZipRegionMapping />} />
             <Route path="contracts" element={<ContractManagement />} />
             <Route path="agreements" element={<AgreementManagement />} />
+            <Route path="settings/addresses" element={<AddressManagement />} />
+            <Route path="settings/addresses/:addressId/zones" element={<AddressZoneConfig />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useZipCodeLookup } from "@/hooks/useZipCodeLookup";
 
 const packageSchema = z.object({
   package_type: z.string().optional(),
@@ -66,6 +67,7 @@ interface CreateExpressOrderFormProps {
 
 export function CreateExpressOrderForm({ onSuccess, onCancel, orderId, mode = 'create' }: CreateExpressOrderFormProps) {
   const { toast } = useToast();
+  const { lookupZipCode, loading: zipLoading } = useZipCodeLookup();
   const [isMetric, setIsMetric] = useState(false);
   const [packages, setPackages] = useState<PackageData[]>([
     {
@@ -351,8 +353,24 @@ export function CreateExpressOrderForm({ onSuccess, onCancel, orderId, mode = 'c
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="zip_code">邮编 *</Label>
-            <Input id="zip_code" {...register("zip_code")} />
+            <Label htmlFor="zip_code">邮编 * (5位或5+4位)</Label>
+            <Input 
+              id="zip_code" 
+              {...register("zip_code")}
+              maxLength={10}
+              onChange={async (e) => {
+                const zip = e.target.value;
+                setValue("zip_code", zip);
+                const zipRegex = /^\d{5}(-\d{4})?$/;
+                if (zipRegex.test(zip)) {
+                  const info = await lookupZipCode(zip.substring(0, 5));
+                  if (info) {
+                    setValue("city", info.city);
+                    setValue("state", info.stateCode);
+                  }
+                }
+              }}
+            />
             {errors.zip_code && (
               <p className="text-sm text-destructive">{errors.zip_code.message}</p>
             )}
@@ -360,7 +378,7 @@ export function CreateExpressOrderForm({ onSuccess, onCancel, orderId, mode = 'c
 
           <div className="space-y-2">
             <Label htmlFor="state">州 *</Label>
-            <Input id="state" {...register("state")} />
+            <Input id="state" {...register("state")} disabled={zipLoading} className="bg-muted" />
             {errors.state && (
               <p className="text-sm text-destructive">{errors.state.message}</p>
             )}
@@ -368,7 +386,7 @@ export function CreateExpressOrderForm({ onSuccess, onCancel, orderId, mode = 'c
 
           <div className="space-y-2">
             <Label htmlFor="city">城市 *</Label>
-            <Input id="city" {...register("city")} />
+            <Input id="city" {...register("city")} disabled={zipLoading} className="bg-muted" />
             {errors.city && (
               <p className="text-sm text-destructive">{errors.city.message}</p>
             )}

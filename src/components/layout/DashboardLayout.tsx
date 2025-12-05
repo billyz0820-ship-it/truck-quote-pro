@@ -51,7 +51,8 @@ import {
   ArrowLeftRight,
   Star,
   FileSignature,
-  ScrollText
+  ScrollText,
+  MapPin
 } from "lucide-react";
 
 const DashboardLayout = () => {
@@ -83,7 +84,14 @@ const DashboardLayout = () => {
       ]
     },
     { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
-    { title: "配置管理", url: "/dashboard/settings", icon: Settings },
+    { 
+      title: "配置管理", 
+      icon: Settings,
+      subItems: [
+        { title: "系统设置", url: "/dashboard/settings", icon: Settings },
+        { title: "地址配置", url: "/dashboard/settings/addresses", icon: MapPin },
+      ]
+    },
     { title: "工单管理", url: "/dashboard/tickets", icon: FileText },
     { title: "知识库", url: "/dashboard/knowledge", icon: FileText },
     { title: "通知管理", url: "/dashboard/notifications", icon: FileText },
