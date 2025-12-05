@@ -10,6 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
+import { AgreementViewDialog } from "@/components/agreements/AgreementViewDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   order_number: z.string().min(1, "订单号不能为空"),
@@ -36,8 +39,12 @@ interface CreateReturnOrderFormProps {
 
 export function CreateReturnOrderForm({ onSuccess, onCancel }: CreateReturnOrderFormProps) {
   const { toast } = useToast();
+  const { customerId } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [showAgreementDialog, setShowAgreementDialog] = useState(false);
+  
+  const { isFirstOrder, hasAgreed, markAsAgreed } = useFirstOrderCheck(customerId);
 
   const {
     register,
@@ -73,6 +80,12 @@ export function CreateReturnOrderForm({ onSuccess, onCancel }: CreateReturnOrder
   };
 
   const onSubmit = async (data: FormData) => {
+    // Check agreement for first order
+    if (isFirstOrder && !hasAgreed) {
+      setShowAgreementDialog(true);
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -310,9 +323,15 @@ export function CreateReturnOrderForm({ onSuccess, onCancel }: CreateReturnOrder
           取消
         </Button>
         <Button type="submit" disabled={submitting}>
-          {submitting ? "创建中..." : "创建订单"}
+          {submitting ? "创建中..." : isFirstOrder && !hasAgreed ? "签署协议并创建" : "创建订单"}
         </Button>
       </div>
+
+      <AgreementViewDialog
+        open={showAgreementDialog}
+        onOpenChange={setShowAgreementDialog}
+        onAccept={markAsAgreed}
+      />
     </form>
   );
 }

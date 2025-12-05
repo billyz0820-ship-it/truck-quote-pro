@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Edit, Eye, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, FileText, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ContractFileUpload } from "@/components/contracts/ContractFileUpload";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -47,6 +48,7 @@ const ContractManagement = () => {
     party_name: "",
     title: "",
     content: "",
+    file_url: "",
     start_date: "",
     end_date: "",
     status: "active"
@@ -162,6 +164,7 @@ const ContractManagement = () => {
       party_name: "",
       title: "",
       content: "",
+      file_url: "",
       start_date: "",
       end_date: "",
       status: "active"
@@ -178,6 +181,7 @@ const ContractManagement = () => {
       party_name: contract.party_name,
       title: contract.title,
       content: contract.content || "",
+      file_url: contract.file_url || "",
       start_date: contract.start_date,
       end_date: contract.end_date || "",
       status: contract.status
@@ -319,7 +323,14 @@ const ContractManagement = () => {
                             value={formData.content}
                             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                             placeholder="输入合同内容或条款"
-                            rows={6}
+                            rows={4}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <ContractFileUpload
+                            contractId={editingContract?.id || "new"}
+                            currentFileUrl={formData.file_url}
+                            onUploadComplete={(url) => setFormData({ ...formData, file_url: url })}
                           />
                         </div>
                       </div>
@@ -342,17 +353,18 @@ const ContractManagement = () => {
                     <TableHead>开始日期</TableHead>
                     <TableHead>结束日期</TableHead>
                     <TableHead>状态</TableHead>
+                    <TableHead>合同文件</TableHead>
                     <TableHead className="text-right">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">加载中...</TableCell>
+                      <TableCell colSpan={8} className="text-center py-8">加载中...</TableCell>
                     </TableRow>
                   ) : filteredContracts.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
                     </TableRow>
                   ) : (
                     filteredContracts.map((contract) => (
@@ -363,6 +375,21 @@ const ContractManagement = () => {
                         <TableCell>{contract.start_date}</TableCell>
                         <TableCell>{contract.end_date || "-"}</TableCell>
                         <TableCell>{getStatusBadge(contract.status)}</TableCell>
+                        <TableCell>
+                          {contract.file_url ? (
+                            <a 
+                              href={contract.file_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-sm text-primary hover:underline"
+                            >
+                              <FileText className="h-4 w-4" />
+                              查看
+                            </a>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <TooltipProvider>
                             <div className="flex justify-end gap-1">

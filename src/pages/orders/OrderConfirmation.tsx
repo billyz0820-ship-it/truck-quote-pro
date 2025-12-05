@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Truck, Ticket, Wallet, FileText, AlertCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
+import { AgreementViewDialog } from "@/components/agreements/AgreementViewDialog";
 
 const OrderConfirmation = () => {
   const navigate = useNavigate();
@@ -18,17 +19,16 @@ const OrderConfirmation = () => {
   
   const [loading, setLoading] = useState(false);
   const [customerBalance, setCustomerBalance] = useState<number>(0);
-  const [hasAgreedBefore, setHasAgreedBefore] = useState(true);
-  const [agreementChecked, setAgreementChecked] = useState(false);
-  const [loadingAgreement, setLoadingAgreement] = useState(true);
+  const [showAgreementDialog, setShowAgreementDialog] = useState(false);
+  
+  const { isFirstOrder, loading: loadingAgreement, hasAgreed, markAsAgreed } = useFirstOrderCheck(customerId);
 
-  // 获取客户余额和协议签署状态
+  // 获取客户余额
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBalance = async () => {
       if (!customerId) return;
 
       try {
-        // 获取客户余额和客户编码
         const { data: customerData } = await supabase
           .from('customers')
           .select('balance, customer_code')
@@ -39,28 +39,12 @@ const OrderConfirmation = () => {
           setCustomerBalance(customerData.balance || 0);
           setCustomerCode(customerData.customer_code || '');
         }
-
-        // 检查是否有过任何订单（卡车、快递、退件）
-        const [truckOrders, expressOrders, returnOrders] = await Promise.all([
-          supabase.from('orders').select('id').eq('customer_id', customerId).limit(1),
-          supabase.from('express_orders').select('id').eq('customer_id', customerId).limit(1),
-          supabase.from('return_orders').select('id').eq('customer_id', customerId).limit(1)
-        ]);
-
-        const hasAnyOrder = 
-          (truckOrders.data && truckOrders.data.length > 0) ||
-          (expressOrders.data && expressOrders.data.length > 0) ||
-          (returnOrders.data && returnOrders.data.length > 0);
-
-        setHasAgreedBefore(hasAnyOrder);
       } catch (error) {
         console.error("获取数据失败:", error);
-      } finally {
-        setLoadingAgreement(false);
       }
     };
 
-    fetchData();
+    fetchBalance();
   }, [customerId]);
 
   // 如果没有数据，返回创建页面
@@ -75,9 +59,9 @@ const OrderConfirmation = () => {
   const remainingBalance = customerBalance - finalAmount;
 
   const handleSubmit = async () => {
-    // 检查协议
-    if (!hasAgreedBefore && !agreementChecked) {
-      toast.error("请先阅读并同意服务协议");
+    // 检查协议 - 首单需要签署
+    if (isFirstOrder && !hasAgreed) {
+      setShowAgreementDialog(true);
       return;
     }
 
@@ -302,8 +286,8 @@ const OrderConfirmation = () => {
             </CardContent>
           </Card>
 
-          {/* 服务协议 */}
-          {!loadingAgreement && !hasAgreedBefore && (
+          {/* 服务协议提示 */}
+          {!loadingAgreement && isFirstOrder && !hasAgreed && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -314,21 +298,16 @@ const OrderConfirmation = () => {
               <CardContent>
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    首次下单需阅读并同意以下协议：
+                    首次下单需阅读并同意服务协议
                   </p>
-                  <div className="flex items-start gap-2">
-                    <Checkbox
-                      id="agreement"
-                      checked={agreementChecked}
-                      onCheckedChange={(checked) => setAgreementChecked(checked as boolean)}
-                    />
-                    <label htmlFor="agreement" className="text-sm cursor-pointer">
-                      我已阅读并同意
-                      <a href="#" className="text-primary hover:underline mx-1">《物流服务协议》</a>
-                      和
-                      <a href="#" className="text-primary hover:underline mx-1">《用户隐私政策》</a>
-                    </label>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAgreementDialog(true)}
+                    className="w-full"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    查看并签署协议
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -340,9 +319,9 @@ const OrderConfirmation = () => {
               onClick={handleSubmit} 
               className="w-full" 
               size="lg"
-              disabled={loading || remainingBalance < 0 || (!hasAgreedBefore && !agreementChecked)}
+              disabled={loading || remainingBalance < 0}
             >
-              {loading ? "提交中..." : "确认下单"}
+              {loading ? "提交中..." : isFirstOrder && !hasAgreed ? "签署协议并下单" : "确认下单"}
             </Button>
             <Button 
               variant="outline" 
@@ -355,6 +334,12 @@ const OrderConfirmation = () => {
           </div>
         </div>
       </div>
+
+      <AgreementViewDialog
+        open={showAgreementDialog}
+        onOpenChange={setShowAgreementDialog}
+        onAccept={markAsAgreed}
+      />
     </div>
   );
 };
