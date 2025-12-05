@@ -1214,6 +1214,8 @@ export type Database = {
           discount_amount: number | null
           id: string
           order_number: string
+          pallet_count: number | null
+          pallet_info: Json | null
           pallet_label_url: string | null
           pickup_address: string | null
           pickup_address_type: string | null
@@ -1256,6 +1258,8 @@ export type Database = {
           discount_amount?: number | null
           id?: string
           order_number: string
+          pallet_count?: number | null
+          pallet_info?: Json | null
           pallet_label_url?: string | null
           pickup_address?: string | null
           pickup_address_type?: string | null
@@ -1298,6 +1302,8 @@ export type Database = {
           discount_amount?: number | null
           id?: string
           order_number?: string
+          pallet_count?: number | null
+          pallet_info?: Json | null
           pallet_label_url?: string | null
           pickup_address?: string | null
           pickup_address_type?: string | null

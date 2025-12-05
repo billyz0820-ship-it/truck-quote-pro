@@ -13,6 +13,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+interface PalletInfo {
+  id: string;
+  count: number;
+  weight: number;
+  dimensions: string;
+  class: string;
+}
+
 interface Order {
   id: string;
   order_number: string;
@@ -35,9 +43,15 @@ interface Order {
   status: string;
   quoted_amount: number;
   created_at: string;
+  customer_code: string;
+  pallet_count: number | null;
+  pallet_info: PalletInfo[] | null;
+  customers?: {
+    company_name: string;
+  } | null;
 }
 
-const OrderList = () => {
+const TruckOrders = () => {
   const navigate = useNavigate();
   const { customerId, userRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,7 +69,10 @@ const OrderList = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      let query = supabase.from('orders').select('*');
+      let query = supabase.from('orders').select(`
+        *,
+        customers(company_name)
+      `);
       
       if (userRole !== 'admin' && customerId) {
         query = query.eq('customer_id', customerId);
@@ -64,7 +81,10 @@ const OrderList = () => {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
-      setOrders(data || []);
+      setOrders((data || []).map(order => ({
+        ...order,
+        pallet_info: Array.isArray(order.pallet_info) ? order.pallet_info as unknown as PalletInfo[] : null
+      })));
     } catch (error: any) {
       toast.error("加载订单失败: " + error.message);
     } finally {
@@ -120,6 +140,7 @@ const OrderList = () => {
       case "sku": return order.sku?.toLowerCase().includes(term);
       case "pickup": return order.pickup_zip.includes(term);
       case "delivery": return order.delivery_zip.includes(term);
+      case "customer": return order.customer_code?.toLowerCase().includes(term) || order.customers?.company_name?.toLowerCase().includes(term);
       default:
         return (
           order.order_number.toLowerCase().includes(term) ||
@@ -128,7 +149,9 @@ const OrderList = () => {
           order.bol_number?.toLowerCase().includes(term) ||
           order.sku?.toLowerCase().includes(term) ||
           order.pickup_zip.includes(term) ||
-          order.delivery_zip.includes(term)
+          order.delivery_zip.includes(term) ||
+          order.customer_code?.toLowerCase().includes(term) ||
+          order.customers?.company_name?.toLowerCase().includes(term)
         );
     }
   });
@@ -163,12 +186,31 @@ const OrderList = () => {
     }
   };
 
+  const getPalletSummary = (palletInfo: PalletInfo[] | null, palletCount: number | null) => {
+    if (palletInfo && palletInfo.length > 0) {
+      const totalPallets = palletInfo.reduce((sum, p) => sum + (p.count || 1), 0);
+      const totalWeight = palletInfo.reduce((sum, p) => sum + ((p.weight || 0) * (p.count || 1)), 0);
+      return (
+        <div className="text-sm">
+          <div>{totalPallets}托</div>
+          <div className="text-xs text-muted-foreground">{totalWeight}磅</div>
+        </div>
+      );
+    }
+    if (palletCount) {
+      return <span>{palletCount}托</span>;
+    }
+    return "-";
+  };
+
+  const isQuotedTab = activeTab === "quoted";
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">订单管理</h1>
-          <p className="text-muted-foreground">查看和管理所有运输订单</p>
+          <h1 className="text-3xl font-bold">卡车订单</h1>
+          <p className="text-muted-foreground">查看和管理所有卡车运输订单</p>
         </div>
         <Button onClick={() => navigate("/dashboard/orders/create")}>
           <Plus className="h-4 w-4 mr-2" />
@@ -188,8 +230,9 @@ const OrderList = () => {
                   <SelectItem value="all">全部</SelectItem>
                   <SelectItem value="order">订单编号</SelectItem>
                   <SelectItem value="reference">参考编号</SelectItem>
-                  <SelectItem value="pro">PRO号</SelectItem>
-                  <SelectItem value="bol">BOL号</SelectItem>
+                  <SelectItem value="customer">客户</SelectItem>
+                  {!isQuotedTab && <SelectItem value="pro">PRO号</SelectItem>}
+                  {!isQuotedTab && <SelectItem value="bol">BOL号</SelectItem>}
                   <SelectItem value="sku">SKU</SelectItem>
                   <SelectItem value="pickup">起点邮编</SelectItem>
                   <SelectItem value="delivery">终点邮编</SelectItem>
@@ -236,14 +279,16 @@ const OrderList = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>订单编号</TableHead>
+                    {isQuotedTab && <TableHead>客户</TableHead>}
                     <TableHead>参考编号</TableHead>
                     <TableHead>发货人</TableHead>
                     <TableHead>发货地址</TableHead>
                     <TableHead>收货人</TableHead>
                     <TableHead>收货地址</TableHead>
-                    <TableHead>货物</TableHead>
-                    <TableHead>PRO号</TableHead>
-                    <TableHead>BOL号</TableHead>
+                    {isQuotedTab && <TableHead>托盘信息</TableHead>}
+                    {!isQuotedTab && <TableHead>货物</TableHead>}
+                    {!isQuotedTab && <TableHead>PRO号</TableHead>}
+                    {!isQuotedTab && <TableHead>BOL号</TableHead>}
                     <TableHead>状态</TableHead>
                     <TableHead>金额</TableHead>
                     <TableHead>日期</TableHead>
@@ -254,6 +299,14 @@ const OrderList = () => {
                   {filteredOrders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.order_number}</TableCell>
+                      {isQuotedTab && (
+                        <TableCell>
+                          <div className="text-sm">
+                            <div className="font-medium">{order.customer_code}</div>
+                            <div className="text-xs text-muted-foreground">{order.customers?.company_name || '-'}</div>
+                          </div>
+                        </TableCell>
+                      )}
                       <TableCell>{order.reference_number || "-"}</TableCell>
                       <TableCell>{order.pickup_contact_name || "-"}</TableCell>
                       <TableCell>
@@ -273,9 +326,12 @@ const OrderList = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{order.cargo_description || "-"}</TableCell>
-                      <TableCell>{order.pro_number || "-"}</TableCell>
-                      <TableCell>{order.bol_number || "-"}</TableCell>
+                      {isQuotedTab && (
+                        <TableCell>{getPalletSummary(order.pallet_info, order.pallet_count)}</TableCell>
+                      )}
+                      {!isQuotedTab && <TableCell>{order.cargo_description || "-"}</TableCell>}
+                      {!isQuotedTab && <TableCell>{order.pro_number || "-"}</TableCell>}
+                      {!isQuotedTab && <TableCell>{order.bol_number || "-"}</TableCell>}
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell className="font-medium">${order.quoted_amount.toFixed(2)}</TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleDateString('zh-CN')}</TableCell>
@@ -351,4 +407,4 @@ const OrderList = () => {
   );
 };
 
-export default OrderList;
+export default TruckOrders;
