@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { LucideIcon, Home } from "lucide-react";
 
@@ -16,6 +16,7 @@ interface TabContextType {
   openTab: (tab: Omit<Tab, "id" | "closable">) => void;
   closeTab: (tabId: string) => void;
   switchTab: (tabId: string) => void;
+  scrollToActiveTab: () => void;
 }
 
 const TabContext = createContext<TabContextType | undefined>(undefined);
@@ -51,6 +52,10 @@ export const TabProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [location.pathname, tabs, activeTabId]);
 
+  const scrollToActiveTab = useCallback(() => {
+    // This will be handled by TabBar component
+  }, []);
+
   const openTab = useCallback((newTab: Omit<Tab, "id" | "closable">) => {
     const tabId = newTab.path.replace(/\//g, "-");
     
@@ -62,10 +67,7 @@ export const TabProvider = ({ children }: { children: ReactNode }) => {
         return prevTabs;
       }
 
-      if (prevTabs.length >= 10) {
-        return prevTabs;
-      }
-
+      // No limit on tabs - allow unlimited tabs with scrolling
       const tab: Tab = {
         ...newTab,
         id: tabId,
@@ -102,7 +104,7 @@ export const TabProvider = ({ children }: { children: ReactNode }) => {
   }, [tabs]);
 
   return (
-    <TabContext.Provider value={{ tabs, activeTabId, openTab, closeTab, switchTab }}>
+    <TabContext.Provider value={{ tabs, activeTabId, openTab, closeTab, switchTab, scrollToActiveTab }}>
       {children}
     </TabContext.Provider>
   );
