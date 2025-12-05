@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { ArrowLeft, MapPin, Package, Clock, Shield, Truck, Ticket } from "lucide
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface CarrierQuote {
   id: string;
@@ -38,6 +39,55 @@ const QuoteResults = () => {
   const orderData = location.state?.orderData;
   const [availableCoupon, setAvailableCoupon] = useState<AvailableCoupon | null>(null);
   const [useCoupon, setUseCoupon] = useState(false);
+  const [savedOrderId, setSavedOrderId] = useState<string | null>(location.state?.savedOrderId || null);
+  const saveAttemptedRef = useRef(false);
+
+  // 自动保存报价到数据库
+  useEffect(() => {
+    const saveQuoteToDatabase = async () => {
+      if (!orderData || !orderData.customerId || savedOrderId || saveAttemptedRef.current) return;
+      
+      saveAttemptedRef.current = true;
+      
+      try {
+        // Generate order number
+        const orderNumber = `TK${Date.now().toString().slice(-8)}`;
+        
+        const { data, error } = await supabase
+          .from('orders')
+          .insert({
+            order_number: orderNumber,
+            customer_id: orderData.customerId,
+            customer_code: orderData.customerCode || '',
+            pickup_zip: orderData.pickupZip,
+            pickup_city: orderData.pickupCity || null,
+            pickup_state: orderData.pickupState || null,
+            delivery_zip: orderData.deliveryZip,
+            delivery_city: orderData.deliveryCity || null,
+            delivery_state: orderData.deliveryState || null,
+            cargo_description: orderData.cargoDescription || null,
+            reference_number: orderData.referenceNumber || null,
+            shipment_type: orderData.shipmentType,
+            pallet_count: orderData.pallets?.reduce((sum: number, p: any) => sum + (p.count || 1), 0) || null,
+            pallet_info: orderData.pallets || [],
+            quoted_amount: 0, // Will be updated when user selects a quote
+            status: 'quoted'
+          })
+          .select('id')
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setSavedOrderId(data.id);
+        }
+      } catch (error: any) {
+        console.error("保存报价失败:", error);
+        // Don't show error toast to avoid confusion
+      }
+    };
+
+    saveQuoteToDatabase();
+  }, [orderData, savedOrderId]);
 
   // 获取可用的卡车优惠券
   useEffect(() => {
@@ -125,7 +175,19 @@ const QuoteResults = () => {
   const distance = "875英里";
   const route = `${orderData?.pickupZip} → ${orderData?.deliveryZip}`;
 
-  const handleSelectQuote = (quote: CarrierQuote) => {
+  const handleSelectQuote = async (quote: CarrierQuote) => {
+    // 更新数据库中的报价金额
+    if (savedOrderId) {
+      const finalAmount = useCoupon && availableCoupon 
+        ? Math.max(0, quote.totalCost - availableCoupon.amount)
+        : quote.totalCost;
+      
+      await supabase
+        .from('orders')
+        .update({ quoted_amount: finalAmount })
+        .eq('id', savedOrderId);
+    }
+
     // 将订单数据和选中的报价一起传递
     const finalQuote = useCoupon && availableCoupon ? {
       ...quote,
@@ -138,7 +200,8 @@ const QuoteResults = () => {
       state: { 
         orderData,
         selectedQuote: finalQuote,
-        couponApplied: useCoupon ? availableCoupon : null
+        couponApplied: useCoupon ? availableCoupon : null,
+        savedOrderId
       } 
     });
   };
@@ -150,12 +213,19 @@ const QuoteResults = () => {
     return originalPrice;
   };
 
+  // 返回创建订单页面继续编辑
+  const handleBack = () => {
+    navigate("/dashboard/orders/create", { 
+      state: { orderData, savedOrderId } 
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
-          onClick={() => navigate("/dashboard/orders/truck")}
+          onClick={handleBack}
           className="p-2"
         >
           <ArrowLeft className="h-4 w-4" />
