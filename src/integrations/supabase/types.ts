@@ -79,6 +79,39 @@ export type Database = {
           },
         ]
       }
+      agreements: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       bills: {
         Row: {
           bill_month: string
@@ -347,6 +380,60 @@ export type Database = {
         }
         Relationships: []
       }
+      contracts: {
+        Row: {
+          content: string | null
+          contract_number: string
+          contract_type: string
+          created_at: string
+          created_by: string
+          end_date: string | null
+          file_url: string | null
+          id: string
+          party_id: string
+          party_name: string
+          signed_at: string | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          contract_number: string
+          contract_type: string
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          file_url?: string | null
+          id?: string
+          party_id: string
+          party_name: string
+          signed_at?: string | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          contract_number?: string
+          contract_type?: string
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          file_url?: string | null
+          id?: string
+          party_id?: string
+          party_name?: string
+          signed_at?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cost_imports: {
         Row: {
           actual_cost: number
@@ -432,6 +519,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "coupons_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_agreements: {
+        Row: {
+          agreed_at: string
+          agreement_id: string
+          customer_id: string
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          agreed_at?: string
+          agreement_id: string
+          customer_id: string
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          agreed_at?: string
+          agreement_id?: string
+          customer_id?: string
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_agreements_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_agreements_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"

@@ -55,6 +55,8 @@ import PlatformWarehousePricingDetail from "./pages/truck/PlatformWarehousePrici
 import ZipRegionMapping from "./pages/truck/ZipRegionMapping";
 import PricingTemplateEdit from "./pages/carrier/PricingTemplateEdit";
 import CustomerPricingEdit from "./pages/carrier/CustomerPricingEdit";
+import ContractManagement from "./pages/contracts/ContractManagement";
+import AgreementManagement from "./pages/contracts/AgreementManagement";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +121,8 @@ const App = () => (
             <Route path="truck/platform-warehouse" element={<PlatformWarehousePricing />} />
             <Route path="truck/platform-warehouse/:pricingName" element={<PlatformWarehousePricingDetail />} />
             <Route path="truck/zip-region" element={<ZipRegionMapping />} />
+            <Route path="contracts" element={<ContractManagement />} />
+            <Route path="agreements" element={<AgreementManagement />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
