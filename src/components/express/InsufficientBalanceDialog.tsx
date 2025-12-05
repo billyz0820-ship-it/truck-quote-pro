@@ -43,7 +43,7 @@ export function InsufficientBalanceDialog({
         <div className="space-y-4">
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">当前余额</span>
+              <span className="text-muted-foreground">可用总额 (余额+额度)</span>
               <span className="font-medium">${currentBalance.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">

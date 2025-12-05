@@ -20,6 +20,7 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [couponInfo, setCouponInfo] = useState<any>(null);
   const [customerBalance, setCustomerBalance] = useState<number>(0);
+  const [creditLimit, setCreditLimit] = useState<number>(0);
   const [totalShippingFee, setTotalShippingFee] = useState<number>(0);
   const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
   const [showAgreementDialog, setShowAgreementDialog] = useState(false);
@@ -52,15 +53,16 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
       setOrderDetails(firstOrder);
       setCustomerId(firstOrder.customer_id);
 
-      // Fetch customer balance
+      // Fetch customer balance and credit limit
       const { data: customerData } = await supabase
         .from('customers')
-        .select('balance')
+        .select('balance, credit_limit')
         .eq('id', firstOrder.customer_id)
         .single();
 
       if (customerData) {
         setCustomerBalance(customerData.balance || 0);
+        setCreditLimit(customerData.credit_limit || 0);
       }
 
       // Fetch available coupon for this customer (auto-apply)
@@ -90,6 +92,7 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
   // Calculate final amount after coupon
   const discountAmount = couponInfo ? Math.min(couponInfo.amount, totalShippingFee) : 0;
   const finalAmount = totalShippingFee - discountAmount;
+  const totalAvailable = customerBalance + creditLimit;
 
   const handlePrint = async () => {
     // Check agreement for first order
@@ -98,8 +101,8 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
       return;
     }
     
-    // Check balance before printing
-    if (customerBalance < finalAmount) {
+    // Check balance + credit limit before printing
+    if (totalAvailable < finalAmount) {
       setShowInsufficientDialog(true);
       return;
     }
@@ -170,6 +173,14 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
                 <span className="font-medium">${customerBalance.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-muted-foreground">信用额度</span>
+                <span className="font-medium">${creditLimit.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span className="text-muted-foreground">可用总额</span>
+                <span className="font-medium text-primary">${totalAvailable.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between border-t pt-1 mt-2">
                 <span className="text-muted-foreground">运费总计</span>
                 <span>${totalShippingFee.toFixed(2)}</span>
               </div>
@@ -211,7 +222,7 @@ export function PrintLabelDialog({ open, onOpenChange, orderIds, onSuccess }: Pr
       <InsufficientBalanceDialog
         open={showInsufficientDialog}
         onOpenChange={setShowInsufficientDialog}
-        currentBalance={customerBalance}
+        currentBalance={totalAvailable}
         requiredAmount={finalAmount}
       />
 
