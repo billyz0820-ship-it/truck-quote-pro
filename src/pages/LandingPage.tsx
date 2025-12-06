@@ -1,378 +1,966 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Truck, MapPin, Calculator, Users, Phone, Mail, Clock, Shield, User, TrendingUp } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Truck, Package, TrendingUp, Shield, Clock, Globe, ChevronRight, BarChart3, PieChart, MapPin, ArrowUpRight, Calculator, Users, Award, Headphones, CheckCircle2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroImage from "@/assets/hero-truck.jpg";
+import { toast } from "sonner";
+
+// 动态计数器组件
+const AnimatedCounter = ({ end, duration = 2000, suffix = "" }: { end: number; duration?: number; suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    let startTime: number;
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      setCount(Math.floor(progress * end));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [isVisible, end, duration]);
+
+  return <div ref={ref}>{count.toLocaleString()}{suffix}</div>;
+};
+
+// 简约折线图组件
+const SimpleLineChart = () => {
+  const points = [20, 35, 25, 45, 30, 55, 40, 65, 50, 70];
+  const maxVal = Math.max(...points);
+  const width = 280;
+  const height = 100;
+  
+  const pathData = points.map((val, i) => {
+    const x = (i / (points.length - 1)) * width;
+    const y = height - (val / maxVal) * height;
+    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+  }).join(' ');
+  
+  return (
+    <svg width={width} height={height} className="overflow-visible">
+      <defs>
+        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path
+        d={`${pathData} L ${width} ${height} L 0 ${height} Z`}
+        fill="url(#lineGradient)"
+      />
+      <path
+        d={pathData}
+        fill="none"
+        stroke="hsl(var(--primary))"
+        strokeWidth="2"
+      />
+      <circle cx={width} cy={height - (points[points.length - 1] / maxVal) * height} r="4" fill="hsl(var(--primary))" />
+    </svg>
+  );
+};
+
+// 简约饼图组件
+const SimplePieChart = () => {
+  return (
+    <div className="relative w-28 h-28">
+      <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--muted))" strokeWidth="12" />
+        <circle 
+          cx="50" cy="50" r="40" fill="none" 
+          stroke="hsl(var(--primary))" strokeWidth="12"
+          strokeDasharray="175 251"
+        />
+        <circle 
+          cx="50" cy="50" r="40" fill="none" 
+          stroke="hsl(var(--primary) / 0.5)" strokeWidth="12"
+          strokeDasharray="50 251"
+          strokeDashoffset="-175"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-bold text-foreground">$540</span>
+        <span className="text-xs text-muted-foreground">总支出(万)</span>
+      </div>
+    </div>
+  );
+};
+
+// 仪表盘模拟组件
+const DashboardMockup = () => {
+  return (
+    <div className="relative bg-card rounded-2xl shadow-xl border border-border p-6 max-w-lg">
+      {/* 顶部统计卡片 */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="bg-muted/50 rounded-lg p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-muted-foreground">总订单</span>
+            <TrendingUp className="w-3 h-3 text-green-500" />
+          </div>
+          <p className="text-lg font-bold text-foreground">8,256</p>
+        </div>
+        <div className="bg-muted/50 rounded-lg p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-muted-foreground">运输中</span>
+            <Truck className="w-3 h-3 text-primary" />
+          </div>
+          <p className="text-lg font-bold text-foreground">1,428</p>
+        </div>
+        <div className="bg-muted/50 rounded-lg p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-muted-foreground">已送达</span>
+            <Package className="w-3 h-3 text-green-500" />
+          </div>
+          <p className="text-lg font-bold text-foreground">6,828</p>
+        </div>
+      </div>
+      
+      {/* 图表区域 */}
+      <div className="grid grid-cols-5 gap-4">
+        <div className="col-span-3 bg-muted/50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-foreground">运单趋势</span>
+            <BarChart3 className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <SimpleLineChart />
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+            <span>周一</span>
+            <span>周日</span>
+          </div>
+        </div>
+        <div className="col-span-2 bg-muted/50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-foreground">费用分析</span>
+            <PieChart className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <div className="flex justify-center">
+            <SimplePieChart />
+          </div>
+        </div>
+      </div>
+      
+      {/* 物流追踪示意 */}
+      <div className="mt-4 bg-muted/50 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">实时追踪</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="h-full w-3/4 bg-gradient-to-r from-primary to-primary/70 rounded-full" />
+          </div>
+          <span className="text-xs text-muted-foreground">75%</span>
+        </div>
+        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+          <span>海外仓</span>
+          <span>FBA</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 运费估算逻辑
+const calculateEstimate = (
+  serviceType: "truck" | "express",
+  originZip: string,
+  destZip: string,
+  pallets: string,
+  weight: string
+) => {
+  // 基于邮编前3位计算大致区域距离
+  const originRegion = parseInt(originZip.substring(0, 3)) || 0;
+  const destRegion = parseInt(destZip.substring(0, 3)) || 0;
+  const regionDiff = Math.abs(originRegion - destRegion);
+  
+  // 区域距离系数 (0-1)
+  const distanceFactor = Math.min(regionDiff / 500, 1);
+  
+  if (serviceType === "truck") {
+    const palletCount = parseInt(pallets) || 1;
+    // 卡车基础价格: $150-$300/托盘，根据距离浮动
+    const baseMin = 150 + distanceFactor * 100;
+    const baseMax = 300 + distanceFactor * 200;
+    const minPrice = Math.round(baseMin * palletCount);
+    const maxPrice = Math.round(baseMax * palletCount);
+    return {
+      minPrice,
+      maxPrice,
+      transitTime: distanceFactor > 0.5 ? "5-7" : "2-4",
+      carriers: ["XPO Logistics", "Old Dominion", "Saia"]
+    };
+  } else {
+    const weightLbs = parseFloat(weight) || 1;
+    // 快递基础价格: 根据重量和距离计算
+    const baseCost = 8 + weightLbs * 0.5;
+    const distanceMultiplier = 1 + distanceFactor * 0.8;
+    const minPrice = Math.round(baseCost * distanceMultiplier * 0.9 * 100) / 100;
+    const maxPrice = Math.round(baseCost * distanceMultiplier * 1.3 * 100) / 100;
+    return {
+      minPrice,
+      maxPrice,
+      transitTime: distanceFactor > 0.5 ? "3-5" : "1-3",
+      carriers: ["FedEx Ground", "UPS Ground", "USPS Priority"]
+    };
+  }
+};
+
+// 运费测算组件
+const FreightCalculator = () => {
+  const navigate = useNavigate();
+  const [serviceType, setServiceType] = useState<"truck" | "express">("truck");
+  const [formData, setFormData] = useState({
+    originZip: "",
+    destZip: "",
+    weight: "",
+    pallets: "",
+  });
+  const [result, setResult] = useState<{
+    minPrice: number;
+    maxPrice: number;
+    transitTime: string;
+    carriers: string[];
+  } | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  const handleCalculate = () => {
+    if (!formData.originZip || !formData.destZip) {
+      toast.error("请填写起始和目的地邮编");
+      return;
+    }
+    if (formData.originZip.length < 5 || formData.destZip.length < 5) {
+      toast.error("请输入完整的5位邮编");
+      return;
+    }
+    if (serviceType === "truck" && !formData.pallets) {
+      toast.error("请填写托盘数量");
+      return;
+    }
+    if (serviceType === "express" && !formData.weight) {
+      toast.error("请填写包裹重量");
+      return;
+    }
+    
+    setIsCalculating(true);
+    // 模拟计算延迟
+    setTimeout(() => {
+      const estimate = calculateEstimate(
+        serviceType,
+        formData.originZip,
+        formData.destZip,
+        formData.pallets,
+        formData.weight
+      );
+      setResult(estimate);
+      setIsCalculating(false);
+    }, 800);
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    setFormData({ originZip: "", destZip: "", weight: "", pallets: "" });
+  };
+
+  // 显示结果界面
+  if (result) {
+    return (
+      <div className="bg-card rounded-2xl shadow-lg border border-border p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">预估报价</h3>
+              <p className="text-sm text-muted-foreground">
+                {serviceType === "truck" ? "卡车运输" : "快递服务"} · {formData.originZip} → {formData.destZip}
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleReset}>
+            重新测算
+          </Button>
+        </div>
+
+        {/* 价格展示 */}
+        <div className="bg-primary/5 rounded-xl p-6 mb-6 text-center">
+          <p className="text-sm text-muted-foreground mb-2">预估运费范围</p>
+          <div className="flex items-baseline justify-center gap-1">
+            <span className="text-3xl font-bold text-primary">${result.minPrice}</span>
+            <span className="text-xl text-muted-foreground mx-2">-</span>
+            <span className="text-3xl font-bold text-primary">${result.maxPrice}</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            预计时效：{result.transitTime} 个工作日
+          </p>
+        </div>
+
+        {/* 承运商选择 */}
+        <div className="mb-6">
+          <p className="text-sm font-medium text-foreground mb-3">可选承运商</p>
+          <div className="space-y-2">
+            {result.carriers.map((carrier, index) => (
+              <div key={carrier} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  {serviceType === "truck" ? (
+                    <Truck className="w-4 h-4 text-primary" />
+                  ) : (
+                    <Package className="w-4 h-4 text-primary" />
+                  )}
+                  <span className="text-sm text-foreground">{carrier}</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  ${Math.round(result.minPrice + (result.maxPrice - result.minPrice) * (index * 0.3))}+
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 注册引导 */}
+        <div className="bg-muted/30 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">注册获取精准报价</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                以上为预估价格，注册后可获取实时精准报价，新用户还可领取专属优惠券
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Button onClick={() => navigate('/register')} className="w-full">
+          免费注册获取精准报价
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card rounded-2xl shadow-lg border border-border p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+          <Calculator className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-foreground">运费测算</h3>
+          <p className="text-sm text-muted-foreground">快速获取运费报价</p>
+        </div>
+      </div>
+
+      <RadioGroup 
+        value={serviceType} 
+        onValueChange={(v) => {
+          setServiceType(v as "truck" | "express");
+          setResult(null);
+        }}
+        className="grid grid-cols-2 gap-4 mb-6"
+      >
+        <div className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all ${serviceType === "truck" ? "border-primary bg-primary/5" : "border-border"}`}>
+          <RadioGroupItem value="truck" id="truck" className="absolute top-3 right-3" />
+          <Label htmlFor="truck" className="cursor-pointer">
+            <Truck className="w-6 h-6 text-primary mb-2" />
+            <p className="font-semibold text-foreground">卡车运输</p>
+            <p className="text-xs text-muted-foreground">FTL / LTL</p>
+          </Label>
+        </div>
+        <div className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all ${serviceType === "express" ? "border-primary bg-primary/5" : "border-border"}`}>
+          <RadioGroupItem value="express" id="express" className="absolute top-3 right-3" />
+          <Label htmlFor="express" className="cursor-pointer">
+            <Package className="w-6 h-6 text-primary mb-2" />
+            <p className="font-semibold text-foreground">快递服务</p>
+            <p className="text-xs text-muted-foreground">FedEx / UPS / USPS</p>
+          </Label>
+        </div>
+      </RadioGroup>
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label className="text-sm text-muted-foreground mb-1.5 block">起始邮编</Label>
+            <Input 
+              placeholder="如：90001" 
+              value={formData.originZip}
+              onChange={(e) => setFormData({...formData, originZip: e.target.value.replace(/\D/g, '').slice(0, 5)})}
+              maxLength={5}
+            />
+          </div>
+          <div>
+            <Label className="text-sm text-muted-foreground mb-1.5 block">目的邮编</Label>
+            <Input 
+              placeholder="如：10001" 
+              value={formData.destZip}
+              onChange={(e) => setFormData({...formData, destZip: e.target.value.replace(/\D/g, '').slice(0, 5)})}
+              maxLength={5}
+            />
+          </div>
+        </div>
+        
+        {serviceType === "truck" ? (
+          <div>
+            <Label className="text-sm text-muted-foreground mb-1.5 block">托盘数量</Label>
+            <Input 
+              type="number"
+              placeholder="请输入托盘数量 (1-26)" 
+              value={formData.pallets}
+              onChange={(e) => setFormData({...formData, pallets: e.target.value})}
+              min={1}
+              max={26}
+            />
+          </div>
+        ) : (
+          <div>
+            <Label className="text-sm text-muted-foreground mb-1.5 block">包裹重量 (lbs)</Label>
+            <Input 
+              type="number"
+              placeholder="请输入重量" 
+              value={formData.weight}
+              onChange={(e) => setFormData({...formData, weight: e.target.value})}
+              min={0.1}
+              step={0.1}
+            />
+          </div>
+        )}
+
+        <Button onClick={handleCalculate} className="w-full" disabled={isCalculating}>
+          {isCalculating ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span>
+              正在计算...
+            </>
+          ) : (
+            <>
+              立即测算
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    pickup: "",
-    delivery: "",
-    cargo: "",
-    pallets: "",
-    weight: ""
-  });
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const features = [
+    {
+      icon: TrendingUp,
+      title: "成本优化",
+      description: "智能比价，自动选择最优物流方案，平均节省15%物流成本",
+    },
+    {
+      icon: Shield,
+      title: "安全保障",
+      description: "货物保险全覆盖，全程实时追踪，安心托运无忧",
+    },
+    {
+      icon: Clock,
+      title: "时效保证",
+      description: "准时送达率99%+，严格把控时效，承诺必达",
+    },
+    {
+      icon: Globe,
+      title: "全境覆盖",
+      description: "北美全境配送网络，跨境物流一站式解决方案",
+    },
+  ];
 
-  const handleQuoteRequest = () => {
-    // 这里会跳转到登录页面或者报价页面
-    navigate("/login");
-  };
+  const partners = [
+    "FedEx", "UPS", "USPS", "XPO Logistics", "Old Dominion", "Saia", 
+    "Estes Express", "ABF Freight", "R+L Carriers", "YRC Freight", 
+    "Southeastern Freight", "AAA Cooper", "Averitt Express", "Dayton Freight"
+  ];
+
+  const processSteps = [
+    {
+      step: "01",
+      title: "在线下单",
+      description: "填写收发货信息，系统自动匹配最优物流方案",
+    },
+    {
+      step: "02",
+      title: "智能报价",
+      description: "多承运商实时比价，透明价格一目了然",
+    },
+    {
+      step: "03",
+      title: "确认支付",
+      description: "选择心仪方案，安全便捷支付",
+    },
+    {
+      step: "04",
+      title: "全程追踪",
+      description: "实时物流状态更新，货物动态尽在掌握",
+    },
+  ];
+
+  const whyChooseUs = [
+    {
+      icon: Award,
+      title: "专业团队",
+      description: "10年+跨境物流经验，深耕北美市场",
+    },
+    {
+      icon: Users,
+      title: "优质服务",
+      description: "200+企业客户信赖，口碑见证实力",
+    },
+    {
+      icon: TrendingUp,
+      title: "价格优势",
+      description: "与主流承运商深度合作，享受批量折扣",
+    },
+    {
+      icon: Headphones,
+      title: "售后无忧",
+      description: "7x24小时客服支持，问题快速响应",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Truck className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">北美卡车经纪</span>
-          </div>
-          <nav className="hidden md:flex items-center space-x-6">
-            <a href="#home" className="text-foreground hover:text-primary transition-colors">首页</a>
-            <a href="#features" className="text-foreground hover:text-primary transition-colors">服务优势</a>
-            <a href="#partners" className="text-foreground hover:text-primary transition-colors">合作代理</a>
-            <a href="#contact" className="text-foreground hover:text-primary transition-colors">联系我们</a>
-          </nav>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" onClick={() => navigate("/login")}>登录</Button>
-            <Button onClick={() => navigate("/register")}>注册</Button>
+      {/* 导航栏 */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Truck className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold text-foreground">智运物流</span>
+            </div>
+            
+            <nav className="hidden md:flex items-center gap-8">
+              <a href="#calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">运费测算</a>
+              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">核心功能</a>
+              <a href="#process" className="text-sm text-muted-foreground hover:text-foreground transition-colors">服务流程</a>
+              <a href="#why-us" className="text-sm text-muted-foreground hover:text-foreground transition-colors">为什么选择我们</a>
+              <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">关于我们</a>
+            </nav>
+            
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => navigate('/login')} className="text-muted-foreground">
+                登录
+              </Button>
+              <Button onClick={() => navigate('/register')}>
+                免费试用
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="relative bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-        <div className="absolute inset-0">
-          <img src={heroImage} alt="卡车运输" className="w-full h-full object-cover opacity-20" />
-        </div>
-        <div className="relative container mx-auto px-4 py-20">
+      <section className="pt-32 pb-20 relative overflow-hidden">
+        <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-                北美最专业的<br />
-                <span className="text-accent">卡车经纪平台</span>
-              </h1>
-              <p className="text-xl mb-8 text-primary-foreground/90">
-                与北美数百家卡车公司合作，一键获取最优报价，
-                让您的货物运输更高效、更经济。
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-accent hover:bg-accent/90">
-                  立即获取报价
+            {/* 左侧内容 */}
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+                  北美跨境物流
+                  <br />
+                  <span className="text-primary">一站式智能管理平台</span>
+                </h1>
+                <p className="text-lg text-muted-foreground max-w-md">
+                  专注卡车运输与快递服务，为跨境卖家提供高效、低成本的物流解决方案
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap gap-4">
+                <Button 
+                  size="lg" 
+                  onClick={() => navigate('/register')}
+                  className="px-8"
+                >
+                  立即免费试用
                 </Button>
-                <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                  了解更多
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  运费测算
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
             </div>
             
-            {/* Quote Form */}
-            <Card className="shadow-strong">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calculator className="h-5 w-5 text-primary" />
-                  快速报价
-                </CardTitle>
-                <CardDescription>
-                  填写货物信息，即可获得所有合作卡车公司的报价
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="pickup">提货地址</Label>
-                    <Input 
-                      id="pickup"
-                      placeholder="输入提货城市"
-                      value={formData.pickup}
-                      onChange={(e) => handleInputChange("pickup", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="delivery">送货地址</Label>
-                    <Input 
-                      id="delivery"
-                      placeholder="输入送货城市"
-                      value={formData.delivery}
-                      onChange={(e) => handleInputChange("delivery", e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="cargo">货物描述</Label>
-                  <Textarea 
-                    id="cargo"
-                    placeholder="描述您的货物类型"
-                    value={formData.cargo}
-                    onChange={(e) => handleInputChange("cargo", e.target.value)}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="pallets">托盘数量</Label>
-                    <Input 
-                      id="pallets"
-                      placeholder="托盘数"
-                      value={formData.pallets}
-                      onChange={(e) => handleInputChange("pallets", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="weight">重量 (磅)</Label>
-                    <Input 
-                      id="weight"
-                      placeholder="总重量"
-                      value={formData.weight}
-                      onChange={(e) => handleInputChange("weight", e.target.value)}
-                    />
-                  </div>
-                </div>
-                <Button className="w-full bg-gradient-to-r from-primary to-accent" onClick={handleQuoteRequest}>
-                  获取报价
-                </Button>
-              </CardContent>
-            </Card>
+            {/* 右侧仪表盘模拟 */}
+            <div className="relative">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+              <DashboardMockup />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-16 bg-secondary/50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">为什么选择我们</h2>
+      {/* 合作伙伴 - 滚动展示 */}
+      <section className="py-12 border-y border-border bg-muted/30 overflow-hidden">
+        <div className="container mx-auto px-6">
+          <p className="text-center text-sm text-muted-foreground mb-6">合作物流伙伴</p>
+          <div className="relative">
+            <div className="flex animate-scroll-left gap-12">
+              {[...partners, ...partners].map((partner, index) => (
+                <div key={`${partner}-${index}`} className="text-lg font-semibold text-muted-foreground/60 hover:text-muted-foreground transition-colors whitespace-nowrap flex-shrink-0">
+                  {partner}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 数据统计 */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <p className="text-4xl font-bold text-primary mb-2">
+                <AnimatedCounter end={200} suffix="+" />
+              </p>
+              <p className="text-muted-foreground">服务客户</p>
+            </div>
+            <div className="text-center">
+              <p className="text-4xl font-bold text-primary mb-2">
+                <AnimatedCounter end={100000} suffix="+" />
+              </p>
+              <p className="text-muted-foreground">年运单量</p>
+            </div>
+            <div className="text-center">
+              <p className="text-4xl font-bold text-primary mb-2">
+                99.5%
+              </p>
+              <p className="text-muted-foreground">准时送达率</p>
+            </div>
+            <div className="text-center">
+              <p className="text-4xl font-bold text-primary mb-2">
+                <AnimatedCounter end={15} suffix="%" />
+              </p>
+              <p className="text-muted-foreground">平均节省成本</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 运费测算区块 */}
+      <section id="calculator" className="py-20 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold text-foreground">快速获取运费报价</h2>
+              <p className="text-muted-foreground">
+                选择卡车或快递服务，填写基本信息，即可获取多家承运商的实时报价。注册后可享受更多优惠。
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium text-foreground">多承运商比价</p>
+                    <p className="text-sm text-muted-foreground">同时获取多家物流公司报价</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium text-foreground">透明定价</p>
+                    <p className="text-sm text-muted-foreground">无隐藏费用，所见即所得</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium text-foreground">即时报价</p>
+                    <p className="text-sm text-muted-foreground">实时计算，快速响应</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <FreightCalculator />
+          </div>
+        </div>
+      </section>
+
+      {/* 核心功能 */}
+      <section id="features" className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-foreground mb-4">核心功能</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              一站式物流管理平台，涵盖订单管理、费用管理、数据分析等全流程
+            </p>
+          </div>
+          
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="text-center">
-              <CardHeader>
-                <Shield className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle>可靠安全</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  所有合作的卡车公司都经过严格筛选，拥有完整的保险和资质认证，确保货物运输全程安全可靠
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardHeader>
-                <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle>快速响应</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  一键获取多家报价，30秒内得到回复，7×24小时在线客服支持，节省您的宝贵时间
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardHeader>
-                <Calculator className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle>最优价格</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  比较数百家承运商报价，智能匹配最优方案，为您节省高达30%的运输成本
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardHeader>
-                <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle>专业服务</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  10年以上行业经验，专业团队全程跟踪，提供端到端的物流解决方案和售后保障
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Customer Testimonials */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">客户评价</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">张总</CardTitle>
-                    <p className="text-sm text-muted-foreground">某电子科技公司</p>
-                  </div>
+            {features.map((feature, index) => (
+              <div 
+                key={index}
+                className="bg-card rounded-xl p-6 border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-300 group"
+              >
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <feature.icon className="w-6 h-6 text-primary" />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  "使用这个平台已经一年多了，报价快速准确，承运商服务质量很高，大大提升了我们的物流效率。"
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">李经理</CardTitle>
-                    <p className="text-sm text-muted-foreground">某零售连锁企业</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  "平台操作简单，价格透明，客服响应及时。相比之前的物流方式，成本降低了25%，非常满意！"
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">王女士</CardTitle>
-                    <p className="text-sm text-muted-foreground">某制造业公司</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  "专业的团队，可靠的服务。货物全程可追踪，送达时间准确，让我们的供应链管理更加顺畅。"
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Carrier Partners Section */}
-      <section className="py-16 bg-secondary/50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">合作伙伴</h2>
-          <p className="text-center text-muted-foreground mb-12">与北美顶级承运商建立长期合作关系</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            {["XPO Logistics", "J.B. Hunt", "Knight Transportation", "Schneider", "Old Dominion", "YRC Freight", "Estes Express", "ABF Freight", "R+L Carriers", "Saia", "TForce Freight", "Holland"].map((partner) => (
-              <Card key={partner} className="text-center hover:shadow-medium transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-2">
-                    <Truck className="h-8 w-8 text-primary" />
-                  </div>
-                  <CardTitle className="text-sm">{partner}</CardTitle>
-                </CardHeader>
-              </Card>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm">{feature.description}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Agency Partners Section */}
-      <section id="partners" className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">合作代理</h2>
-          <p className="text-center text-muted-foreground mb-12">欢迎其他公司代理我们的业务，共创共赢</p>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center">
-              <CardHeader>
-                <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle>丰厚佣金</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  提供行业领先的佣金比例，每笔订单都有可观收益，月结算，按时支付
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardHeader>
-                <Shield className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle>完善支持</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  提供专业培训、营销物料、技术支持，帮助代理商快速开展业务
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardHeader>
-                <TrendingUp className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle>长期合作</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  建立长期战略合作关系，共同发展北美物流市场，实现互利共赢
-                </p>
-              </CardContent>
-            </Card>
+      {/* 服务对比 */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-foreground mb-4">双轨物流服务</h2>
+            <p className="text-muted-foreground">卡车 + 快递，满足您的所有物流需求</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* 卡车服务 */}
+            <div className="bg-card rounded-2xl p-8 border border-border hover:border-primary/30 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Truck className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">卡车运输</h3>
+                  <p className="text-sm text-muted-foreground">FTL / LTL 全覆盖</p>
+                </div>
+              </div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  平台仓库配送优惠价
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  多承运商比价选择
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  住宅/商业地址全覆盖
+                </li>
+              </ul>
+              <Button variant="outline" className="w-full" onClick={() => navigate('/register')}>
+                立即体验 <ArrowUpRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+            
+            {/* 快递服务 */}
+            <div className="bg-card rounded-2xl p-8 border border-border hover:border-primary/30 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Package className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">快递服务</h3>
+                  <p className="text-sm text-muted-foreground">FedEx / UPS / USPS</p>
+                </div>
+              </div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  批量下单，一键打单
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  智能选择最优渠道
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                  退货标签便捷管理
+                </li>
+              </ul>
+              <Button variant="outline" className="w-full" onClick={() => navigate('/register')}>
+                立即体验 <ArrowUpRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 服务流程 */}
+      <section id="process" className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-foreground mb-4">服务流程</h2>
+            <p className="text-muted-foreground">简单四步，轻松完成物流下单</p>
+          </div>
+          
+          <div className="grid md:grid-cols-4 gap-8">
+            {processSteps.map((item, index) => (
+              <div key={index} className="text-center relative">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-primary">{item.step}</span>
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
+                {index < processSteps.length - 1 && (
+                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-border" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 为什么选择我们 */}
+      <section id="why-us" className="py-20 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-foreground mb-4">为什么选择我们</h2>
+            <p className="text-muted-foreground">专业、可靠、高效的物流服务体验</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {whyChooseUs.map((item, index) => (
+              <div key={index} className="bg-card rounded-xl p-6 border border-border text-center">
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 关于我们 */}
+      <section id="about" className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-foreground mb-6">关于我们</h2>
+            <p className="text-muted-foreground mb-6 leading-relaxed">
+              智运物流是一家专注于北美跨境物流的科技公司，致力于为跨境电商卖家提供一站式物流解决方案。
+              我们整合了卡车运输（FTL/LTL）与快递服务（FedEx/UPS/USPS），通过智能比价系统帮助客户降低物流成本。
+            </p>
+            <p className="text-muted-foreground mb-8 leading-relaxed">
+              凭借多年的行业经验和与主流承运商的深度合作，我们已服务超过200家企业客户，
+              年处理运单量超过10万件。选择智运物流，让跨境物流更简单、更高效。
+            </p>
+            <Button onClick={() => navigate('/register')} size="lg">
+              加入我们
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-primary">
+        <div className="container mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold text-primary-foreground mb-4">
+            立即开始您的智能物流之旅
+          </h2>
+          <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
+            注册即送新人优惠券，体验智能物流管理带来的效率提升
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              variant="secondary"
+              onClick={() => navigate('/register')}
+            >
+              免费注册
+            </Button>
+            <Button 
+              size="lg" 
+              onClick={() => navigate('/login')}
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+            >
+              已有账号？立即登录
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-16 bg-secondary/50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">联系我们</h2>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle>联系方式</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-primary" />
-                  <span>+1 (555) 123-4567</span>
+      <section id="contact" className="py-16 bg-muted/30 border-t border-border">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-foreground mb-2">联系我们</h2>
+            <p className="text-muted-foreground">扫码添加微信，获取专属物流方案</p>
+          </div>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+            {/* QR Code */}
+            <div className="text-center">
+              <div className="w-40 h-40 bg-card border-2 border-border rounded-lg flex items-center justify-center mb-3">
+                <div className="text-center text-muted-foreground">
+                  <div className="w-32 h-32 bg-muted rounded grid grid-cols-5 gap-0.5 p-2">
+                    {/* Placeholder QR code pattern */}
+                    {Array.from({length: 25}).map((_, i) => (
+                      <div key={i} className={`aspect-square ${Math.random() > 0.5 ? 'bg-foreground' : 'bg-transparent'}`} />
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-primary" />
-                  <span>contact@truckbroker.com</span>
+              </div>
+              <p className="text-sm text-muted-foreground">扫码添加微信</p>
+            </div>
+            {/* Contact Info */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary" />
                 </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  <span>123 Transport St, Logistics City, TX 12345</span>
+                <div>
+                  <p className="text-sm text-muted-foreground">联系人</p>
+                  <p className="font-semibold text-foreground">张经理</p>
                 </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>发送消息</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input placeholder="您的姓名" />
-                <Input placeholder="您的邮箱" />
-                <Textarea placeholder="您的消息" rows={4} />
-                <Button className="w-full">发送消息</Button>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Headphones className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">联系电话</p>
+                  <p className="font-semibold text-foreground">+1 (888) 888-8888</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-primary text-primary-foreground py-8">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Truck className="h-6 w-6" />
-            <span className="text-xl font-bold">北美卡车经纪</span>
+      <footer className="py-8 bg-card border-t border-border">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                <Truck className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="font-semibold text-foreground">智运物流</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              © 2024 智运物流. All rights reserved.
+            </p>
           </div>
-          <p className="text-primary-foreground/80">
-            © 2024 北美卡车经纪平台. 保留所有权利.
-          </p>
         </div>
       </footer>
     </div>

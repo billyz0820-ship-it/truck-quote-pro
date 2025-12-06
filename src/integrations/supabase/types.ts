@@ -1,0 +1,2541 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
+  public: {
+    Tables: {
+      address_zip_zones: {
+        Row: {
+          address_id: string
+          created_at: string
+          id: string
+          zip_end: string
+          zip_start: string
+          zone: number
+        }
+        Insert: {
+          address_id: string
+          created_at?: string
+          id?: string
+          zip_end: string
+          zip_start: string
+          zone: number
+        }
+        Update: {
+          address_id?: string
+          created_at?: string
+          id?: string
+          zip_end?: string
+          zip_start?: string
+          zone?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "address_zip_zones_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "customer_addresses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addresses: {
+        Row: {
+          address: string
+          address_type: string
+          city: string
+          contact_email: string | null
+          contact_name: string
+          contact_phone: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_default: boolean | null
+          location_type: string
+          name: string
+          notes: string | null
+          state: string
+          updated_at: string
+          zip: string
+        }
+        Insert: {
+          address: string
+          address_type: string
+          city: string
+          contact_email?: string | null
+          contact_name: string
+          contact_phone: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_default?: boolean | null
+          location_type: string
+          name: string
+          notes?: string | null
+          state: string
+          updated_at?: string
+          zip: string
+        }
+        Update: {
+          address?: string
+          address_type?: string
+          city?: string
+          contact_email?: string | null
+          contact_name?: string
+          contact_phone?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_default?: boolean | null
+          location_type?: string
+          name?: string
+          notes?: string | null
+          state?: string
+          updated_at?: string
+          zip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addresses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreements: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      bills: {
+        Row: {
+          bill_month: string
+          bill_number: string
+          created_at: string
+          customer_id: string
+          id: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          bill_month: string
+          bill_number: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          bill_month?: string
+          bill_number?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bills_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carrier_account_costs: {
+        Row: {
+          account_id: string
+          address_correction_fee: number | null
+          ahs_dim: Json
+          ahs_packing: Json
+          ahs_weight: Json
+          base_prices: Json
+          created_at: string
+          dangerous_goods_fee: number | null
+          delivery_intercept_fee: number | null
+          dim_factor: number | null
+          effective_date: string
+          fuel_charge: number | null
+          id: string
+          oversize_commercial: Json
+          oversize_residential: Json
+          peak_surcharges: Json
+          remote_area_fees: Json
+          residential_fees: Json
+          signature_services: Json | null
+          unauthorized_fee: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          address_correction_fee?: number | null
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
+          dim_factor?: number | null
+          effective_date: string
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          signature_services?: Json | null
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          address_correction_fee?: number | null
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
+          dim_factor?: number | null
+          effective_date?: string
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          signature_services?: Json | null
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrier_account_costs_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "carrier_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carrier_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          api_credentials: Json | null
+          carrier: string
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          api_credentials?: Json | null
+          carrier: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          api_credentials?: Json | null
+          carrier?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      carrier_official_prices: {
+        Row: {
+          address_correction_fee: number | null
+          ahs_dim: Json
+          ahs_packing: Json
+          ahs_weight: Json
+          base_prices: Json
+          carrier: string
+          created_at: string
+          dangerous_goods_fee: number | null
+          delivery_intercept_fee: number | null
+          dim_factor: number | null
+          effective_date: string
+          fuel_charge: number | null
+          id: string
+          oversize_commercial: Json
+          oversize_residential: Json
+          peak_surcharges: Json
+          remote_area_fees: Json
+          residential_fees: Json
+          signature_services: Json | null
+          unauthorized_fee: number | null
+          updated_at: string
+        }
+        Insert: {
+          address_correction_fee?: number | null
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          carrier: string
+          created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
+          dim_factor?: number | null
+          effective_date: string
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          signature_services?: Json | null
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address_correction_fee?: number | null
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          carrier?: string
+          created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
+          dim_factor?: number | null
+          effective_date?: string
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          signature_services?: Json | null
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      channel_configs: {
+        Row: {
+          carrier: string
+          channel_code: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_active: boolean
+          logistics_service: string
+          platform: string
+          updated_at: string
+          warehouse: string
+        }
+        Insert: {
+          carrier: string
+          channel_code: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_active?: boolean
+          logistics_service: string
+          platform: string
+          updated_at?: string
+          warehouse: string
+        }
+        Update: {
+          carrier?: string
+          channel_code?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_active?: boolean
+          logistics_service?: string
+          platform?: string
+          updated_at?: string
+          warehouse?: string
+        }
+        Relationships: []
+      }
+      contracts: {
+        Row: {
+          content: string | null
+          contract_number: string
+          contract_type: string
+          created_at: string
+          created_by: string
+          end_date: string | null
+          file_url: string | null
+          id: string
+          party_id: string
+          party_name: string
+          signed_at: string | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          contract_number: string
+          contract_type: string
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          file_url?: string | null
+          id?: string
+          party_id: string
+          party_name: string
+          signed_at?: string | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          contract_number?: string
+          contract_type?: string
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          file_url?: string | null
+          id?: string
+          party_id?: string
+          party_name?: string
+          signed_at?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cost_imports: {
+        Row: {
+          actual_cost: number
+          carrier_name: string | null
+          created_at: string
+          created_by: string
+          id: string
+          import_date: string
+          notes: string | null
+          order_number: string
+          payment_method: string | null
+          reference_number: string | null
+        }
+        Insert: {
+          actual_cost: number
+          carrier_name?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          import_date: string
+          notes?: string | null
+          order_number: string
+          payment_method?: string | null
+          reference_number?: string | null
+        }
+        Update: {
+          actual_cost?: number
+          carrier_name?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          import_date?: string
+          notes?: string | null
+          order_number?: string
+          payment_method?: string | null
+          reference_number?: string | null
+        }
+        Relationships: []
+      }
+      coupons: {
+        Row: {
+          amount: number
+          coupon_code: string
+          coupon_type: string | null
+          created_at: string
+          created_by: string
+          customer_id: string | null
+          expire_at: string | null
+          id: string
+          order_type: string | null
+          status: string
+          used_at: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          amount: number
+          coupon_code: string
+          coupon_type?: string | null
+          created_at?: string
+          created_by: string
+          customer_id?: string | null
+          expire_at?: string | null
+          id?: string
+          order_type?: string | null
+          status?: string
+          used_at?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          amount?: number
+          coupon_code?: string
+          coupon_type?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string | null
+          expire_at?: string | null
+          id?: string
+          order_type?: string | null
+          status?: string
+          used_at?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_addresses: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          address_type: string
+          city: string
+          company_name: string | null
+          contact_email: string | null
+          contact_name: string
+          contact_phone: string | null
+          country: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_default: boolean | null
+          state: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          address_type: string
+          city: string
+          company_name?: string | null
+          contact_email?: string | null
+          contact_name: string
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_default?: boolean | null
+          state: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          address_type?: string
+          city?: string
+          company_name?: string | null
+          contact_email?: string | null
+          contact_name?: string
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_default?: boolean | null
+          state?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      customer_agreements: {
+        Row: {
+          agreed_at: string
+          agreement_id: string
+          customer_id: string
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          agreed_at?: string
+          agreement_id: string
+          customer_id: string
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          agreed_at?: string
+          agreement_id?: string
+          customer_id?: string
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_agreements_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_agreements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_carrier_pricing: {
+        Row: {
+          carrier: string
+          created_at: string
+          created_by: string | null
+          custom_prices: Json
+          customer_id: string
+          effective_date_from: string | null
+          effective_date_to: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          profitability_analysis: Json | null
+          template_id: string | null
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          created_by?: string | null
+          custom_prices?: Json
+          customer_id: string
+          effective_date_from?: string | null
+          effective_date_to?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          profitability_analysis?: Json | null
+          template_id?: string | null
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          created_by?: string | null
+          custom_prices?: Json
+          customer_id?: string
+          effective_date_from?: string | null
+          effective_date_to?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          profitability_analysis?: Json | null
+          template_id?: string | null
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_carrier_pricing_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_carrier_pricing_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_pricing_notifications: {
+        Row: {
+          created_at: string
+          customer_id: string
+          effective_date: string
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          pricing_config_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          effective_date: string
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type?: string
+          pricing_config_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          effective_date?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          pricing_config_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_pricing_notifications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_pricing_notifications_pricing_config_id_fkey"
+            columns: ["pricing_config_id"]
+            isOneToOne: false
+            referencedRelation: "customer_carrier_pricing"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_users: {
+        Row: {
+          customer_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          customer_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          customer_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_users_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          balance: number | null
+          commission_type: string | null
+          commission_value: number | null
+          company_address: string | null
+          company_name: string
+          created_at: string
+          credit_limit: number | null
+          customer_code: string
+          customer_type: Database["public"]["Enums"]["customer_type"]
+          distributor_id: string | null
+          id: string
+          last_login_at: string | null
+          payment_due_date: string | null
+          payment_terms: number | null
+          phone: string | null
+          status: Database["public"]["Enums"]["customer_status"]
+          updated_at: string
+        }
+        Insert: {
+          balance?: number | null
+          commission_type?: string | null
+          commission_value?: number | null
+          company_address?: string | null
+          company_name: string
+          created_at?: string
+          credit_limit?: number | null
+          customer_code: string
+          customer_type?: Database["public"]["Enums"]["customer_type"]
+          distributor_id?: string | null
+          id?: string
+          last_login_at?: string | null
+          payment_due_date?: string | null
+          payment_terms?: number | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["customer_status"]
+          updated_at?: string
+        }
+        Update: {
+          balance?: number | null
+          commission_type?: string | null
+          commission_value?: number | null
+          company_address?: string | null
+          company_name?: string
+          created_at?: string
+          credit_limit?: number | null
+          customer_code?: string
+          customer_type?: Database["public"]["Enums"]["customer_type"]
+          distributor_id?: string | null
+          id?: string
+          last_login_at?: string | null
+          payment_due_date?: string | null
+          payment_terms?: number | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["customer_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_distributor_id_fkey"
+            columns: ["distributor_id"]
+            isOneToOne: false
+            referencedRelation: "distributors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distributors: {
+        Row: {
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          express_commission_rate: number | null
+          id: string
+          invitation_code: string
+          phone: string
+          status: string
+          truck_commission_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          contact_name: string
+          created_at?: string
+          email: string
+          express_commission_rate?: number | null
+          id?: string
+          invitation_code: string
+          phone: string
+          status?: string
+          truck_commission_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          express_commission_rate?: number | null
+          id?: string
+          invitation_code?: string
+          phone?: string
+          status?: string
+          truck_commission_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_bindings: {
+        Row: {
+          created_at: string
+          customer_id: string
+          email: string
+          email_type: string
+          enabled: boolean
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          email: string
+          email_type?: string
+          enabled?: boolean
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          email?: string
+          email_type?: string
+          enabled?: boolean
+          id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          expense_date: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expense_date: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      express_orders: {
+        Row: {
+          address: string
+          address_type: string | null
+          cancelled_at: string | null
+          carrier: string
+          city: string
+          country: string
+          coupon_id: string | null
+          created_at: string
+          customer_code: string
+          customer_id: string
+          discount_amount: number | null
+          id: string
+          label_printed_at: string | null
+          logistics_account: string | null
+          logistics_status: string | null
+          notes: string | null
+          order_number: string
+          order_source: string | null
+          recipient_email: string | null
+          recipient_name: string
+          recipient_phone: string | null
+          reference_number: string | null
+          service_type: string
+          shipping_fee: number | null
+          signature_service: string | null
+          state: string
+          status: string
+          tracking_number: string | null
+          updated_at: string
+          warehouse: string
+          zip_code: string
+          zone: string | null
+        }
+        Insert: {
+          address: string
+          address_type?: string | null
+          cancelled_at?: string | null
+          carrier: string
+          city: string
+          country?: string
+          coupon_id?: string | null
+          created_at?: string
+          customer_code: string
+          customer_id: string
+          discount_amount?: number | null
+          id?: string
+          label_printed_at?: string | null
+          logistics_account?: string | null
+          logistics_status?: string | null
+          notes?: string | null
+          order_number: string
+          order_source?: string | null
+          recipient_email?: string | null
+          recipient_name: string
+          recipient_phone?: string | null
+          reference_number?: string | null
+          service_type: string
+          shipping_fee?: number | null
+          signature_service?: string | null
+          state: string
+          status?: string
+          tracking_number?: string | null
+          updated_at?: string
+          warehouse: string
+          zip_code: string
+          zone?: string | null
+        }
+        Update: {
+          address?: string
+          address_type?: string | null
+          cancelled_at?: string | null
+          carrier?: string
+          city?: string
+          country?: string
+          coupon_id?: string | null
+          created_at?: string
+          customer_code?: string
+          customer_id?: string
+          discount_amount?: number | null
+          id?: string
+          label_printed_at?: string | null
+          logistics_account?: string | null
+          logistics_status?: string | null
+          notes?: string | null
+          order_number?: string
+          order_source?: string | null
+          recipient_email?: string | null
+          recipient_name?: string
+          recipient_phone?: string | null
+          reference_number?: string | null
+          service_type?: string
+          shipping_fee?: number | null
+          signature_service?: string | null
+          state?: string
+          status?: string
+          tracking_number?: string | null
+          updated_at?: string
+          warehouse?: string
+          zip_code?: string
+          zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "express_orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      express_packages: {
+        Row: {
+          created_at: string
+          declared_value: number | null
+          height: number | null
+          id: string
+          insurance_amount: number | null
+          insurance_fee: number | null
+          length: number | null
+          order_id: string
+          origin_country: string | null
+          package_type: string | null
+          product_sku: string | null
+          unit_system: string
+          weight: number
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          declared_value?: number | null
+          height?: number | null
+          id?: string
+          insurance_amount?: number | null
+          insurance_fee?: number | null
+          length?: number | null
+          order_id: string
+          origin_country?: string | null
+          package_type?: string | null
+          product_sku?: string | null
+          unit_system?: string
+          weight: number
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          declared_value?: number | null
+          height?: number | null
+          id?: string
+          insurance_amount?: number | null
+          insurance_fee?: number | null
+          length?: number | null
+          order_id?: string
+          origin_country?: string | null
+          package_type?: string | null
+          product_sku?: string | null
+          unit_system?: string
+          weight?: number
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "express_packages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "express_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_base: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      logistics_services: {
+        Row: {
+          carrier: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          service_code: string
+          service_name: string
+          updated_at: string
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          service_code: string
+          service_name: string
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          service_code?: string
+          service_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      logistics_triggers: {
+        Row: {
+          carrier: string
+          conditions: Json
+          created_at: string
+          fee_amount: number
+          id: string
+          is_active: boolean
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          carrier: string
+          conditions?: Json
+          created_at?: string
+          fee_amount: number
+          id?: string
+          is_active?: boolean
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string
+          conditions?: Json
+          created_at?: string
+          fee_amount?: number
+          id?: string
+          is_active?: boolean
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          end_time: string | null
+          id: string
+          media_urls: Json | null
+          notification_type: string
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          end_time?: string | null
+          id?: string
+          media_urls?: Json | null
+          notification_type?: string
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          end_time?: string | null
+          id?: string
+          media_urls?: Json | null
+          notification_type?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          actual_cost: number | null
+          bol_number: string | null
+          bol_url: string | null
+          cargo_description: string | null
+          carrier_name: string | null
+          coupon_id: string | null
+          created_at: string
+          customer_code: string
+          customer_id: string
+          delivery_address: string | null
+          delivery_address_type: string | null
+          delivery_city: string | null
+          delivery_contact_email: string | null
+          delivery_contact_name: string | null
+          delivery_contact_phone: string | null
+          delivery_notes: string | null
+          delivery_state: string | null
+          delivery_zip: string
+          discount_amount: number | null
+          id: string
+          order_number: string
+          pallet_count: number | null
+          pallet_info: Json | null
+          pallet_label_url: string | null
+          pickup_address: string | null
+          pickup_address_type: string | null
+          pickup_city: string | null
+          pickup_contact_email: string | null
+          pickup_contact_name: string | null
+          pickup_contact_phone: string | null
+          pickup_notes: string | null
+          pickup_state: string | null
+          pickup_zip: string
+          pro_number: string | null
+          profit: number | null
+          quoted_amount: number
+          reference_number: string | null
+          sbol_url: string | null
+          shipment_type: string | null
+          sku: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          bol_number?: string | null
+          bol_url?: string | null
+          cargo_description?: string | null
+          carrier_name?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          customer_code: string
+          customer_id: string
+          delivery_address?: string | null
+          delivery_address_type?: string | null
+          delivery_city?: string | null
+          delivery_contact_email?: string | null
+          delivery_contact_name?: string | null
+          delivery_contact_phone?: string | null
+          delivery_notes?: string | null
+          delivery_state?: string | null
+          delivery_zip: string
+          discount_amount?: number | null
+          id?: string
+          order_number: string
+          pallet_count?: number | null
+          pallet_info?: Json | null
+          pallet_label_url?: string | null
+          pickup_address?: string | null
+          pickup_address_type?: string | null
+          pickup_city?: string | null
+          pickup_contact_email?: string | null
+          pickup_contact_name?: string | null
+          pickup_contact_phone?: string | null
+          pickup_notes?: string | null
+          pickup_state?: string | null
+          pickup_zip: string
+          pro_number?: string | null
+          profit?: number | null
+          quoted_amount: number
+          reference_number?: string | null
+          sbol_url?: string | null
+          shipment_type?: string | null
+          sku?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          actual_cost?: number | null
+          bol_number?: string | null
+          bol_url?: string | null
+          cargo_description?: string | null
+          carrier_name?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          customer_code?: string
+          customer_id?: string
+          delivery_address?: string | null
+          delivery_address_type?: string | null
+          delivery_city?: string | null
+          delivery_contact_email?: string | null
+          delivery_contact_name?: string | null
+          delivery_contact_phone?: string | null
+          delivery_notes?: string | null
+          delivery_state?: string | null
+          delivery_zip?: string
+          discount_amount?: number | null
+          id?: string
+          order_number?: string
+          pallet_count?: number | null
+          pallet_info?: Json | null
+          pallet_label_url?: string | null
+          pickup_address?: string | null
+          pickup_address_type?: string | null
+          pickup_city?: string | null
+          pickup_contact_email?: string | null
+          pickup_contact_name?: string | null
+          pickup_contact_phone?: string | null
+          pickup_notes?: string | null
+          pickup_state?: string | null
+          pickup_zip?: string
+          pro_number?: string | null
+          profit?: number | null
+          quoted_amount?: number
+          reference_number?: string | null
+          sbol_url?: string | null
+          shipment_type?: string | null
+          sku?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_vouchers: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          voucher_url: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          voucher_url: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          voucher_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_vouchers_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_orders: {
+        Row: {
+          id: string
+          order_date: string
+          order_id: string
+          platform_name: string
+        }
+        Insert: {
+          id?: string
+          order_date?: string
+          order_id: string
+          platform_name: string
+        }
+        Update: {
+          id?: string
+          order_date?: string
+          order_id?: string
+          platform_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_warehouse_pricing: {
+        Row: {
+          carrier_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          max_dimensions: string | null
+          max_pallets: number
+          min_pallets: number
+          platform: string
+          price: number
+          pricing_name: string
+          region: string
+          transit_time: string | null
+          updated_at: string
+          warehouse_address: string | null
+          warehouse_code: string
+        }
+        Insert: {
+          carrier_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_dimensions?: string | null
+          max_pallets?: number
+          min_pallets?: number
+          platform: string
+          price: number
+          pricing_name: string
+          region: string
+          transit_time?: string | null
+          updated_at?: string
+          warehouse_address?: string | null
+          warehouse_code: string
+        }
+        Update: {
+          carrier_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_dimensions?: string | null
+          max_pallets?: number
+          min_pallets?: number
+          platform?: string
+          price?: number
+          pricing_name?: string
+          region?: string
+          transit_time?: string | null
+          updated_at?: string
+          warehouse_address?: string | null
+          warehouse_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_warehouse_pricing_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "truck_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_calculation_history: {
+        Row: {
+          calculation_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          package_info: Json
+          results: Json
+          user_id: string
+        }
+        Insert: {
+          calculation_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          package_info: Json
+          results: Json
+          user_id: string
+        }
+        Update: {
+          calculation_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          package_info?: Json
+          results?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pricing_change_history: {
+        Row: {
+          change_reason: string | null
+          change_type: string
+          changed_at: string
+          changed_by: string
+          created_at: string
+          customer_id: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          pricing_config_id: string
+        }
+        Insert: {
+          change_reason?: string | null
+          change_type: string
+          changed_at?: string
+          changed_by: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          pricing_config_id: string
+        }
+        Update: {
+          change_reason?: string | null
+          change_type?: string
+          changed_at?: string
+          changed_by?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          pricing_config_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_change_history_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_change_history_pricing_config_id_fkey"
+            columns: ["pricing_config_id"]
+            isOneToOne: false
+            referencedRelation: "customer_carrier_pricing"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing_templates: {
+        Row: {
+          address_correction_fee: number | null
+          ahs_dim: Json
+          ahs_packing: Json
+          ahs_weight: Json
+          base_prices: Json
+          carrier: string
+          created_at: string
+          dangerous_goods_fee: number | null
+          delivery_intercept_fee: number | null
+          description: string | null
+          dim_factor: number | null
+          fuel_charge: number | null
+          id: string
+          oversize_commercial: Json
+          oversize_residential: Json
+          peak_surcharge_periods: Json | null
+          peak_surcharges: Json
+          remote_area_fees: Json
+          residential_fees: Json
+          signature_services: Json | null
+          template_name: string
+          unauthorized_fee: number | null
+          updated_at: string
+        }
+        Insert: {
+          address_correction_fee?: number | null
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          carrier: string
+          created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
+          description?: string | null
+          dim_factor?: number | null
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharge_periods?: Json | null
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          signature_services?: Json | null
+          template_name: string
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address_correction_fee?: number | null
+          ahs_dim?: Json
+          ahs_packing?: Json
+          ahs_weight?: Json
+          base_prices?: Json
+          carrier?: string
+          created_at?: string
+          dangerous_goods_fee?: number | null
+          delivery_intercept_fee?: number | null
+          description?: string | null
+          dim_factor?: number | null
+          fuel_charge?: number | null
+          id?: string
+          oversize_commercial?: Json
+          oversize_residential?: Json
+          peak_surcharge_periods?: Json | null
+          peak_surcharges?: Json
+          remote_area_fees?: Json
+          residential_fees?: Json
+          signature_services?: Json | null
+          template_name?: string
+          unauthorized_fee?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rebills: {
+        Row: {
+          actual_amount: number
+          base_fee: number | null
+          carrier_name: string | null
+          created_at: string
+          created_by: string
+          customer_id: string
+          difference: number
+          fee_type: string | null
+          fuel_surcharge: number | null
+          id: string
+          long_haul_fee: number | null
+          order_id: string
+          original_amount: number
+          other_fees: number | null
+          platform_name: string | null
+        }
+        Insert: {
+          actual_amount: number
+          base_fee?: number | null
+          carrier_name?: string | null
+          created_at?: string
+          created_by: string
+          customer_id: string
+          difference: number
+          fee_type?: string | null
+          fuel_surcharge?: number | null
+          id?: string
+          long_haul_fee?: number | null
+          order_id: string
+          original_amount: number
+          other_fees?: number | null
+          platform_name?: string | null
+        }
+        Update: {
+          actual_amount?: number
+          base_fee?: number | null
+          carrier_name?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          difference?: number
+          fee_type?: string | null
+          fuel_surcharge?: number | null
+          id?: string
+          long_haul_fee?: number | null
+          order_id?: string
+          original_amount?: number
+          other_fees?: number | null
+          platform_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rebills_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recharge_records: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          payment_method: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          updated_at: string
+          voucher_url: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          payment_method: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          voucher_url: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          payment_method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          voucher_url?: string
+        }
+        Relationships: []
+      }
+      remote_area_zones: {
+        Row: {
+          carrier: string
+          created_at: string
+          id: string
+          service_type: string | null
+          zip_code: string
+          zone_type: string
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          id?: string
+          service_type?: string | null
+          zip_code: string
+          zone_type: string
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          id?: string
+          service_type?: string | null
+          zip_code?: string
+          zone_type?: string
+        }
+        Relationships: []
+      }
+      return_orders: {
+        Row: {
+          address: string
+          address_type: string | null
+          carrier: string
+          city: string
+          created_at: string
+          customer_code: string
+          customer_id: string
+          id: string
+          order_number: string
+          order_source: string | null
+          return_person: string
+          service_type: string
+          shipping_fee: number | null
+          state: string
+          status: string
+          updated_at: string
+          warehouse: string
+          zip_code: string
+          zone: string | null
+        }
+        Insert: {
+          address: string
+          address_type?: string | null
+          carrier: string
+          city: string
+          created_at?: string
+          customer_code: string
+          customer_id: string
+          id?: string
+          order_number: string
+          order_source?: string | null
+          return_person: string
+          service_type: string
+          shipping_fee?: number | null
+          state: string
+          status?: string
+          updated_at?: string
+          warehouse: string
+          zip_code: string
+          zone?: string | null
+        }
+        Update: {
+          address?: string
+          address_type?: string | null
+          carrier?: string
+          city?: string
+          created_at?: string
+          customer_code?: string
+          customer_id?: string
+          id?: string
+          order_number?: string
+          order_source?: string | null
+          return_person?: string
+          service_type?: string
+          shipping_fee?: number | null
+          state?: string
+          status?: string
+          updated_at?: string
+          warehouse?: string
+          zip_code?: string
+          zone?: string | null
+        }
+        Relationships: []
+      }
+      shipping_rules: {
+        Row: {
+          conditions: Json
+          created_at: string
+          fallback_accounts: Json
+          id: string
+          is_active: boolean
+          primary_account_id: string | null
+          priority: number
+          rule_name: string
+          updated_at: string
+        }
+        Insert: {
+          conditions?: Json
+          created_at?: string
+          fallback_accounts?: Json
+          id?: string
+          is_active?: boolean
+          primary_account_id?: string | null
+          priority?: number
+          rule_name: string
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          fallback_accounts?: Json
+          id?: string
+          is_active?: boolean
+          primary_account_id?: string | null
+          priority?: number
+          rule_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_rules_primary_account_id_fkey"
+            columns: ["primary_account_id"]
+            isOneToOne: false
+            referencedRelation: "carrier_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_accounts: {
+        Row: {
+          created_at: string
+          customer_permissions: Json | null
+          email: string
+          feature_permissions: Json | null
+          id: string
+          phone: string | null
+          role: string
+          status: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          customer_permissions?: Json | null
+          email: string
+          feature_permissions?: Json | null
+          id?: string
+          phone?: string | null
+          role: string
+          status?: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          customer_permissions?: Json | null
+          email?: string
+          feature_permissions?: Json | null
+          id?: string
+          phone?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      temporary_credits: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          valid_until: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          valid_until: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
+      ticket_communications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          ticket_id: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          ticket_id: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          ticket_id?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_communications_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_status_changes: {
+        Row: {
+          changed_by: string
+          changed_by_name: string
+          created_at: string
+          id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          ticket_id: string
+        }
+        Insert: {
+          changed_by: string
+          changed_by_name: string
+          created_at?: string
+          id?: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          ticket_id: string
+        }
+        Update: {
+          changed_by?: string
+          changed_by_name?: string
+          created_at?: string
+          id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_status_changes_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          assigned_to: string | null
+          attachments: Json | null
+          carrier_name: string | null
+          created_at: string
+          created_by: string
+          customer_id: string | null
+          description: string
+          id: string
+          order_number: string | null
+          priority: string
+          resolved_at: string | null
+          status: string
+          ticket_number: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          carrier_name?: string | null
+          created_at?: string
+          created_by: string
+          customer_id?: string | null
+          description: string
+          id?: string
+          order_number?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          ticket_number: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          carrier_name?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string | null
+          description?: string
+          id?: string
+          order_number?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          ticket_number?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      truck_carrier_pricing: {
+        Row: {
+          accessorial_charges: Json
+          base_prices: Json
+          carrier_id: string
+          created_at: string
+          effective_date: string
+          id: string
+          is_active: boolean
+          pricing_name: string
+          service_surcharges: Json
+          updated_at: string
+          zone_table: Json
+        }
+        Insert: {
+          accessorial_charges?: Json
+          base_prices?: Json
+          carrier_id: string
+          created_at?: string
+          effective_date?: string
+          id?: string
+          is_active?: boolean
+          pricing_name: string
+          service_surcharges?: Json
+          updated_at?: string
+          zone_table?: Json
+        }
+        Update: {
+          accessorial_charges?: Json
+          base_prices?: Json
+          carrier_id?: string
+          created_at?: string
+          effective_date?: string
+          id?: string
+          is_active?: boolean
+          pricing_name?: string
+          service_surcharges?: Json
+          updated_at?: string
+          zone_table?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_carrier_pricing_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "truck_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      truck_carrier_ratings: {
+        Row: {
+          carrier_id: string
+          created_at: string
+          delivery_timeliness: number
+          id: string
+          loss_rate: number
+          overall_score: number | null
+          pickup_punctuality: number
+          rated_by: string | null
+          transit_timeliness: number
+          updated_at: string
+        }
+        Insert: {
+          carrier_id: string
+          created_at?: string
+          delivery_timeliness?: number
+          id?: string
+          loss_rate?: number
+          overall_score?: number | null
+          pickup_punctuality?: number
+          rated_by?: string | null
+          transit_timeliness?: number
+          updated_at?: string
+        }
+        Update: {
+          carrier_id?: string
+          created_at?: string
+          delivery_timeliness?: number
+          id?: string
+          loss_rate?: number
+          overall_score?: number | null
+          pickup_punctuality?: number
+          rated_by?: string | null
+          transit_timeliness?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_carrier_ratings_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "truck_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      truck_carriers: {
+        Row: {
+          avatar_url: string | null
+          carrier_name: string
+          created_at: string
+          id: string
+          is_system: boolean
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          carrier_name: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          carrier_name?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          permissions: Json | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zip_region_mapping: {
+        Row: {
+          created_at: string
+          id: string
+          region: string
+          updated_at: string
+          zip_prefix: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          region: string
+          updated_at?: string
+          zip_prefix: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          region?: string
+          updated_at?: string
+          zip_prefix?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      generate_customer_code: { Args: never; Returns: string }
+      generate_invitation_code: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+    }
+    Enums: {
+      app_role:
+        | "admin"
+        | "customer"
+        | "customer_service"
+        | "operations"
+        | "finance"
+        | "moderator"
+      customer_status: "active" | "frozen"
+      customer_type: "prepaid" | "credit"
+      payment_method: "bank_transfer" | "credit_card" | "paypal" | "other"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: [
+        "admin",
+        "customer",
+        "customer_service",
+        "operations",
+        "finance",
+        "moderator",
+      ],
+      customer_status: ["active", "frozen"],
+      customer_type: ["prepaid", "credit"],
+      payment_method: ["bank_transfer", "credit_card", "paypal", "other"],
+    },
+  },
+} as const

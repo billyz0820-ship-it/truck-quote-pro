@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Package, Clock, Shield, Truck } from "lucide-react";
+import { ArrowLeft, MapPin, Package, Clock, Shield, Truck, Ticket } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface CarrierQuote {
   id: string;
@@ -23,10 +26,99 @@ interface CarrierQuote {
   freeInsurance: number;
 }
 
+interface AvailableCoupon {
+  id: string;
+  coupon_code: string;
+  amount: number;
+}
+
 const QuoteResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { customerId } = useAuth();
   const orderData = location.state?.orderData;
+  const [availableCoupon, setAvailableCoupon] = useState<AvailableCoupon | null>(null);
+  const [useCoupon, setUseCoupon] = useState(false);
+  const [savedOrderId, setSavedOrderId] = useState<string | null>(location.state?.savedOrderId || null);
+  const saveAttemptedRef = useRef(false);
+
+  // 自动保存报价到数据库
+  useEffect(() => {
+    const saveQuoteToDatabase = async () => {
+      if (!orderData || !orderData.customerId || savedOrderId || saveAttemptedRef.current) return;
+      
+      saveAttemptedRef.current = true;
+      
+      try {
+        // Generate order number
+        const orderNumber = `TK${Date.now().toString().slice(-8)}`;
+        
+        const { data, error } = await supabase
+          .from('orders')
+          .insert({
+            order_number: orderNumber,
+            customer_id: orderData.customerId,
+            customer_code: orderData.customerCode || '',
+            pickup_zip: orderData.pickupZip,
+            pickup_city: orderData.pickupCity || null,
+            pickup_state: orderData.pickupState || null,
+            delivery_zip: orderData.deliveryZip,
+            delivery_city: orderData.deliveryCity || null,
+            delivery_state: orderData.deliveryState || null,
+            cargo_description: orderData.cargoDescription || null,
+            reference_number: orderData.referenceNumber || null,
+            shipment_type: orderData.shipmentType,
+            pallet_count: orderData.pallets?.reduce((sum: number, p: any) => sum + (p.count || 1), 0) || null,
+            pallet_info: orderData.pallets || [],
+            quoted_amount: 0, // Will be updated when user selects a quote
+            status: 'quoted'
+          })
+          .select('id')
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setSavedOrderId(data.id);
+        }
+      } catch (error: any) {
+        console.error("保存报价失败:", error);
+        // Don't show error toast to avoid confusion
+      }
+    };
+
+    saveQuoteToDatabase();
+  }, [orderData, savedOrderId]);
+
+  // 获取可用的卡车优惠券
+  useEffect(() => {
+    const fetchCoupon = async () => {
+      if (!customerId) return;
+      
+      const { data } = await supabase
+        .from('coupons')
+        .select('id, coupon_code, amount')
+        .eq('customer_id', customerId)
+        .eq('status', 'active')
+        .is('used_at', null)
+        .or('order_type.is.null,order_type.eq.truck')
+        .gt('expire_at', new Date().toISOString())
+        .order('amount', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        setAvailableCoupon(data);
+      }
+    };
+
+    fetchCoupon();
+  }, [customerId]);
+
+  // 如果没有订单数据，返回创建页面
+  if (!orderData) {
+    navigate("/dashboard/orders/create");
+    return null;
+  }
 
   // 模拟报价数据
   const [quotes] = useState<CarrierQuote[]>([
@@ -83,10 +175,49 @@ const QuoteResults = () => {
   const distance = "875英里";
   const route = `${orderData?.pickupZip} → ${orderData?.deliveryZip}`;
 
-  const handleSelectQuote = (quote: CarrierQuote) => {
-    console.log("选择报价:", quote);
-    // 导航到填写详细信息页面
-    navigate("/dashboard/orders/details", { state: { quote } });
+  const handleSelectQuote = async (quote: CarrierQuote) => {
+    // 更新数据库中的报价金额
+    if (savedOrderId) {
+      const finalAmount = useCoupon && availableCoupon 
+        ? Math.max(0, quote.totalCost - availableCoupon.amount)
+        : quote.totalCost;
+      
+      await supabase
+        .from('orders')
+        .update({ quoted_amount: finalAmount })
+        .eq('id', savedOrderId);
+    }
+
+    // 将订单数据和选中的报价一起传递
+    const finalQuote = useCoupon && availableCoupon ? {
+      ...quote,
+      originalCost: quote.totalCost,
+      totalCost: Math.max(0, quote.totalCost - availableCoupon.amount),
+      couponApplied: availableCoupon
+    } : quote;
+
+    navigate("/dashboard/orders/confirm", { 
+      state: { 
+        orderData,
+        selectedQuote: finalQuote,
+        couponApplied: useCoupon ? availableCoupon : null,
+        savedOrderId
+      } 
+    });
+  };
+
+  const getDiscountedPrice = (originalPrice: number) => {
+    if (useCoupon && availableCoupon) {
+      return Math.max(0, originalPrice - availableCoupon.amount);
+    }
+    return originalPrice;
+  };
+
+  // 返回创建订单页面继续编辑
+  const handleBack = () => {
+    navigate("/dashboard/orders/create", { 
+      state: { orderData, savedOrderId } 
+    });
   };
 
   return (
@@ -94,7 +225,7 @@ const QuoteResults = () => {
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
-          onClick={() => navigate("/dashboard/orders/create")}
+          onClick={handleBack}
           className="p-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -148,6 +279,35 @@ const QuoteResults = () => {
         </CardContent>
       </Card>
 
+      {/* 优惠券提示 */}
+      {availableCoupon && (
+        <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Ticket className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-700 dark:text-green-400">
+                    您有一张 ${availableCoupon.amount} 的卡车运费优惠券可用
+                  </p>
+                  <p className="text-sm text-green-600 dark:text-green-500">
+                    券码: {availableCoupon.coupon_code}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={useCoupon ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUseCoupon(!useCoupon)}
+                className={useCoupon ? "bg-green-600 hover:bg-green-700" : "border-green-600 text-green-600"}
+              >
+                {useCoupon ? "已使用" : "使用优惠券"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 承运商报价 */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">承运商报价</h2>
@@ -165,8 +325,18 @@ const QuoteResults = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-primary">${quote.totalCost}</p>
-                  <p className="text-sm text-muted-foreground">总费用</p>
+                  {useCoupon && availableCoupon ? (
+                    <>
+                      <p className="text-lg text-muted-foreground line-through">${quote.totalCost}</p>
+                      <p className="text-2xl font-bold text-green-600">${getDiscountedPrice(quote.totalCost)}</p>
+                      <p className="text-sm text-green-600">已优惠 ${availableCoupon.amount}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-2xl font-bold text-primary">${quote.totalCost}</p>
+                      <p className="text-sm text-muted-foreground">总费用</p>
+                    </>
+                  )}
                 </div>
               </div>
             </CardHeader>

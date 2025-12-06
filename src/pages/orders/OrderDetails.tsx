@@ -4,19 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MapPin, User, Phone, Mail } from "lucide-react";
+import { ArrowLeft, MapPin, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+
+// 地址类型映射
+const ADDRESS_TYPE_LABELS: Record<string, string> = {
+  commercial_dock: "商业地址带卸货口",
+  commercial_no_dock: "商业地址无卸货口",
+  residential: "住宅地址",
+};
 
 const OrderDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const quote = location.state?.quote;
+  const { orderData, selectedQuote } = location.state || {};
+  const [loading, setLoading] = useState(false);
+
+  // 如果没有数据，返回创建页面
+  if (!orderData || !selectedQuote) {
+    navigate("/dashboard/orders/create");
+    return null;
+  }
 
   const [pickupDetails, setPickupDetails] = useState({
     address: "",
-    city: "",
-    state: "",
-    zip: "",
+    city: orderData.pickupCity || "",
+    state: orderData.pickupState || "",
+    zip: orderData.pickupZip || "",
+    addressType: orderData.pickupAddressType || "",
     contactName: "",
     contactPhone: "",
     contactEmail: "",
@@ -25,9 +40,10 @@ const OrderDetails = () => {
 
   const [deliveryDetails, setDeliveryDetails] = useState({
     address: "",
-    city: "",
-    state: "",
-    zip: "",
+    city: orderData.deliveryCity || "",
+    state: orderData.deliveryState || "",
+    zip: orderData.deliveryZip || "",
+    addressType: orderData.deliveryAddressType || "",
     contactName: "",
     contactPhone: "",
     contactEmail: "",
@@ -42,16 +58,19 @@ const OrderDetails = () => {
     setDeliveryDetails(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const orderData = {
-      quote,
-      pickupDetails,
-      deliveryDetails
-    };
-    console.log("订单详情:", orderData);
-    // 这里可以提交订单或导航到确认页面
-    navigate("/dashboard/orders");
+    
+    // 跳转到确认页面
+    navigate("/dashboard/orders/order-confirm", {
+      state: {
+        orderData,
+        selectedQuote,
+        pickupDetails,
+        deliveryDetails,
+        couponApplied: location.state?.couponApplied
+      }
+    });
   };
 
   return (
@@ -59,7 +78,7 @@ const OrderDetails = () => {
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/dashboard/orders/quote", { state: { orderData } })}
           className="p-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -71,22 +90,20 @@ const OrderDetails = () => {
       </div>
 
       {/* 选中的报价摘要 */}
-      {quote && (
-        <Card className="bg-primary/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-lg">{quote.name}</h3>
-                <p className="text-sm text-muted-foreground">运输时间: {quote.transitTime}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-primary">${quote.totalCost}</p>
-                <p className="text-sm text-muted-foreground">总费用</p>
-              </div>
+      <Card className="bg-primary/5">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-lg">{selectedQuote.name}</h3>
+              <p className="text-sm text-muted-foreground">运输时间: {selectedQuote.transitTime}</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div className="text-right">
+              <p className="text-2xl font-bold text-primary">${selectedQuote.totalCost}</p>
+              <p className="text-sm text-muted-foreground">总费用</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 发货地址详情 */}
@@ -113,30 +130,35 @@ const OrderDetails = () => {
                 <Label htmlFor="pickupCity">城市</Label>
                 <Input
                   id="pickupCity"
-                  placeholder="城市"
                   value={pickupDetails.city}
-                  onChange={(e) => handlePickupChange("city", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pickupState">州</Label>
                 <Input
                   id="pickupState"
-                  placeholder="州"
                   value={pickupDetails.state}
-                  onChange={(e) => handlePickupChange("state", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pickupZip">邮编</Label>
                 <Input
                   id="pickupZip"
-                  placeholder="邮编"
                   value={pickupDetails.zip}
-                  onChange={(e) => handlePickupChange("zip", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>地址类型</Label>
+                <Input
+                  value={ADDRESS_TYPE_LABELS[pickupDetails.addressType] || pickupDetails.addressType}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
             </div>
@@ -217,30 +239,35 @@ const OrderDetails = () => {
                 <Label htmlFor="deliveryCity">城市</Label>
                 <Input
                   id="deliveryCity"
-                  placeholder="城市"
                   value={deliveryDetails.city}
-                  onChange={(e) => handleDeliveryChange("city", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="deliveryState">州</Label>
                 <Input
                   id="deliveryState"
-                  placeholder="州"
                   value={deliveryDetails.state}
-                  onChange={(e) => handleDeliveryChange("state", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="deliveryZip">邮编</Label>
                 <Input
                   id="deliveryZip"
-                  placeholder="邮编"
                   value={deliveryDetails.zip}
-                  onChange={(e) => handleDeliveryChange("zip", e.target.value)}
-                  required
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>地址类型</Label>
+                <Input
+                  value={ADDRESS_TYPE_LABELS[deliveryDetails.addressType] || deliveryDetails.addressType}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
             </div>
@@ -302,12 +329,13 @@ const OrderDetails = () => {
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/dashboard/orders/quote", { state: { orderData } })}
+            disabled={loading}
           >
             返回
           </Button>
-          <Button type="submit" className="bg-primary hover:bg-primary/90">
-            确认并提交订单
+        <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={loading}>
+            确认
           </Button>
         </div>
       </form>
