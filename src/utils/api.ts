@@ -88,17 +88,24 @@ const handleApiError = async (response: Response, responseData?: any): Promise<n
   throw error;
 };
 
+// 获取认证token
+const getAuthToken = (): string | null => {
+  return localStorage.getItem('authToken');
+};
+
 // 通用请求函数
 export const request = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<Response> => {
   const url = `${apiConfig.baseURL}${endpoint}`;
+  const token = getAuthToken();
 
   // 默认配置
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     },
     signal: AbortSignal.timeout(apiConfig.timeout),
@@ -119,6 +126,14 @@ export const request = async (
     
     // 检查HTTP状态码，如果不是成功状态则统一处理错误
     if (!response.ok) {
+      // 如果是401错误，清除认证信息并跳转到登录页
+      if (response.status === 401 && getAuthToken()) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userInfo');
+        window.location.href = '/login';
+      }
+      
       let responseData;
       try {
         responseData = await response.clone().json();
@@ -233,13 +248,36 @@ export const api = {
 
 // 认证相关API - 使用简化的请求方式
 export const authApi = {
-  login: (credentials: { userName: string; password: string }) => {
+  login: async (credentials: { userName: string; password: string }) => {
     // 加密密码后再发送
+    const encryptedPassword = await encryptPassword(credentials.password);
     const encryptedCredentials = {
       ...credentials,
-      password: encryptPassword(credentials.password)
+      password: encryptedPassword
     };
-    return api.post('/auth/api/Auth/CoustomerValidate', encryptedCredentials);
+    
+    // 登录接口不需要Authorization头，直接使用request
+    const url = `${apiConfig.baseURL}/auth/api/Auth/CoustomerValidate`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(encryptedCredentials),
+      signal: AbortSignal.timeout(apiConfig.timeout),
+    });
+    
+    if (!response.ok) {
+      let responseData;
+      try {
+        responseData = await response.clone().json();
+      } catch {
+        responseData = null;
+      }
+      await handleApiError(response, responseData);
+    }
+    
+    return handleApiResponse(response);
   },
 
   register: (userData: any) => {

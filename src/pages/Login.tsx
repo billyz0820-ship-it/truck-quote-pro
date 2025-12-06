@@ -37,9 +37,24 @@ const Login = () => {
     try {
       const data = await authApi.login({ userName, password });
       
-      // 可以在这里保存token到localStorage
-      if (data.token) {
-        localStorage.setItem('authToken', data.token);
+      // 保存JWT token到localStorage
+      if (data.access_token) {
+        localStorage.setItem('authToken', data.access_token);
+        localStorage.setItem('refreshToken', data.refresh_token);
+        
+        // 保存用户信息到localStorage（可选）
+        const userInfo = {
+          Id: data.Id,
+          UserName: data.UserName,
+          DisplayName: data.DisplayName,
+          Email: data.Email,
+          Company: data.Company,
+          CustomerId: data.CustomerId,
+          CustomerName: data.CustomerName,
+          IsAdmin: data.IsAdmin,
+          SystemType: data.SystemType
+        };
+        localStorage.setItem('userInfo', JSON.stringify(userInfo));
       }
       
       return data;
@@ -53,10 +68,31 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await loginUser(formData.userName, formData.password);
+      const response = await loginUser(formData.userName, formData.password);
+      
+      // 调用AuthContext的signIn方法更新认证状态
+      if (response.access_token) {
+        // 从JWT token中解析用户信息
+        const tokenPayload = JSON.parse(atob(response.access_token.split('.')[1]));
+        const user = {
+          id: tokenPayload.Id,
+          userName: tokenPayload.UserName,
+          displayName: tokenPayload.DisplayName,
+          email: tokenPayload.Email,
+          company: tokenPayload.Company,
+          customerId: tokenPayload.CustomerId,
+          customerName: tokenPayload.CustomerName,
+          isAdmin: tokenPayload.IsAdmin === "True",
+          systemType: tokenPayload.SystemType
+        };
+        
+        await signIn(user, response.access_token);
+      }
+      
       navigate("/dashboard");
     } catch (error) {
-      alert(error.message);
+      console.error('登录失败:', error);
+      alert(error.message || '登录失败，请重试');
     } finally {
       setIsLoading(false);
     }

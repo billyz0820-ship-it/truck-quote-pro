@@ -1,160 +1,90 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
+// 自定义用户类型，基于JWT token中的信息
+interface CustomUser {
+  id: string;
+  userName: string;
+  displayName: string;
+  email: string;
+  company: string;
+  customerId: string;
+  customerName: string;
+  isAdmin: boolean;
+  systemType: string;
+}
+
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  userRole: "admin" | "customer" | null;
-  customerId: string | null;
+  user: CustomUser | null;
+  token: string | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
-  signOut: () => Promise<void>;
+  signIn: (user: CustomUser, token: string) => Promise<void>;
+  signOut: () => void;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [userRole, setUserRole] = useState<"admin" | "customer" | null>(null);
-  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [user, setUser] = useState<CustomUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fetch user role
-          setTimeout(async () => {
-            const { data: roleData } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", session.user.id)
-              .single();
-            
-            if (roleData) {
-              setUserRole(roleData.role as "admin" | "customer");
-              
-              // If customer, fetch customer ID
-              if (roleData.role === "customer") {
-                const { data: customerUser } = await supabase
-                  .from("customer_users")
-                  .select("customer_id")
-                  .eq("user_id", session.user.id)
-                  .single();
-                
-                if (customerUser) {
-                  setCustomerId(customerUser.customer_id);
-                }
-              }
-            }
-            setLoading(false);
-          }, 0);
-        } else {
-          setUserRole(null);
-          setCustomerId(null);
-          setLoading(false);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .single()
-          .then(({ data: roleData }) => {
-            if (roleData) {
-              setUserRole(roleData.role as "admin" | "customer");
-              
-              if (roleData.role === "customer") {
-                supabase
-                  .from("customer_users")
-                  .select("customer_id")
-                  .eq("user_id", session.user.id)
-                  .single()
-                  .then(({ data: customerUser }) => {
-                    if (customerUser) {
-                      setCustomerId(customerUser.customer_id);
-                    }
-                    setLoading(false);
-                  });
-              } else {
-                setLoading(false);
-              }
-            } else {
-              setLoading(false);
-            }
-          });
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // 检查localStorage中是否有已保存的token和用户信息
+    const savedToken = localStorage.getItem('authToken');
+    const savedUserInfo = localStorage.getItem('userInfo');
     
-    if (!error) {
-      navigate("/dashboard");
+    if (savedToken && savedUserInfo) {
+      try {
+        const userInfo = JSON.parse(savedUserInfo);
+        setUser(userInfo);
+        setToken(savedToken);
+      } catch (error) {
+        console.error('解析用户信息失败:', error);
+        // 清除无效的数据
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        localStorage.removeItem('refreshToken');
+      }
     }
     
-    return { error };
+    setLoading(false);
+  }, []);
+
+  const signIn = async (user: CustomUser, token: string) => {
+    setUser(user);
+    setToken(token);
+    
+    // 保存到localStorage
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('userInfo', JSON.stringify(user));
   };
 
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
-    });
-    
-    return { data, error };
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const signOut = () => {
     setUser(null);
-    setSession(null);
-    setUserRole(null);
-    setCustomerId(null);
+    setToken(null);
+    
+    // 清除localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('refreshToken');
+    
     navigate("/login");
   };
+
+  const isAuthenticated = !!token && !!user;
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        session,
-        userRole,
-        customerId,
+        token,
         loading,
         signIn,
-        signUp,
         signOut,
+        isAuthenticated,
       }}
     >
       {children}

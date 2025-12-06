@@ -5,15 +5,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Truck, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { api } from "@/utils/api";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 这里添加发送重置邮件的逻辑
-    setSubmitted(true);
+    setIsLoading(true);
+
+    try {
+      await api.put('/api/v1/User/ForgetResetPassword', { email });
+      setSubmitted(true);
+    } catch (error) {
+      alert(error.message || '发送重置邮件失败，请稍后重试');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -50,8 +60,12 @@ const ForgotPassword = () => {
                   className="border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
-              <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-                发送重置链接
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                disabled={isLoading}
+              >
+                {isLoading ? "发送中..." : "发送重置链接"}
               </Button>
             </form>
           ) : (
