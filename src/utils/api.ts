@@ -1,5 +1,7 @@
 import { apiConfig } from '@/config/api';
 import { encryptPassword } from './crypto';
+import { FinanceServiceResource } from '@/constants';
+import { t } from './i18n';
 
 // 统一错误处理函数
 const handleApiError = async (response: Response, responseData?: any): Promise<never> => {
