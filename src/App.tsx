@@ -59,6 +59,7 @@ import ContractManagement from "./pages/contracts/ContractManagement";
 import AgreementManagement from "./pages/contracts/AgreementManagement";
 import AddressManagement from "./pages/settings/AddressManagement";
 import AddressZoneConfig from "./pages/settings/AddressZoneConfig";
+import ResourceManagement from "./pages/settings/ResourceManagement";
 
 const queryClient = new QueryClient();
 
@@ -127,6 +128,7 @@ const App = () => (
             <Route path="agreements" element={<AgreementManagement />} />
             <Route path="settings/addresses" element={<AddressManagement />} />
             <Route path="settings/addresses/:addressId/zones" element={<AddressZoneConfig />} />
+            <Route path="settings/resources" element={<ResourceManagement />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
