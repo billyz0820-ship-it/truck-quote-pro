@@ -495,12 +495,12 @@ export default function ResourceManagement() {
             </div>
             <div className="space-y-2">
               <Label>父级</Label>
-              <Select value={formData.parent_id} onValueChange={(v) => setFormData(prev => ({ ...prev, parent_id: v }))}>
+              <Select value={formData.parent_id || "none"} onValueChange={(v) => setFormData(prev => ({ ...prev, parent_id: v === "none" ? "" : v }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="请选择" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">无</SelectItem>
+                  <SelectItem value="none">无</SelectItem>
                   {flatResources.filter(r => r.id !== editingResource?.id).map(r => (
                     <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>
                   ))}
