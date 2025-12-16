@@ -2,10 +2,12 @@ import { apiConfig } from '@/config/api';
 import { encryptPassword } from './crypto';
 import { FinanceServiceResource } from '@/constants';
 import { t } from './i18n';
+import { handleAuthError } from './toast';
 
 // 统一错误处理函数
 const handleApiError = async (response: Response, responseData?: any): Promise<never> => {
   let errorMessage = '请求失败';
+  let errorCode = null;
   
   // 如果已经提供了响应数据，直接使用
   if (responseData && typeof responseData === 'object') {
@@ -13,10 +15,12 @@ const handleApiError = async (response: Response, responseData?: any): Promise<n
     if (('IsSuccess' in responseData && responseData.IsSuccess === false) || 
         ('isSuccess' in responseData && responseData.isSuccess === false)) {
       errorMessage = responseData.message || '程序繁忙，请稍后再试';
+      errorCode = responseData.code;
     }
     // 处理其他可能的错误格式
     else if (responseData.message) {
       errorMessage = responseData.message;
+      errorCode = responseData.code;
     }
     else if (responseData.error) {
       errorMessage = responseData.error;
@@ -35,10 +39,12 @@ const handleApiError = async (response: Response, responseData?: any): Promise<n
         if (('IsSuccess' in data && data.IsSuccess === false) || 
             ('isSuccess' in data && data.isSuccess === false)) {
           errorMessage = data.message || '程序繁忙，请稍后再试';
+          errorCode = data.code;
         }
         // 处理其他可能的错误格式
         else if (data.message) {
           errorMessage = data.message;
+          errorCode = data.code;
         }
         else if (data.error) {
           errorMessage = data.error;
@@ -51,6 +57,11 @@ const handleApiError = async (response: Response, responseData?: any): Promise<n
       // JSON解析失败或流已被读取，使用默认错误信息
       console.warn('解析错误响应失败:', parseError);
     }
+  }
+
+  // 检查是否是授权无效错误码
+  if (errorCode === 'WBS00012') {
+    handleAuthError(errorMessage);
   }
 
   // 如果没有从响应中获取到错误信息，使用HTTP状态码对应的默认信息
@@ -84,6 +95,7 @@ const handleApiError = async (response: Response, responseData?: any): Promise<n
 
   const error = new Error(errorMessage);
   (error as any).status = response.status;
+  (error as any).code = errorCode;
   (error as any).response = response;
   throw error;
 };
@@ -173,6 +185,12 @@ const handleApiResponse = async (response: Response): Promise<any> => {
       if ('isSuccess' in data) {
         if (data.isSuccess === false) {
           const errorMessage = data.message || '请求失败';
+          
+          // 检查是否是授权无效错误码
+          if (data.code === 'WBS00012') {
+            handleAuthError(errorMessage);
+          }
+          
           const error = new Error(errorMessage);
           (error as any).code = data.code;
           (error as any).response = response;
@@ -185,6 +203,12 @@ const handleApiResponse = async (response: Response): Promise<any> => {
       else if ('IsSuccess' in data) {
         if (data.IsSuccess === false) {
           const errorMessage = data.message || '请求失败';
+          
+          // 检查是否是授权无效错误码
+          if (data.code === 'WBS00012') {
+            handleAuthError(errorMessage);
+          }
+          
           const error = new Error(errorMessage);
           (error as any).code = data.code;
           (error as any).response = response;

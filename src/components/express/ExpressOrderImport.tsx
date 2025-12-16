@@ -69,7 +69,7 @@ export function ExpressOrderImport({ onSuccess }: ExpressOrderImportProps) {
         const { error } = await supabase.from("express_orders").insert({
           ...rowData,
           customer_id: rowData.customer_id || "00000000-0000-0000-0000-000000000000", // 需要从 customer_code 查询
-          status: "pending_label",
+          status: "pending",
           country: rowData.country || "US",
         });
 

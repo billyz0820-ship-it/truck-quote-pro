@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,13 +20,14 @@ const Login = () => {
     userName: "",
     password: ""
   });
-  const [loading, setLoading] = useState(false);
+
 
   // Redirect if already logged in
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -74,6 +75,9 @@ const Login = () => {
       if (response.access_token) {
         // 从JWT token中解析用户信息
         const tokenPayload = JSON.parse(atob(response.access_token.split('.')[1]));
+        console.log('=== JWT Token 解析的用户信息 ===');
+        console.log('SystemType:', tokenPayload.SystemType, '类型:', typeof tokenPayload.SystemType);
+        
         const user = {
           id: tokenPayload.Id,
           userName: tokenPayload.UserName,
@@ -85,6 +89,8 @@ const Login = () => {
           isAdmin: tokenPayload.IsAdmin === "True",
           systemType: tokenPayload.SystemType
         };
+        
+        console.log('创建的用户对象systemType:', user.systemType);
         
         await signIn(user, response.access_token);
       }
@@ -155,9 +161,9 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full bg-blue-500 hover:bg-blue-600 text-white" 
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading ? t("loading") : t("login")}
+              {isLoading ? t("loading") : t("login")}
             </Button>
           </form>
           <div className="mt-6 text-center">

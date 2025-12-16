@@ -58,85 +58,11 @@ import {
 const DashboardLayout = () => {
   const location = useLocation();
   const { state } = useSidebar();
-  const { signOut } = useAuth();
+  const { signOut, sidebarMenus, user } = useAuth();
   const { t } = useLanguage();
 
-  const menuItems = [
-    { title: "首页", url: "/dashboard", icon: Home },
-    { 
-      title: "订单列表", 
-      icon: Package,
-      subItems: [
-        { title: "卡车订单", url: "/dashboard/orders/truck", icon: Truck },
-        { title: "快递订单", url: "/dashboard/orders/express", icon: Package },
-        { title: "退货订单", url: "/dashboard/orders/return", icon: CornerUpLeft },
-      ]
-    },
-    { 
-      title: "财务", 
-      icon: DollarSign,
-      subItems: [
-        { title: "财务概览", url: "/dashboard/finance", icon: DollarSign },
-        { title: "当前报价", url: "/dashboard/finance/quotations", icon: FileText },
-        { title: "流水记录", url: "/dashboard/finance/transactions", icon: Receipt },
-        { title: "反弹账单", url: "/dashboard/finance/rebills", icon: Receipt },
-        { title: "运费差异", url: "/dashboard/finance/freight-difference", icon: ArrowLeftRight },
-      ]
-    },
-    { title: "优惠券", url: "/dashboard/coupons", icon: Ticket },
-    { 
-      title: "配置管理", 
-      icon: Settings,
-      subItems: [
-        { title: "系统设置", url: "/dashboard/settings", icon: Settings },
-        { title: "地址配置", url: "/dashboard/settings/addresses", icon: MapPin },
-      ]
-    },
-    { title: "工单管理", url: "/dashboard/tickets", icon: FileText },
-    { title: "知识库", url: "/dashboard/knowledge", icon: FileText },
-    { title: "通知管理", url: "/dashboard/notifications", icon: FileText },
-    { title: "邮件管理", url: "/dashboard/emails", icon: FileText },
-    { title: "用户管理", url: "/dashboard/users", icon: Users },
-    { 
-      title: "快递管理", 
-      icon: PackageCheck,
-      subItems: [
-        { title: "快递账号", url: "/dashboard/carrier/accounts", icon: Truck },
-        { title: "账套管理", url: "/dashboard/carrier/templates", icon: FileText },
-        { title: "账号成本", url: "/dashboard/carrier/costs", icon: DollarSign },
-        { title: "价格比较", url: "/dashboard/carrier/comparison", icon: Receipt },
-        { title: "打单规则", url: "/dashboard/carrier/rules", icon: Settings },
-        { title: "客户报价", url: "/dashboard/carrier/customer-pricing", icon: Settings },
-      ]
-    },
-    { 
-      title: "物流设置", 
-      icon: Settings,
-      subItems: [
-        { title: "物流触发", url: "/dashboard/logistics/triggers", icon: Settings },
-        { title: "物流服务", url: "/dashboard/logistics/services", icon: Package },
-        { title: "偏远地址", url: "/dashboard/logistics/remote-areas", icon: Package },
-        { title: "渠道配置", url: "/dashboard/logistics/channels", icon: Settings },
-      ]
-    },
-    { 
-      title: "卡车管理", 
-      icon: Truck,
-      subItems: [
-        { title: "承运商管理", url: "/dashboard/truck/carriers", icon: Truck },
-        { title: "平台仓专送", url: "/dashboard/truck/platform-warehouse", icon: Package },
-        { title: "邮编地区映射", url: "/dashboard/truck/zip-region", icon: Settings },
-      ]
-    },
-    { 
-      title: "合同与协议", 
-      icon: FileSignature,
-      subItems: [
-        { title: "合同管理", url: "/dashboard/contracts", icon: ScrollText },
-        { title: "协议管理", url: "/dashboard/agreements", icon: FileText },
-      ]
-    },
-  ];
+  // 使用动态权限菜单，如果没有权限信息则显示空数组
+  const menuItems = sidebarMenus || [];
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -204,6 +130,29 @@ const DashboardLayout = () => {
   );
 };
 
+// 图标映射函数
+const getIcon = (iconName?: string) => {
+  const iconMap: Record<string, any> = {
+    'Dashboard': Home,
+    'Package': Package,
+    'DollarSign': DollarSign,
+    'Settings': Settings,
+    'FileText': FileText,
+    'Truck': Truck,
+    'HelpCircle': FileText, // 临时使用FileText
+    'Tag': Ticket,
+    'Book': FileText, // 临时使用FileText
+    'Bell': FileText, // 临时使用FileText
+    'Mail': FileText, // 临时使用FileText
+    'Users': Users,
+    'ShoppingCart': Package,
+    'FileSignature': FileSignature,
+    'ScrollText': ScrollText,
+    'MapPin': MapPin,
+  };
+  return iconMap[iconName || ''] || Package;
+};
+
 const AppSidebar = ({ 
   menuItems, 
   isActive 
@@ -215,11 +164,11 @@ const AppSidebar = ({
   const { openTab } = useTab();
 
   const handleNavClick = (item: any) => {
-    if (item.url) {
+    if (item.path) {
       openTab({
         title: item.title,
-        path: item.url,
-        icon: item.icon,
+        path: item.path,
+        icon: getIcon(item.icon),
       });
     }
   };
@@ -231,56 +180,62 @@ const AppSidebar = ({
           <SidebarGroupLabel className="text-base font-semibold px-4 py-3 text-slate-800">导航菜单</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  {item.subItems ? (
-                    <Collapsible defaultOpen className="group/collapsible">
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton className="h-12 px-4 cursor-pointer text-slate-600 hover:text-slate-800 hover:bg-slate-50">
-                          <item.icon className="h-5 w-5" />
-                          {state === "expanded" && (
-                            <>
-                              <span className="text-base flex-1 text-left">{item.title}</span>
-                              <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                            </>
-                          )}
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.subItems.map((subItem: any) => (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton
-                                className={`h-10 cursor-pointer ${
-                                  isActive(subItem.url) 
-                                    ? "bg-blue-50 text-blue-600" 
-                                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                                }`}
-                                onClick={() => handleNavClick(subItem)}
-                              >
-                                <subItem.icon className="h-4 w-4" />
-                                {state === "expanded" && <span>{subItem.title}</span>}
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  ) : (
-                    <SidebarMenuButton 
-                      className={`h-12 px-4 cursor-pointer ${
-                        item.url && isActive(item.url) 
-                          ? "bg-blue-50 text-blue-600" 
-                          : "text-slate-600 hover:text-slate-800 hover:bg-slate-50"
-                      }`}
-                      onClick={() => handleNavClick(item)}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {state === "expanded" && <span className="text-base">{item.title}</span>}
-                    </SidebarMenuButton>
-                  )}
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                const Icon = getIcon(item.icon);
+                return (
+                  <SidebarMenuItem key={item.code || item.title}>
+                    {item.children ? (
+                      <Collapsible defaultOpen className="group/collapsible">
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton className="h-12 px-4 cursor-pointer text-slate-600 hover:text-slate-800 hover:bg-slate-50">
+                            <Icon className="h-5 w-5" />
+                            {state === "expanded" && (
+                              <>
+                                <span className="text-base flex-1 text-left">{item.title}</span>
+                                <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                              </>
+                            )}
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.children.map((subItem: any) => {
+                              const SubIcon = getIcon(subItem.icon);
+                              return (
+                                <SidebarMenuSubItem key={subItem.code || subItem.title}>
+                                  <SidebarMenuSubButton
+                                    className={`h-10 cursor-pointer ${
+                                      isActive(subItem.path) 
+                                        ? "bg-blue-50 text-blue-600" 
+                                        : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                                    }`}
+                                    onClick={() => handleNavClick(subItem)}
+                                  >
+                                    <SubIcon className="h-4 w-4" />
+                                    {state === "expanded" && <span>{subItem.title}</span>}
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              );
+                            })}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
+                      <SidebarMenuButton 
+                        className={`h-12 px-4 cursor-pointer ${
+                          item.path && isActive(item.path) 
+                            ? "bg-blue-50 text-blue-600" 
+                            : "text-slate-600 hover:text-slate-800 hover:bg-slate-50"
+                        }`}
+                        onClick={() => handleNavClick(item)}
+                      >
+                        <Icon className="h-5 w-5" />
+                        {state === "expanded" && <span className="text-base">{item.title}</span>}
+                      </SidebarMenuButton>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

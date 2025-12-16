@@ -13,42 +13,48 @@ interface ExpressOrderExportProps {
 export function ExpressOrderExport({ orders, selectedOrders }: ExpressOrderExportProps) {
   const [open, setOpen] = useState(false);
   const [fields, setFields] = useState({
-    order_number: true,
-    customer_code: true,
-    warehouse: true,
-    carrier: true,
-    service_type: true,
-    recipient_name: true,
-    zip_code: true,
-    state: true,
-    city: true,
-    address: true,
-    recipient_phone: true,
-    recipient_email: true,
-    tracking_number: true,
-    shipping_fee: true,
-    status: true,
-    created_at: true,
+    orderNo: true,
+    customerName: true,
+    wareHouseName: true,
+    carrierStr: true,
+    logisticsidService: true,
+    orderSourceTypeName: true,
+    recipient: true,
+    recipientPostalCode: true,
+    recipientStateorProvince: true,
+    recipientCityName: true,
+    recipientAddress1: true,
+    recipientZone: true,
+    trackingNumber: true,
+    recordNo: true,
+    account: true,
+    createdTime: true,
+    orderStatus: true,
+    addressType: true,
+    remark: true,
   });
   const { toast } = useToast();
 
   const fieldLabels: Record<string, string> = {
-    order_number: "订单号",
-    customer_code: "客户编码",
-    warehouse: "发货仓库",
-    carrier: "物流商",
-    service_type: "物流服务",
-    recipient_name: "收件人",
-    zip_code: "邮编",
-    state: "州",
-    city: "城市",
-    address: "地址",
-    recipient_phone: "电话",
-    recipient_email: "邮箱",
-    tracking_number: "物流单号",
-    shipping_fee: "运费",
-    status: "状态",
-    created_at: "创建时间",
+    orderNo: "订单号",
+    customerName: "客户",
+    wareHouseName: "发货仓库",
+    carrierStr: "物流商",
+    logisticsidService: "物流服务",
+    orderSourceTypeName: "订单来源",
+    recipient: "收件人",
+    recipientPostalCode: "邮编",
+    recipientStateorProvince: "州",
+    recipientCityName: "城市",
+    recipientAddress1: "地址",
+    recipientZone: "分区",
+    trackingNumber: "追踪号",
+    recordNo: "记录号",
+    account: "物流账号",
+    createdTime: "创建时间",
+    orderStatus: "订单状态",
+    addressType: "地址类型",
+    remark: "备注",
   };
 
   const handleFieldToggle = (field: string) => {
@@ -77,9 +83,43 @@ export function ExpressOrderExport({ orders, selectedOrders }: ExpressOrderExpor
     const rows = exportData.map(order => {
       return selectedFields.map(field => {
         let value = order[field] || "";
-        if (field === "created_at" && value) {
-          value = new Date(value).toLocaleString("zh-CN");
+        
+        // 格式化创建时间
+        if (field === "createdTime" && value) {
+          value = new Date(value).toLocaleString("zh-CN", { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: false 
+          }).replace(/\//g, '-');
         }
+        
+        // 格式化订单状态
+        if (field === "orderStatus" && value) {
+          const statusMap: Record<number, string> = {
+            10: "待打单",
+            20: "已打单",
+            30: "运输中",
+            40: "已送达",
+            50: "已取消",
+          };
+          value = statusMap[value] || `状态${value}`;
+        }
+        
+        // 格式化地址类型
+        if (field === "addressType" && value) {
+          const addressTypeMap: Record<number, string> = {
+            1: "混合",
+            2: "未知",
+            3: "商业",
+            4: "住宅",
+          };
+          value = addressTypeMap[value] || "未知";
+        }
+        
         // 处理包含逗号的值
         if (typeof value === "string" && value.includes(",")) {
           value = `"${value}"`;

@@ -640,27 +640,27 @@ const LandingPage = () => {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <p className="text-4xl font-bold text-primary mb-2">
+              <div className="text-4xl font-bold text-primary mb-2">
                 <AnimatedCounter end={200} suffix="+" />
-              </p>
+              </div>
               <p className="text-muted-foreground">服务客户</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold text-primary mb-2">
+              <div className="text-4xl font-bold text-primary mb-2">
                 <AnimatedCounter end={100000} suffix="+" />
-              </p>
+              </div>
               <p className="text-muted-foreground">年运单量</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold text-primary mb-2">
+              <div className="text-4xl font-bold text-primary mb-2">
                 99.5%
-              </p>
+              </div>
               <p className="text-muted-foreground">准时送达率</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold text-primary mb-2">
+              <div className="text-4xl font-bold text-primary mb-2">
                 <AnimatedCounter end={15} suffix="%" />
-              </p>
+              </div>
               <p className="text-muted-foreground">平均节省成本</p>
             </div>
           </div>

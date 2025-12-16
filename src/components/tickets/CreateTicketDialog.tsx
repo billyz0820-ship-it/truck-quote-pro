@@ -45,7 +45,7 @@ const EXPRESS_TICKET_TYPES = [
 ];
 
 export function CreateTicketDialog({ open, onOpenChange, onSuccess }: CreateTicketDialogProps) {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const [creating, setCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Order[]>([]);
@@ -192,14 +192,18 @@ export function CreateTicketDialog({ open, onOpenChange, onSuccess }: CreateTick
       setCreating(true);
 
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("未登录");
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      if (!supabaseUser) throw new Error("未登录");
 
-      // Get customer info
-      const { data: customerUser } = await supabase
-        .from('customer_users')
-        .select('customer_id, customers(id, customer_code)')
-        .eq('user_id', user.id)
+      // Get customer info directly from user context
+      if (!authUser?.customerId) {
+        throw new Error("用户未关联客户");
+      }
+
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id, customer_code')
+        .eq('id', authUser.customerId)
         .single();
 
       // Generate ticket number
@@ -214,8 +218,8 @@ export function CreateTicketDialog({ open, onOpenChange, onSuccess }: CreateTick
           priority: formData.priority,
           order_number: selectedOrder.order_number,
           carrier_name: formData.carrier_name,
-          customer_id: customerUser?.customer_id || null,
-          created_by: user.id,
+          customer_id: authUser?.customerId || null,
+          created_by: supabaseUser.id,
           status: 'open',
           attachments: {
             order_type: selectedOrder.type,

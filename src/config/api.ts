@@ -13,7 +13,7 @@ const getApiConfig = (): ApiConfig => {
   switch (buildMode || env) {
     case 'development':
       return {
-        baseURL: 'http://161.189.32.160:4188',
+        baseURL: 'http://161.189.32.160:7766',
         timeout: 10000,
       };
     case 'staging':

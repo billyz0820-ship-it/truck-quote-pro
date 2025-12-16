@@ -29,7 +29,7 @@ export const xorEncrypt = (text: string, key: string = SECRET_KEY): string => {
 export const xorDecrypt = (hexText: string, key: string = SECRET_KEY): string => {
   let result = '';
   for (let i = 0; i < hexText.length; i += 2) {
-    const hex = hexText.substr(i, 2);
+    const hex = hexText.substring(i, i + 2);
     const charCode = parseInt(hex, 16);
     const keyChar = key.charCodeAt(Math.floor(i / 2) % key.length);
     const decrypted = charCode ^ keyChar;

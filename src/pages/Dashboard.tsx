@@ -24,19 +24,14 @@ const Dashboard = () => {
     if (!user) return;
     
     try {
-      const { data: customerUser } = await supabase
-        .from("customer_users")
-        .select("customer_id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (customerUser) {
-        setCustomerId(customerUser.customer_id);
+      // 直接使用用户关联的客户信息，不查询 customer_users 表
+      if (user.customerId) {
+        setCustomerId(user.customerId);
         
         const { data: customer } = await supabase
           .from("customers")
           .select("*")
-          .eq("id", customerUser.customer_id)
+          .eq("id", user.customerId)
           .single();
 
         setCustomerData(customer);
@@ -343,18 +338,13 @@ const CustomerDashboard = () => {
     if (!user) return;
     
     try {
-      const { data: customerUser } = await supabase
-        .from("customer_users")
-        .select("customer_id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (customerUser) {
-        setCustomerId(customerUser.customer_id);
+      // 直接使用用户关联的客户信息，不查询 customer_users 表
+      if (user.customerId) {
+        setCustomerId(user.customerId);
         const { data: customer } = await supabase
           .from("customers")
           .select("*")
-          .eq("id", customerUser.customer_id)
+          .eq("id", user.customerId)
           .single();
 
         setCustomerData(customer);

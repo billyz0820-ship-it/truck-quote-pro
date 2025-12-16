@@ -12,6 +12,8 @@ export interface FilterValues {
   startDate: Date | undefined;
   endDate: Date | undefined;
   customerCode: string;
+  customerName: string;
+  recipient: string;
   carrier: string;
 }
 
@@ -19,16 +21,17 @@ interface ExpressOrderFiltersProps {
   filters: FilterValues;
   onFiltersChange: (filters: FilterValues) => void;
   onReset: () => void;
+  onApply: () => void;
 }
 
-export function ExpressOrderFilters({ filters, onFiltersChange, onReset }: ExpressOrderFiltersProps) {
+export function ExpressOrderFilters({ filters, onFiltersChange, onReset, onApply }: ExpressOrderFiltersProps) {
   const [open, setOpen] = useState(false);
 
   const handleFilterChange = (key: keyof FilterValues, value: any) => {
     onFiltersChange({ ...filters, [key]: value });
   };
 
-  const hasActiveFilters = filters.startDate || filters.endDate || filters.customerCode || filters.carrier;
+  const hasActiveFilters = filters.startDate || filters.endDate || filters.customerCode || filters.customerName || filters.recipient || filters.carrier;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -38,7 +41,7 @@ export function ExpressOrderFilters({ filters, onFiltersChange, onReset }: Expre
           筛选
           {hasActiveFilters && (
             <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
-              {[filters.startDate, filters.endDate, filters.customerCode, filters.carrier].filter(Boolean).length}
+              {[filters.startDate, filters.endDate, filters.customerCode, filters.customerName, filters.recipient, filters.carrier].filter(Boolean).length}
             </span>
           )}
         </Button>
@@ -103,6 +106,24 @@ export function ExpressOrderFilters({ filters, onFiltersChange, onReset }: Expre
             </div>
 
             <div className="space-y-2">
+              <label className="text-sm font-medium">客户名称</label>
+              <Input
+                placeholder="输入客户名称"
+                value={filters.customerName}
+                onChange={(e) => handleFilterChange("customerName", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">收件人</label>
+              <Input
+                placeholder="输入收件人"
+                value={filters.recipient}
+                onChange={(e) => handleFilterChange("recipient", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
               <label className="text-sm font-medium">物流商</label>
               <Select value={filters.carrier} onValueChange={(value) => handleFilterChange("carrier", value)}>
                 <SelectTrigger>
@@ -119,7 +140,10 @@ export function ExpressOrderFilters({ filters, onFiltersChange, onReset }: Expre
             </div>
           </div>
 
-          <Button className="w-full" onClick={() => setOpen(false)}>
+          <Button className="w-full" onClick={() => {
+            setOpen(false);
+            onApply();
+          }}>
             应用筛选
           </Button>
         </div>

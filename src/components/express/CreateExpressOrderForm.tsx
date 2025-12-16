@@ -192,7 +192,7 @@ export function CreateExpressOrderForm({ onSuccess, onCancel, orderId, mode = 'c
           address: data.address,
           address_type: data.address_type,
           notes: data.notes,
-          status: "pending_label",
+          status: "pending",
         })
         .select()
         .single();

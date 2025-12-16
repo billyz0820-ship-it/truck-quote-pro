@@ -59,9 +59,14 @@ export const TabProvider = ({ children }: { children: ReactNode }) => {
   const openTab = useCallback((newTab: Omit<Tab, "id" | "closable">) => {
     const tabId = newTab.path.replace(/\//g, "-");
     
+    console.log('=== TabContext openTab ===');
+    console.log('新标签页数据:', newTab);
+    console.log('生成的标签页ID:', tabId);
+    
     setTabs((prevTabs) => {
       const existingTab = prevTabs.find((t) => t.path === newTab.path);
       if (existingTab) {
+        console.log('标签页已存在，激活现有标签页:', existingTab);
         setActiveTabId(existingTab.id);
         setPendingNavigation(newTab.path);
         return prevTabs;
@@ -74,6 +79,7 @@ export const TabProvider = ({ children }: { children: ReactNode }) => {
         closable: newTab.path !== "/dashboard",
       };
 
+      console.log('创建新标签页:', tab);
       setActiveTabId(tabId);
       setPendingNavigation(newTab.path);
       return [...prevTabs, tab];

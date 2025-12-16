@@ -87,14 +87,12 @@ const FinanceQuotations = () => {
 
   const fetchCustomerForUser = async () => {
     try {
-      const { data: customerUser, error } = await supabase
-        .from('customer_users')
-        .select('customer_id')
-        .eq('user_id', user?.id)
-        .single();
+      // 直接使用用户关联的客户信息，不查询 customer_users 表
+      if (!user?.customerId) {
+        return;
+      }
 
-      if (error) throw error;
-      setSelectedCustomer(customerUser.customer_id);
+      setSelectedCustomer(user.customerId);
     } catch (error: any) {
       toast.error('加载客户信息失败');
     }
