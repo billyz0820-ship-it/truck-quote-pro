@@ -1244,6 +1244,74 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_resources: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_cacheable: boolean | null
+          is_closable: boolean | null
+          is_disabled: boolean | null
+          menu_ownership: string
+          menu_type: string | null
+          parent_id: string | null
+          path: string | null
+          resource_type: string
+          sort_order: number
+          title: string
+          title_en: string | null
+          updated_at: string
+          view_name: string | null
+          view_path: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_cacheable?: boolean | null
+          is_closable?: boolean | null
+          is_disabled?: boolean | null
+          menu_ownership?: string
+          menu_type?: string | null
+          parent_id?: string | null
+          path?: string | null
+          resource_type?: string
+          sort_order?: number
+          title: string
+          title_en?: string | null
+          updated_at?: string
+          view_name?: string | null
+          view_path?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_cacheable?: boolean | null
+          is_closable?: boolean | null
+          is_disabled?: boolean | null
+          menu_ownership?: string
+          menu_type?: string | null
+          parent_id?: string | null
+          path?: string | null
+          resource_type?: string
+          sort_order?: number
+          title?: string
+          title_en?: string | null
+          updated_at?: string
+          view_name?: string | null
+          view_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_resources_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "menu_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           content: string
