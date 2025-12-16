@@ -289,8 +289,6 @@ const TruckOrders = () => {
           <CardContent>
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">加载中...</div>
-            ) : filteredOrders.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">暂无订单</div>
             ) : (
               <Table>
                 <TableHeader>
@@ -463,6 +461,15 @@ const TruckOrders = () => {
                     </TableRow>
                   ))}
                 </TableBody>
+                {filteredOrders.length === 0 && (
+                  <tfoot>
+                    <tr>
+                      <td colSpan={isQuotedTab ? 14 : 13} className="text-center py-8 text-muted-foreground">
+                        暂无订单
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
               </Table>
             )}
           </CardContent>

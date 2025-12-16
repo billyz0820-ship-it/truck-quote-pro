@@ -90,6 +90,7 @@ const DashboardLayout = () => {
       subItems: [
         { title: "系统设置", url: "/dashboard/settings", icon: Settings },
         { title: "地址配置", url: "/dashboard/settings/addresses", icon: MapPin },
+        { title: "资源管理", url: "/dashboard/settings/resources", icon: FileText },
       ]
     },
     { title: "工单管理", url: "/dashboard/tickets", icon: FileText },
