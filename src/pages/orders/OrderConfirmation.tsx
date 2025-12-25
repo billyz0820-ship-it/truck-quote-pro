@@ -187,7 +187,7 @@ const OrderConfirmation = () => {
       }
 
       toast.success("订单创建成功！");
-      navigate(`/dashboard/orders/${data.id}`);
+      navigate('/dashboard/orders/truck');
     } catch (error: any) {
       console.error("创建订单失败:", error);
       toast.error("创建订单失败: " + error.message);
