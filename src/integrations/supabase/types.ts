@@ -1142,6 +1142,204 @@ export type Database = {
           },
         ]
       }
+      freight_difference_batches: {
+        Row: {
+          batch_name: string | null
+          carrier: string
+          created_at: string
+          file_name: string | null
+          id: string
+          import_date: string
+          imported_by: string
+          matched_count: number | null
+          status: string
+          total_difference: number | null
+          total_records: number | null
+          unmatched_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          batch_name?: string | null
+          carrier: string
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          import_date?: string
+          imported_by: string
+          matched_count?: number | null
+          status?: string
+          total_difference?: number | null
+          total_records?: number | null
+          unmatched_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          batch_name?: string | null
+          carrier?: string
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          import_date?: string
+          imported_by?: string
+          matched_count?: number | null
+          status?: string
+          total_difference?: number | null
+          total_records?: number | null
+          unmatched_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      freight_differences: {
+        Row: {
+          batch_id: string
+          carrier: string
+          carrier_ahs_fee: number | null
+          carrier_base_fee: number | null
+          carrier_billed_height: number | null
+          carrier_billed_length: number | null
+          carrier_billed_weight: number | null
+          carrier_billed_width: number | null
+          carrier_billed_zone: string | null
+          carrier_fuel_surcharge: number | null
+          carrier_other_fees: number | null
+          carrier_oversize_fee: number | null
+          carrier_peak_surcharge: number | null
+          carrier_remote_area_fee: number | null
+          carrier_residential_fee: number | null
+          carrier_total_cost: number
+          created_at: string
+          customer_code: string | null
+          customer_id: string | null
+          difference_amount: number | null
+          difference_type: string[] | null
+          id: string
+          import_date: string
+          imported_by: string
+          match_status: string
+          notes: string | null
+          order_id: string | null
+          original_height: number | null
+          original_length: number | null
+          original_shipping_fee: number | null
+          original_weight: number | null
+          original_width: number | null
+          original_zone: string | null
+          recalculated_ahs_fee: number | null
+          recalculated_base_fee: number | null
+          recalculated_fuel_surcharge: number | null
+          recalculated_other_fees: number | null
+          recalculated_oversize_fee: number | null
+          recalculated_peak_surcharge: number | null
+          recalculated_remote_area_fee: number | null
+          recalculated_residential_fee: number | null
+          recalculated_total: number | null
+          status: string
+          tracking_number: string
+          updated_at: string
+          weight_difference: number | null
+          zone_difference: string | null
+        }
+        Insert: {
+          batch_id: string
+          carrier: string
+          carrier_ahs_fee?: number | null
+          carrier_base_fee?: number | null
+          carrier_billed_height?: number | null
+          carrier_billed_length?: number | null
+          carrier_billed_weight?: number | null
+          carrier_billed_width?: number | null
+          carrier_billed_zone?: string | null
+          carrier_fuel_surcharge?: number | null
+          carrier_other_fees?: number | null
+          carrier_oversize_fee?: number | null
+          carrier_peak_surcharge?: number | null
+          carrier_remote_area_fee?: number | null
+          carrier_residential_fee?: number | null
+          carrier_total_cost: number
+          created_at?: string
+          customer_code?: string | null
+          customer_id?: string | null
+          difference_amount?: number | null
+          difference_type?: string[] | null
+          id?: string
+          import_date?: string
+          imported_by: string
+          match_status?: string
+          notes?: string | null
+          order_id?: string | null
+          original_height?: number | null
+          original_length?: number | null
+          original_shipping_fee?: number | null
+          original_weight?: number | null
+          original_width?: number | null
+          original_zone?: string | null
+          recalculated_ahs_fee?: number | null
+          recalculated_base_fee?: number | null
+          recalculated_fuel_surcharge?: number | null
+          recalculated_other_fees?: number | null
+          recalculated_oversize_fee?: number | null
+          recalculated_peak_surcharge?: number | null
+          recalculated_remote_area_fee?: number | null
+          recalculated_residential_fee?: number | null
+          recalculated_total?: number | null
+          status?: string
+          tracking_number: string
+          updated_at?: string
+          weight_difference?: number | null
+          zone_difference?: string | null
+        }
+        Update: {
+          batch_id?: string
+          carrier?: string
+          carrier_ahs_fee?: number | null
+          carrier_base_fee?: number | null
+          carrier_billed_height?: number | null
+          carrier_billed_length?: number | null
+          carrier_billed_weight?: number | null
+          carrier_billed_width?: number | null
+          carrier_billed_zone?: string | null
+          carrier_fuel_surcharge?: number | null
+          carrier_other_fees?: number | null
+          carrier_oversize_fee?: number | null
+          carrier_peak_surcharge?: number | null
+          carrier_remote_area_fee?: number | null
+          carrier_residential_fee?: number | null
+          carrier_total_cost?: number
+          created_at?: string
+          customer_code?: string | null
+          customer_id?: string | null
+          difference_amount?: number | null
+          difference_type?: string[] | null
+          id?: string
+          import_date?: string
+          imported_by?: string
+          match_status?: string
+          notes?: string | null
+          order_id?: string | null
+          original_height?: number | null
+          original_length?: number | null
+          original_shipping_fee?: number | null
+          original_weight?: number | null
+          original_width?: number | null
+          original_zone?: string | null
+          recalculated_ahs_fee?: number | null
+          recalculated_base_fee?: number | null
+          recalculated_fuel_surcharge?: number | null
+          recalculated_other_fees?: number | null
+          recalculated_oversize_fee?: number | null
+          recalculated_peak_surcharge?: number | null
+          recalculated_remote_area_fee?: number | null
+          recalculated_residential_fee?: number | null
+          recalculated_total?: number | null
+          status?: string
+          tracking_number?: string
+          updated_at?: string
+          weight_difference?: number | null
+          zone_difference?: string | null
+        }
+        Relationships: []
+      }
       knowledge_base: {
         Row: {
           category: string | null
