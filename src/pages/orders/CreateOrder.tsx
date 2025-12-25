@@ -874,16 +874,6 @@ const CreateOrder = () => {
                     className="h-9"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="notes" className="text-sm">备注（可选）</Label>
-                  <Input
-                    id="notes"
-                    placeholder="其他需要说明的信息"
-                    value={formData.notes}
-                    onChange={(e) => handleInputChange("notes", e.target.value)}
-                    className="h-9"
-                  />
-                </div>
               </CardContent>
             </Card>
             {/* 提交按钮 */}
