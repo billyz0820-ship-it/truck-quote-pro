@@ -391,6 +391,62 @@ const CreateOrder = () => {
                   </Button>
                 </div>
 
+                {/* 发货/收货邮编 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pickupZip" className="text-sm">发货邮编</Label>
+                    <div className="relative">
+                      <Input
+                        id="pickupZip"
+                        placeholder="12345 或 12345-6789"
+                        value={formData.pickupZip}
+                        onChange={(e) => handleZipChange("pickupZip", e.target.value)}
+                        maxLength={10}
+                        required
+                        className="h-9"
+                      />
+                      {zipLoading && formData.pickupZip.length >= 5 && (
+                        <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">发货城市/州</Label>
+                    <Input
+                      value={pickupLocation.city && pickupLocation.state ? `${pickupLocation.city}, ${pickupLocation.state}` : ""}
+                      placeholder="自动填充"
+                      disabled
+                      className="h-9 bg-muted"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="deliveryZip" className="text-sm">收货邮编</Label>
+                    <div className="relative">
+                      <Input
+                        id="deliveryZip"
+                        placeholder="12345 或 12345-6789"
+                        value={formData.deliveryZip}
+                        onChange={(e) => handleZipChange("deliveryZip", e.target.value)}
+                        maxLength={10}
+                        required
+                        className="h-9"
+                      />
+                      {zipLoading && formData.deliveryZip.length >= 5 && (
+                        <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">收货城市/州</Label>
+                    <Input
+                      value={deliveryLocation.city && deliveryLocation.state ? `${deliveryLocation.city}, ${deliveryLocation.state}` : ""}
+                      placeholder="自动填充"
+                      disabled
+                      className="h-9 bg-muted"
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="referenceNumber" className="text-sm">参考编号（可选）</Label>
@@ -818,68 +874,9 @@ const CreateOrder = () => {
             </div>
           </div>
 
-          {/* 右侧 - 发货收货地址和地图 */}
-          <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  收发货地址
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* 发货地址 */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">发货地</Label>
-                  <div className="relative">
-                    <Input
-                      placeholder="发货邮编 (12345 或 12345-6789)"
-                      value={formData.pickupZip}
-                      onChange={(e) => handleZipChange("pickupZip", e.target.value)}
-                      maxLength={10}
-                      required
-                      className="h-9"
-                    />
-                    {zipLoading && formData.pickupZip.length >= 5 && (
-                      <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
-                  </div>
-                  <Input
-                    value={pickupLocation.city && pickupLocation.state ? `${pickupLocation.city}, ${pickupLocation.state}` : ""}
-                    placeholder="城市/州 (自动填充)"
-                    disabled
-                    className="h-9 bg-muted"
-                  />
-                </div>
-
-                {/* 收货地址 */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">收货地</Label>
-                  <div className="relative">
-                    <Input
-                      placeholder="收货邮编 (12345 或 12345-6789)"
-                      value={formData.deliveryZip}
-                      onChange={(e) => handleZipChange("deliveryZip", e.target.value)}
-                      maxLength={10}
-                      required
-                      className="h-9"
-                    />
-                    {zipLoading && formData.deliveryZip.length >= 5 && (
-                      <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
-                  </div>
-                  <Input
-                    value={deliveryLocation.city && deliveryLocation.state ? `${deliveryLocation.city}, ${deliveryLocation.state}` : ""}
-                    placeholder="城市/州 (自动填充)"
-                    disabled
-                    className="h-9 bg-muted"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 路线地图 */}
-            {formData.pickupZip && formData.deliveryZip && (
+          {/* 右侧 - 路线地图 */}
+          <div className="space-y-4 lg:sticky lg:top-4">
+            {formData.pickupZip && formData.deliveryZip ? (
               <RouteMap 
                 pickupZip={formData.pickupZip}
                 deliveryZip={formData.deliveryZip}
@@ -888,6 +885,18 @@ const CreateOrder = () => {
                 deliveryCity={deliveryLocation.city}
                 deliveryState={deliveryLocation.state}
               />
+            ) : (
+              <Card className="bg-muted/50">
+                <CardContent className="p-8 flex flex-col items-center justify-center text-center">
+                  <MapPin className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <p className="text-sm text-muted-foreground">
+                    请在左侧输入发货和收货邮编
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    输入后将显示路线地图
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>
