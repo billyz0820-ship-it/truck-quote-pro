@@ -52,7 +52,6 @@ const OrderDetailView = () => {
     pro_number: "",
     bol_number: "",
     carrier_name: "",
-    actual_cost: "",
   });
 
   useEffect(() => {
@@ -79,7 +78,6 @@ const OrderDetailView = () => {
         pro_number: data.pro_number || "",
         bol_number: data.bol_number || "",
         carrier_name: data.carrier_name || "",
-        actual_cost: data.actual_cost?.toString() || "",
       });
     } catch (error: any) {
       toast.error("加载订单详情失败: " + error.message);
@@ -101,12 +99,6 @@ const OrderDetailView = () => {
         pro_number: updateForm.pro_number || null,
         bol_number: updateForm.bol_number || null,
       };
-
-      // 只有管理员可以更新成本
-      if (userRole === 'admin' && updateForm.actual_cost) {
-        updateData.actual_cost = parseFloat(updateForm.actual_cost);
-        updateData.profit = order.quoted_amount - parseFloat(updateForm.actual_cost);
-      }
 
       const { error } = await supabase
         .from('orders')
@@ -311,17 +303,6 @@ const OrderDetailView = () => {
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-sm">实际成本</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={updateForm.actual_cost}
-                    onChange={(e) => setUpdateForm(prev => ({ ...prev, actual_cost: e.target.value }))}
-                    placeholder="实际成本"
-                    className="h-9"
-                  />
-                </div>
 
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" onClick={() => setUpdateDialogOpen(false)} disabled={updating} size="sm" className="h-9">
