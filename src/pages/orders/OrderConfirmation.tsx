@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
 import { AgreementViewDialog } from "@/components/agreements/AgreementViewDialog";
-import { InsufficientBalanceDialog } from "@/components/express/InsufficientBalanceDialog";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AvailableCoupon {
@@ -30,8 +30,8 @@ const OrderConfirmation = () => {
   const [loading, setLoading] = useState(false);
   const [customerBalance, setCustomerBalance] = useState<number>(0);
   const [creditLimit, setCreditLimit] = useState<number>(0);
+  const [tempCredit, setTempCredit] = useState<number>(0);
   const [showAgreementDialog, setShowAgreementDialog] = useState(false);
-  const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
   
   // Coupon selection
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
@@ -56,6 +56,18 @@ const OrderConfirmation = () => {
           setCustomerBalance(customerData.balance || 0);
           setCreditLimit(customerData.credit_limit || 0);
           setCustomerCode(customerData.customer_code || '');
+        }
+
+        // 获取临时额度
+        const { data: tempCreditData } = await supabase
+          .from('temporary_credits')
+          .select('amount')
+          .eq('customer_id', customerId)
+          .gt('valid_until', new Date().toISOString());
+        
+        if (tempCreditData && tempCreditData.length > 0) {
+          const totalTempCredit = tempCreditData.reduce((sum, tc) => sum + (tc.amount || 0), 0);
+          setTempCredit(totalTempCredit);
         }
 
         // 获取可用优惠券
@@ -97,15 +109,15 @@ const OrderConfirmation = () => {
   const discountAmount = selectedCoupon?.amount || 0;
   const finalAmount = Math.max(0, totalCost - discountAmount);
   
-  // 计算可用总额 = 余额 + 额度
-  const totalAvailable = customerBalance + creditLimit;
+  // 计算可用总额 = 余额 + 额度 + 临时额度
+  const totalAvailable = customerBalance + creditLimit + tempCredit;
   const remainingBalance = customerBalance - finalAmount;
   const canAfford = totalAvailable >= finalAmount;
+  const shortfall = Math.max(0, finalAmount - totalAvailable);
 
   const handleSubmit = async () => {
-    // 检查余额+额度是否足够
+    // 余额不足直接返回（按钮已禁用，此处为二次校验）
     if (!canAfford) {
-      setShowInsufficientDialog(true);
       return;
     }
 
@@ -328,6 +340,12 @@ const OrderConfirmation = () => {
                 <span className="text-muted-foreground">信用额度</span>
                 <span className="font-medium">${creditLimit.toFixed(2)}</span>
               </div>
+              {tempCredit > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">临时额度</span>
+                  <span className="font-medium text-amber-600">${tempCredit.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm border-t pt-2">
                 <span className="text-muted-foreground">可用总额</span>
                 <span className="font-medium text-primary">${totalAvailable.toFixed(2)}</span>
@@ -360,20 +378,51 @@ const OrderConfirmation = () => {
                   </span>
                 </div>
               </div>
-
-              {!canAfford && (
-                <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">余额和额度不足</p>
-                      <p className="text-xs mt-1">请先充值后再下单</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
+
+          {/* 余额不足时显示付款信息 */}
+          {!canAfford && (
+            <Card className="border-destructive">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertCircle className="h-5 w-5" />
+                  余额不足 - 请充值
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm">
+                  <p className="font-medium">还需充值: ${shortfall.toFixed(2)}</p>
+                </div>
+                <div className="space-y-3 text-sm">
+                  <p className="font-medium">付款信息</p>
+                  <div className="space-y-2 bg-muted p-3 rounded-lg">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">银行名称:</span>
+                      <span className="font-medium">Bank of America</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">账户名称:</span>
+                      <span className="font-medium">XXXX LLC</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">账户号码:</span>
+                      <span className="font-medium">123456789</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Routing Number:</span>
+                      <span className="font-medium">026009593</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Zelle:</span>
+                      <span className="font-medium">pay@example.com</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">充值后请联系客服确认到账</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* 服务协议提示 */}
           {!loadingAgreement && isFirstOrder && !hasAgreed && (
@@ -408,9 +457,9 @@ const OrderConfirmation = () => {
               onClick={handleSubmit} 
               className="w-full" 
               size="lg"
-              disabled={loading}
+              disabled={loading || !canAfford}
             >
-              {loading ? "提交中..." : isFirstOrder && !hasAgreed ? "签署协议并下单" : "确认下单"}
+              {loading ? "提交中..." : !canAfford ? "余额不足" : isFirstOrder && !hasAgreed ? "签署协议并下单" : "确认下单"}
             </Button>
             <Button 
               variant="outline" 
@@ -428,13 +477,6 @@ const OrderConfirmation = () => {
         open={showAgreementDialog}
         onOpenChange={setShowAgreementDialog}
         onAccept={markAsAgreed}
-      />
-
-      <InsufficientBalanceDialog
-        open={showInsufficientDialog}
-        onOpenChange={setShowInsufficientDialog}
-        currentBalance={totalAvailable}
-        requiredAmount={finalAmount}
       />
     </div>
   );
