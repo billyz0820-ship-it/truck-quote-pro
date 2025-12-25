@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Truck, Ticket, Wallet, FileText, AlertCircle, ChevronDown } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, Ticket, Wallet, FileText, AlertCircle, ChevronDown, Save } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
 import { AgreementViewDialog } from "@/components/agreements/AgreementViewDialog";
+import { RouteMap } from "@/components/RouteMap";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -23,8 +24,11 @@ interface AvailableCoupon {
 const OrderConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { customerId } = useAuth();
+  const { customerId: authCustomerId } = useAuth();
   const { orderData, selectedQuote, pickupDetails, deliveryDetails, couponApplied: initialCoupon } = location.state || {};
+  
+  // 使用订单中的客户ID（管理员代下单时）或登录用户的客户ID
+  const effectiveCustomerId = orderData?.customerId || authCustomerId;
   const [customerCode, setCustomerCode] = useState<string>('');
   
   const [loading, setLoading] = useState(false);
@@ -38,18 +42,18 @@ const OrderConfirmation = () => {
   const [selectedCouponId, setSelectedCouponId] = useState<string>(initialCoupon?.id || "none");
   const [selectedCoupon, setSelectedCoupon] = useState<AvailableCoupon | null>(initialCoupon || null);
   
-  const { isFirstOrder, loading: loadingAgreement, hasAgreed, markAsAgreed } = useFirstOrderCheck(customerId);
+  const { isFirstOrder, loading: loadingAgreement, hasAgreed, markAsAgreed } = useFirstOrderCheck(effectiveCustomerId);
 
   // 获取客户余额和额度
   useEffect(() => {
     const fetchData = async () => {
-      if (!customerId) return;
+      if (!effectiveCustomerId) return;
 
       try {
         const { data: customerData } = await supabase
           .from('customers')
           .select('balance, credit_limit, customer_code')
-          .eq('id', customerId)
+          .eq('id', effectiveCustomerId)
           .single();
 
         if (customerData) {
@@ -62,7 +66,7 @@ const OrderConfirmation = () => {
         const { data: tempCreditData } = await supabase
           .from('temporary_credits')
           .select('amount')
-          .eq('customer_id', customerId)
+          .eq('customer_id', effectiveCustomerId)
           .gt('valid_until', new Date().toISOString());
         
         if (tempCreditData && tempCreditData.length > 0) {
@@ -74,7 +78,7 @@ const OrderConfirmation = () => {
         const { data: couponsData } = await supabase
           .from('coupons')
           .select('id, coupon_code, amount, expire_at, order_type')
-          .eq('customer_id', customerId)
+          .eq('customer_id', effectiveCustomerId)
           .eq('status', 'active')
           .or('order_type.is.null,order_type.eq.truck');
         
@@ -87,7 +91,7 @@ const OrderConfirmation = () => {
     };
 
     fetchData();
-  }, [customerId]);
+  }, [effectiveCustomerId]);
 
   // 当选择优惠券时更新
   useEffect(() => {
@@ -138,7 +142,7 @@ const OrderConfirmation = () => {
         .from('orders')
         .insert({
           order_number: orderNumber,
-          customer_id: customerId,
+          customer_id: effectiveCustomerId,
           customer_code: customerCode || '',
           pickup_zip: orderData.pickupZip,
           delivery_zip: orderData.deliveryZip,
@@ -289,6 +293,16 @@ const OrderConfirmation = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* 路线地图 */}
+          <RouteMap
+            pickupZip={pickupDetails.zip}
+            deliveryZip={deliveryDetails.zip}
+            pickupCity={pickupDetails.city}
+            deliveryCity={deliveryDetails.city}
+            pickupState={pickupDetails.state}
+            deliveryState={deliveryDetails.state}
+          />
         </div>
 
         {/* 右侧：费用信息 */}
@@ -461,6 +475,19 @@ const OrderConfirmation = () => {
             >
               {loading ? "提交中..." : !canAfford ? "余额不足" : isFirstOrder && !hasAgreed ? "签署协议并下单" : "确认下单"}
             </Button>
+            {!canAfford && (
+              <Button 
+                variant="secondary" 
+                onClick={() => {
+                  toast.info("订单信息已保存，充值后可继续下单");
+                  navigate("/dashboard/orders/create");
+                }} 
+                className="w-full"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                保存退出
+              </Button>
+            )}
             <Button 
               variant="outline" 
               onClick={() => navigate(-1)} 
