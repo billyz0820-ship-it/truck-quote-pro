@@ -360,15 +360,16 @@ const CreateOrder = () => {
               </Card>
             )}
 
-            {/* 运输类型 */}
+            {/* 运输路线 */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Truck className="h-4 w-4 text-primary" />
-                  运输类型
+                  <MapPin className="h-4 w-4 text-primary" />
+                  运输路线
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                {/* 运输类型选择 */}
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     type="button"
@@ -389,6 +390,124 @@ const CreateOrder = () => {
                     整车运输 (FTL)
                   </Button>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="referenceNumber" className="text-sm">参考编号（可选）</Label>
+                    <Input
+                      id="referenceNumber"
+                      placeholder="参考编号"
+                      value={formData.referenceNumber}
+                      onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cargoDescription" className="text-sm">货物描述</Label>
+                    <Input
+                      id="cargoDescription"
+                      placeholder="货物描述"
+                      value={formData.cargoDescription}
+                      onChange={(e) => handleInputChange("cargoDescription", e.target.value)}
+                      required
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+                
+                {/* 发货地址类型（仅零担显示） */}
+                {shipmentType === "LTL" && (
+                  <div className="space-y-2 pt-2 border-t">
+                    <Label className="text-sm font-medium">发货地址类型</Label>
+                    <RadioGroup
+                      value={pickupAddressType}
+                      onValueChange={setPickupAddressType}
+                      className="grid grid-cols-3 gap-2"
+                    >
+                      {ADDRESS_TYPES.map((type) => (
+                        <div key={type.value} className="flex items-center space-x-2">
+                          <RadioGroupItem value={type.value} id={`pickup-${type.value}`} />
+                          <Label htmlFor={`pickup-${type.value}`} className="text-sm cursor-pointer">{type.label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
+                
+                {/* 收货地址类型 */}
+                <div className="space-y-2 pt-2 border-t">
+                  <Label className="text-sm font-medium">收货地址类型</Label>
+                  <RadioGroup
+                    value={deliveryAddressType}
+                    onValueChange={(value) => {
+                      setDeliveryAddressType(value);
+                      if (value === "residential") {
+                        setIsPlatformWarehouse(false);
+                        setWarehouseCode("");
+                        setWarehouseAddress("");
+                      }
+                    }}
+                    className="grid grid-cols-3 gap-2"
+                  >
+                    {ADDRESS_TYPES.map((type) => (
+                      <div key={type.value} className="flex items-center space-x-2">
+                        <RadioGroupItem value={type.value} id={`delivery-${type.value}`} />
+                        <Label htmlFor={`delivery-${type.value}`} className="text-sm cursor-pointer">{type.label}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+                
+                {/* 平台仓库确认（商业地址时显示） */}
+                {isDeliveryCommercial && (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="pt-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Warehouse className="h-5 w-5 text-primary" />
+                        <Label className="text-sm font-medium">是否为平台仓库？</Label>
+                        <RadioGroup
+                          value={isPlatformWarehouse ? "yes" : "no"}
+                          onValueChange={(v) => setIsPlatformWarehouse(v === "yes")}
+                          className="flex gap-4 ml-4"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="not-platform" />
+                            <Label htmlFor="not-platform" className="text-sm cursor-pointer">否</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="is-platform" />
+                            <Label htmlFor="is-platform" className="text-sm cursor-pointer">是（如 Amazon FBA、Wayfair、Walmart）</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      
+                      {isPlatformWarehouse && (
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                          <div className="space-y-1.5">
+                            <Label className="text-sm">仓库编码 *</Label>
+                            <Input
+                              placeholder="例：ABE8、TEB6、CG01"
+                              value={warehouseCode}
+                              onChange={(e) => setWarehouseCode(e.target.value.toUpperCase())}
+                              className="h-9"
+                              required={isPlatformWarehouse}
+                            />
+                            <p className="text-xs text-muted-foreground">系统将优先匹配平台仓专送报价</p>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-sm">仓库地址</Label>
+                            <Input
+                              placeholder="仓库详细地址"
+                              value={warehouseAddress}
+                              onChange={(e) => setWarehouseAddress(e.target.value)}
+                              className="h-9"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </CardContent>
             </Card>
 
@@ -699,176 +818,62 @@ const CreateOrder = () => {
             </div>
           </div>
 
-          {/* 右侧 - 地址和地图 */}
+          {/* 右侧 - 发货收货地址和地图 */}
           <div className="space-y-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  运输路线
+                  收发货地址
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* 发货地址 */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">发货地址</Label>
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Input
-                        placeholder="发货邮编 (12345 或 12345-6789)"
-                        value={formData.pickupZip}
-                        onChange={(e) => handleZipChange("pickupZip", e.target.value)}
-                        maxLength={10}
-                        required
-                        className="h-9"
-                      />
-                      {zipLoading && formData.pickupZip.length >= 5 && (
-                        <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
-                      )}
-                    </div>
+                  <Label className="text-sm font-medium">发货地</Label>
+                  <div className="relative">
                     <Input
-                      value={pickupLocation.city && pickupLocation.state ? `${pickupLocation.city}, ${pickupLocation.state}` : ""}
-                      placeholder="城市/州 (自动填充)"
-                      disabled
-                      className="h-9 bg-muted"
+                      placeholder="发货邮编 (12345 或 12345-6789)"
+                      value={formData.pickupZip}
+                      onChange={(e) => handleZipChange("pickupZip", e.target.value)}
+                      maxLength={10}
+                      required
+                      className="h-9"
                     />
-                    {/* 发货地址类型（仅零担显示） */}
-                    {shipmentType === "LTL" && (
-                      <div className="pt-1">
-                        <RadioGroup
-                          value={pickupAddressType}
-                          onValueChange={setPickupAddressType}
-                          className="space-y-1"
-                        >
-                          {ADDRESS_TYPES.map((type) => (
-                            <div key={type.value} className="flex items-center space-x-2">
-                              <RadioGroupItem value={type.value} id={`pickup-${type.value}`} />
-                              <Label htmlFor={`pickup-${type.value}`} className="text-xs cursor-pointer">{type.label}</Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </div>
+                    {zipLoading && formData.pickupZip.length >= 5 && (
+                      <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
                   </div>
+                  <Input
+                    value={pickupLocation.city && pickupLocation.state ? `${pickupLocation.city}, ${pickupLocation.state}` : ""}
+                    placeholder="城市/州 (自动填充)"
+                    disabled
+                    className="h-9 bg-muted"
+                  />
                 </div>
 
                 {/* 收货地址 */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">收货地址</Label>
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Input
-                        placeholder="收货邮编 (12345 或 12345-6789)"
-                        value={formData.deliveryZip}
-                        onChange={(e) => handleZipChange("deliveryZip", e.target.value)}
-                        maxLength={10}
-                        required
-                        className="h-9"
-                      />
-                      {zipLoading && formData.deliveryZip.length >= 5 && (
-                        <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
-                      )}
-                    </div>
+                  <Label className="text-sm font-medium">收货地</Label>
+                  <div className="relative">
                     <Input
-                      value={deliveryLocation.city && deliveryLocation.state ? `${deliveryLocation.city}, ${deliveryLocation.state}` : ""}
-                      placeholder="城市/州 (自动填充)"
-                      disabled
-                      className="h-9 bg-muted"
+                      placeholder="收货邮编 (12345 或 12345-6789)"
+                      value={formData.deliveryZip}
+                      onChange={(e) => handleZipChange("deliveryZip", e.target.value)}
+                      maxLength={10}
+                      required
+                      className="h-9"
                     />
-                    {/* 收货地址类型 */}
-                    <div className="pt-1">
-                      <RadioGroup
-                        value={deliveryAddressType}
-                        onValueChange={(value) => {
-                          setDeliveryAddressType(value);
-                          if (value === "residential") {
-                            setIsPlatformWarehouse(false);
-                            setWarehouseCode("");
-                            setWarehouseAddress("");
-                          }
-                        }}
-                        className="space-y-1"
-                      >
-                        {ADDRESS_TYPES.map((type) => (
-                          <div key={type.value} className="flex items-center space-x-2">
-                            <RadioGroupItem value={type.value} id={`delivery-${type.value}`} />
-                            <Label htmlFor={`delivery-${type.value}`} className="text-xs cursor-pointer">{type.label}</Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 平台仓库确认（商业地址时显示） */}
-                {isDeliveryCommercial && (
-                  <div className="border-t pt-3 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Warehouse className="h-4 w-4 text-primary" />
-                      <Label className="text-sm font-medium">平台仓库</Label>
-                    </div>
-                    <RadioGroup
-                      value={isPlatformWarehouse ? "yes" : "no"}
-                      onValueChange={(v) => setIsPlatformWarehouse(v === "yes")}
-                      className="space-y-1"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="not-platform" />
-                        <Label htmlFor="not-platform" className="text-xs cursor-pointer">否</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id="is-platform" />
-                        <Label htmlFor="is-platform" className="text-xs cursor-pointer">是（Amazon FBA、Wayfair等）</Label>
-                      </div>
-                    </RadioGroup>
-                    
-                    {isPlatformWarehouse && (
-                      <div className="space-y-2">
-                        <div className="space-y-1">
-                          <Label className="text-xs">仓库编码 *</Label>
-                          <Input
-                            placeholder="例：ABE8、TEB6、CG01"
-                            value={warehouseCode}
-                            onChange={(e) => setWarehouseCode(e.target.value.toUpperCase())}
-                            className="h-8"
-                            required={isPlatformWarehouse}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">仓库地址</Label>
-                          <Input
-                            placeholder="仓库详细地址"
-                            value={warehouseAddress}
-                            onChange={(e) => setWarehouseAddress(e.target.value)}
-                            className="h-8"
-                          />
-                        </div>
-                      </div>
+                    {zipLoading && formData.deliveryZip.length >= 5 && (
+                      <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin text-muted-foreground" />
                     )}
                   </div>
-                )}
-
-                {/* 参考编号和货物描述 */}
-                <div className="border-t pt-3 space-y-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">参考编号（可选）</Label>
-                    <Input
-                      placeholder="参考编号"
-                      value={formData.referenceNumber}
-                      onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
-                      className="h-8"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">货物描述 *</Label>
-                    <Input
-                      placeholder="货物描述"
-                      value={formData.cargoDescription}
-                      onChange={(e) => handleInputChange("cargoDescription", e.target.value)}
-                      required
-                      className="h-8"
-                    />
-                  </div>
+                  <Input
+                    value={deliveryLocation.city && deliveryLocation.state ? `${deliveryLocation.city}, ${deliveryLocation.state}` : ""}
+                    placeholder="城市/州 (自动填充)"
+                    disabled
+                    className="h-9 bg-muted"
+                  />
                 </div>
               </CardContent>
             </Card>
