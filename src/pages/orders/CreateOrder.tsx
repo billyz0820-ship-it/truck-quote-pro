@@ -333,11 +333,11 @@ const CreateOrder = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* 左侧 - 主表单区域 */}
           <div className="lg:col-span-2 space-y-4">
-            {/* 客户选择（仅管理员可见） */}
+            {/* 1. 客户选择（仅管理员可见） */}
             {userRole === "admin" && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">选择客户</CardTitle>
+                  <CardTitle className="text-base">1. 选择客户</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Select 
@@ -360,16 +360,15 @@ const CreateOrder = () => {
               </Card>
             )}
 
-            {/* 运输路线 */}
+            {/* 2. 运输类型选择 */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  运输路线
+                  <Truck className="h-4 w-4 text-primary" />
+                  {userRole === "admin" ? "2. 运输类型" : "1. 运输类型"}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {/* 运输类型选择 */}
+              <CardContent>
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     type="button"
@@ -390,11 +389,22 @@ const CreateOrder = () => {
                     整车运输 (FTL)
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* 发货/收货邮编 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* 3. 发货信息 */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  {userRole === "admin" ? "3. 发货信息" : "2. 发货信息"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* 发货邮编和城市 */}
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="pickupZip" className="text-sm">发货邮编</Label>
+                    <Label htmlFor="pickupZip" className="text-sm">发货邮编 *</Label>
                     <div className="relative">
                       <Input
                         id="pickupZip"
@@ -419,8 +429,101 @@ const CreateOrder = () => {
                       className="h-9 bg-muted"
                     />
                   </div>
+                </div>
+                
+                {/* 发货地址类型（仅零担显示） */}
+                {shipmentType === "LTL" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">发货地址类型</Label>
+                    <RadioGroup
+                      value={pickupAddressType}
+                      onValueChange={setPickupAddressType}
+                      className="grid grid-cols-3 gap-2"
+                    >
+                      {ADDRESS_TYPES.map((type) => (
+                        <div key={type.value} className="flex items-center space-x-2">
+                          <RadioGroupItem value={type.value} id={`pickup-${type.value}`} />
+                          <Label htmlFor={`pickup-${type.value}`} className="text-sm cursor-pointer">{type.label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
+                
+                {/* 发货时间 */}
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="deliveryZip" className="text-sm">收货邮编</Label>
+                    <Label htmlFor="pickupDate" className="text-sm">发货日期 *</Label>
+                    <Input
+                      id="pickupDate"
+                      type="date"
+                      value={formData.pickupDate}
+                      onChange={(e) => handleInputChange("pickupDate", e.target.value)}
+                      required
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pickupTimeSlot" className="text-sm">发货时间段</Label>
+                    <Select value={formData.pickupTimeSlot} onValueChange={(value) => handleInputChange("pickupTimeSlot", value)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="选择时间段" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="8-10">8:00 AM - 10:00 AM</SelectItem>
+                        <SelectItem value="10-12">10:00 AM - 12:00 PM</SelectItem>
+                        <SelectItem value="12-14">12:00 PM - 2:00 PM</SelectItem>
+                        <SelectItem value="14-16">2:00 PM - 4:00 PM</SelectItem>
+                        <SelectItem value="16-18">4:00 PM - 6:00 PM</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {/* 发货配套服务（仅零担） */}
+                {shipmentType === "LTL" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">发货配套服务</Label>
+                    <div className="flex flex-wrap gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="doorPickup" 
+                          checked={pickupServices.doorPickup}
+                          onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, doorPickup: checked as boolean }))}
+                        />
+                        <label htmlFor="doorPickup" className="text-sm">上门取件</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="pickupLiftgate" 
+                          checked={pickupServices.liftgate}
+                          disabled={pickupAddressType === "commercial_no_dock"}
+                          onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, liftgate: checked as boolean }))}
+                        />
+                        <label htmlFor="pickupLiftgate" className="text-sm">
+                          卸货装置
+                          {pickupAddressType === "commercial_no_dock" && <span className="text-xs text-primary ml-1">(必选)</span>}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* 4. 收货信息 */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  {userRole === "admin" ? "4. 收货信息" : "3. 收货信息"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* 收货邮编和城市 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="deliveryZip" className="text-sm">收货邮编 *</Label>
                     <div className="relative">
                       <Input
                         id="deliveryZip"
@@ -446,52 +549,9 @@ const CreateOrder = () => {
                     />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="referenceNumber" className="text-sm">参考编号（可选）</Label>
-                    <Input
-                      id="referenceNumber"
-                      placeholder="参考编号"
-                      value={formData.referenceNumber}
-                      onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
-                      className="h-9"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="cargoDescription" className="text-sm">货物描述</Label>
-                    <Input
-                      id="cargoDescription"
-                      placeholder="货物描述"
-                      value={formData.cargoDescription}
-                      onChange={(e) => handleInputChange("cargoDescription", e.target.value)}
-                      required
-                      className="h-9"
-                    />
-                  </div>
-                </div>
-                
-                {/* 发货地址类型（仅零担显示） */}
-                {shipmentType === "LTL" && (
-                  <div className="space-y-2 pt-2 border-t">
-                    <Label className="text-sm font-medium">发货地址类型</Label>
-                    <RadioGroup
-                      value={pickupAddressType}
-                      onValueChange={setPickupAddressType}
-                      className="grid grid-cols-3 gap-2"
-                    >
-                      {ADDRESS_TYPES.map((type) => (
-                        <div key={type.value} className="flex items-center space-x-2">
-                          <RadioGroupItem value={type.value} id={`pickup-${type.value}`} />
-                          <Label htmlFor={`pickup-${type.value}`} className="text-sm cursor-pointer">{type.label}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                )}
                 
                 {/* 收货地址类型 */}
-                <div className="space-y-2 pt-2 border-t">
+                <div className="space-y-2">
                   <Label className="text-sm font-medium">收货地址类型</Label>
                   <RadioGroup
                     value={deliveryAddressType}
@@ -564,154 +624,81 @@ const CreateOrder = () => {
                     </CardContent>
                   </Card>
                 )}
+                
+                {/* 收货配套服务（仅零担） */}
+                {shipmentType === "LTL" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">收货配套服务</Label>
+                    <div className="flex flex-wrap gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="deliveryAppointment" 
+                          checked={deliveryServices.deliveryAppointment}
+                          onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, deliveryAppointment: checked as boolean }))}
+                        />
+                        <label htmlFor="deliveryAppointment" className="text-sm">送货预约</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="residential" 
+                          checked={deliveryServices.residential}
+                          disabled={deliveryAddressType === "residential"}
+                          onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, residential: checked as boolean }))}
+                        />
+                        <label htmlFor="residential" className="text-sm">
+                          住宅配送{deliveryAddressType === "residential" && <span className="text-xs text-primary ml-1">(必选)</span>}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="notifyConsignee" 
+                          checked={deliveryServices.notifyConsignee}
+                          onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, notifyConsignee: checked as boolean }))}
+                        />
+                        <label htmlFor="notifyConsignee" className="text-sm">通知收货人</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="limitedAccess" 
+                          checked={deliveryServices.limitedAccess}
+                          onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, limitedAccess: checked as boolean }))}
+                        />
+                        <label htmlFor="limitedAccess" className="text-sm">限制交付</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="deliveryLiftgate" 
+                          checked={deliveryServices.liftgate}
+                          disabled={deliveryAddressType === "commercial_no_dock" || deliveryAddressType === "residential"}
+                          onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, liftgate: checked as boolean }))}
+                        />
+                        <label htmlFor="deliveryLiftgate" className="text-sm">
+                          卸货装置
+                          {(deliveryAddressType === "commercial_no_dock" || deliveryAddressType === "residential") && 
+                            <span className="text-xs text-primary ml-1">(必选)</span>}
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="hazmat" 
+                          checked={deliveryServices.hazmat}
+                          onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, hazmat: checked as boolean }))}
+                        />
+                        <label htmlFor="hazmat" className="text-sm">危险品</label>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* 发货时间与配套服务（合并） */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  发货时间{shipmentType === "LTL" && " & 配套服务"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="pickupDate" className="text-sm">发货日期</Label>
-                    <Input
-                      id="pickupDate"
-                      type="date"
-                      value={formData.pickupDate}
-                      onChange={(e) => handleInputChange("pickupDate", e.target.value)}
-                      required
-                      className="h-9"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="pickupTimeSlot" className="text-sm">发货时间段</Label>
-                    <Select value={formData.pickupTimeSlot} onValueChange={(value) => handleInputChange("pickupTimeSlot", value)}>
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="选择时间段" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="8-10">8:00 AM - 10:00 AM</SelectItem>
-                        <SelectItem value="10-12">10:00 AM - 12:00 PM</SelectItem>
-                        <SelectItem value="12-14">12:00 PM - 2:00 PM</SelectItem>
-                        <SelectItem value="14-16">2:00 PM - 4:00 PM</SelectItem>
-                        <SelectItem value="16-18">4:00 PM - 6:00 PM</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {/* 发货配套服务（仅零担） */}
-                  {shipmentType === "LTL" && (
-                    <>
-                      <div className="flex items-end pb-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="doorPickup" 
-                            checked={pickupServices.doorPickup}
-                            onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, doorPickup: checked as boolean }))}
-                          />
-                          <label htmlFor="doorPickup" className="text-sm">上门取件</label>
-                        </div>
-                      </div>
-                      <div className="flex items-end pb-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="pickupLiftgate" 
-                            checked={pickupServices.liftgate}
-                            disabled={pickupAddressType === "commercial_no_dock"}
-                            onCheckedChange={(checked) => setPickupServices(prev => ({ ...prev, liftgate: checked as boolean }))}
-                          />
-                          <label htmlFor="pickupLiftgate" className="text-sm">
-                            卸货装置
-                            {pickupAddressType === "commercial_no_dock" && <span className="text-xs text-primary ml-1">(必选)</span>}
-                          </label>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 收货配套服务（仅零担时显示） */}
-            {shipmentType === "LTL" && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">收货配套服务</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="deliveryAppointment" 
-                        checked={deliveryServices.deliveryAppointment}
-                        onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, deliveryAppointment: checked as boolean }))}
-                      />
-                      <label htmlFor="deliveryAppointment" className="text-sm">送货预约</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="residential" 
-                        checked={deliveryServices.residential}
-                        disabled={deliveryAddressType === "residential"}
-                        onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, residential: checked as boolean }))}
-                      />
-                      <label htmlFor="residential" className="text-sm">
-                        住宅配送{deliveryAddressType === "residential" && <span className="text-xs text-primary ml-1">(必选)</span>}
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="notifyConsignee" 
-                        checked={deliveryServices.notifyConsignee}
-                        onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, notifyConsignee: checked as boolean }))}
-                      />
-                      <label htmlFor="notifyConsignee" className="text-sm">通知收货人</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="limitedAccess" 
-                        checked={deliveryServices.limitedAccess}
-                        onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, limitedAccess: checked as boolean }))}
-                      />
-                      <label htmlFor="limitedAccess" className="text-sm">限制交付</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="deliveryLiftgate" 
-                        checked={deliveryServices.liftgate}
-                        disabled={deliveryAddressType === "commercial_no_dock" || deliveryAddressType === "residential"}
-                        onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, liftgate: checked as boolean }))}
-                      />
-                      <label htmlFor="deliveryLiftgate" className="text-sm">
-                        卸货装置
-                        {(deliveryAddressType === "commercial_no_dock" || deliveryAddressType === "residential") && 
-                          <span className="text-xs text-primary ml-1">(必选)</span>}
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="hazmat" 
-                        checked={deliveryServices.hazmat}
-                        onCheckedChange={(checked) => setDeliveryServices(prev => ({ ...prev, hazmat: checked as boolean }))}
-                      />
-                      <label htmlFor="hazmat" className="text-sm">危险品</label>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* 托盘信息 */}
+            {/* 5. 托盘信息（含货物描述） */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-primary" />
-                    托盘信息
+                    {userRole === "admin" ? "5. 托盘信息" : "4. 托盘信息"}
                   </div>
                   <div className="flex gap-2">
                     <Select value={unit} onValueChange={(value: "imperial" | "metric") => setUnit(value)}>
@@ -731,6 +718,19 @@ const CreateOrder = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {/* 货物描述放在托盘信息顶部 */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="cargoDescription" className="text-sm">货物描述 *</Label>
+                  <Input
+                    id="cargoDescription"
+                    placeholder="请描述货物内容"
+                    value={formData.cargoDescription}
+                    onChange={(e) => handleInputChange("cargoDescription", e.target.value)}
+                    required
+                    className="h-9"
+                  />
+                </div>
+                
                 {pallets.map((pallet, index) => (
                   <div key={pallet.id} className="border rounded-lg p-3 space-y-3">
                     <div className="flex items-center justify-between">
@@ -857,6 +857,26 @@ const CreateOrder = () => {
               </CardContent>
             </Card>
 
+            {/* 6. 其它信息 */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">
+                  {userRole === "admin" ? "6. 其它信息" : "5. 其它信息"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1.5">
+                  <Label htmlFor="referenceNumber" className="text-sm">参考编号（可选）</Label>
+                  <Input
+                    id="referenceNumber"
+                    placeholder="您的内部参考编号"
+                    value={formData.referenceNumber}
+                    onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+              </CardContent>
+            </Card>
             {/* 提交按钮 */}
             <div className="flex justify-end gap-3">
               <Button 
