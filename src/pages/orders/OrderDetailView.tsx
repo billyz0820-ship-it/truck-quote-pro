@@ -207,44 +207,46 @@ const OrderDetailView = () => {
         </div>
         
         <div className="flex gap-2">
-          <Dialog open={fileDialogOpen} onOpenChange={setFileDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
-                <Upload className="h-4 w-4 mr-2" />
-                管理文件
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>订单文件管理</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <FileUpload
-                  orderId={order.id}
-                  fileType="bol"
-                  currentUrl={order.bol_url}
-                  onUploadComplete={fetchOrder}
-                  label="BOL文档"
-                />
-                <FileUpload
-                  orderId={order.id}
-                  fileType="sbol"
-                  currentUrl={order.sbol_url}
-                  onUploadComplete={fetchOrder}
-                  label="SBOL文档"
-                />
-                <FileUpload
-                  orderId={order.id}
-                  fileType="pallet_label"
-                  currentUrl={order.pallet_label_url}
-                  onUploadComplete={fetchOrder}
-                  label="托盘标签"
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+          {['quoted', 'placed', 'picked-up', 'in-transit', 'delivered'].includes(order.status) && (
+            <Dialog open={fileDialogOpen} onOpenChange={setFileDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9">
+                  <Upload className="h-4 w-4 mr-2" />
+                  管理文件
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>订单文件管理</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <FileUpload
+                    orderId={order.id}
+                    fileType="bol"
+                    currentUrl={order.bol_url}
+                    onUploadComplete={fetchOrder}
+                    label="BOL文档"
+                  />
+                  <FileUpload
+                    orderId={order.id}
+                    fileType="sbol"
+                    currentUrl={order.sbol_url}
+                    onUploadComplete={fetchOrder}
+                    label="SBOL文档"
+                  />
+                  <FileUpload
+                    orderId={order.id}
+                    fileType="pallet_label"
+                    currentUrl={order.pallet_label_url}
+                    onUploadComplete={fetchOrder}
+                    label="托盘标签"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
 
-          {userRole === 'admin' && (
+          {userRole === 'admin' && ['quoted', 'placed', 'picked-up', 'in-transit', 'delivered'].includes(order.status) && (
             <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="h-9">
