@@ -76,6 +76,7 @@ const CreateOrder = () => {
     pickupTimeSlot: restoredData?.pickupTimeSlot || "",
     referenceNumber: restoredData?.referenceNumber || "",
     cargoDescription: restoredData?.cargoDescription || "",
+    notes: restoredData?.notes || "",
   });
   
   const [pallets, setPallets] = useState<Pallet[]>(
@@ -337,7 +338,7 @@ const CreateOrder = () => {
             {userRole === "admin" && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">1. 选择客户</CardTitle>
+                  <CardTitle className="text-base">选择客户</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Select 
@@ -365,7 +366,7 @@ const CreateOrder = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Truck className="h-4 w-4 text-primary" />
-                  {userRole === "admin" ? "2. 运输类型" : "1. 运输类型"}
+                  运输类型
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -397,7 +398,7 @@ const CreateOrder = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  {userRole === "admin" ? "3. 发货信息" : "2. 发货信息"}
+                  发货信息
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -516,7 +517,7 @@ const CreateOrder = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  {userRole === "admin" ? "4. 收货信息" : "3. 收货信息"}
+                  收货信息
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -698,7 +699,7 @@ const CreateOrder = () => {
                 <CardTitle className="text-base flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-primary" />
-                    {userRole === "admin" ? "5. 托盘信息" : "4. 托盘信息"}
+                    托盘信息
                   </div>
                   <div className="flex gap-2">
                     <Select value={unit} onValueChange={(value: "imperial" | "metric") => setUnit(value)}>
@@ -857,14 +858,12 @@ const CreateOrder = () => {
               </CardContent>
             </Card>
 
-            {/* 6. 其它信息 */}
+            {/* 其它信息 */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">
-                  {userRole === "admin" ? "6. 其它信息" : "5. 其它信息"}
-                </CardTitle>
+                <CardTitle className="text-base">其它信息</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="referenceNumber" className="text-sm">参考编号（可选）</Label>
                   <Input
@@ -872,6 +871,16 @@ const CreateOrder = () => {
                     placeholder="您的内部参考编号"
                     value={formData.referenceNumber}
                     onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="notes" className="text-sm">备注（可选）</Label>
+                  <Input
+                    id="notes"
+                    placeholder="其他需要说明的信息"
+                    value={formData.notes}
+                    onChange={(e) => handleInputChange("notes", e.target.value)}
                     className="h-9"
                   />
                 </div>
