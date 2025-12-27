@@ -109,12 +109,14 @@ const AppContent = () => {
           }
           
           console.log(`✅ 生成路由: ${finalChildPath} -> ${child.component}`);
+          console.log(`  原路径: ${child.path}`);
+          console.log(`  相对路径: ${finalChildPath}`);
           flatRoutes.push(
             <Route
               key={child.path}
               path={finalChildPath}
               element={
-                <ProtectedRoute requireRoutePermission={child.path}>
+                <ProtectedRoute requireRoutePermission={`/dashboard/${finalChildPath}`}>
                   <Suspense fallback={<LoadingSpinner />}>
                     <Component />
                   </Suspense>

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LogisticsServiceSelect } from "@/components/ui/LogisticsServiceSelect";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +30,7 @@ export default function CreateExpressOrderPage() {
   const [saving, setSaving] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
-  const [logisticsServices, setLogisticsServices] = useState<any[]>([]);
+  
   const [showCustomerSelector, setShowCustomerSelector] = useState(false);
 
   const currentTabId = "/dashboard/orders/express/new".replace(/\//g, "-");
@@ -82,49 +83,9 @@ export default function CreateExpressOrderPage() {
     }
   }, [user]);
 
-  // 获取物流服务列表
-  useEffect(() => {
-    const fetchLogisticsServices = async () => {
-      try {
-        const result = await api.get('/api/v1/LogisticsService/GetAllList');
-        
-        if (result && result.allListItems) {
-          setLogisticsServices(result.allListItems);
-        }
-      } catch (error: any) {
-        toast({ 
-          title: "获取物流服务失败", 
-          description: error.message, 
-          variant: "destructive" 
-        });
-      }
-    };
+  
 
-    fetchLogisticsServices();
-  }, []);
-
-  // 根据服务key获取对应的承运商
-  const getServiceCarrier = (serviceKey: string): string => {
-    // 遍历所有物流服务
-    for (const service of logisticsServices) {
-      // 在每个服务的dropDownList中查找匹配的服务项
-      const found = service.dropDownList.find((item: any) => item.key === serviceKey);
-      if (found) {
-        // 优先使用carrierId，其次是carrierStr，最后使用carrier
-        const carrierId = service.carrierId || service.carrier || service.carrierStr;
-        console.log('找到匹配的服务:', {
-          serviceKey,
-          carrierId,
-          carrierStr: service.carrierStr,
-          carrier: service.carrier,
-          finalValue: carrierId?.toString() || '0'
-        });
-        return carrierId?.toString() || '0';
-      }
-    }
-    console.warn('未找到服务对应的承运商:', serviceKey);
-    return '0'; // 默认值，避免undefined
-  };
+  
 
   // 获取仓库列表
   const fetchWarehouses = async (customerId: string) => {
@@ -403,30 +364,26 @@ export default function CreateExpressOrderPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>物流服务 *</Label>
-              <Select value={formData.service_type} onValueChange={(v) => {
-                console.log('选择物流服务:', v);
-                const carrierValue = getServiceCarrier(v);
-                console.log('获取到的承运商:', carrierValue);
+            <LogisticsServiceSelect
+              value={formData.service_type}
+              onValueChange={(v) => {
                 setFormData(prev => ({ 
                   ...prev, 
-                  service_type: v, 
-                  carrier: carrierValue 
+                  service_type: v
                 }));
-              }}>
-                <SelectTrigger><SelectValue placeholder="选择服务" /></SelectTrigger>
-                <SelectContent>
-                  {logisticsServices.flatMap((service) => 
-                    service.dropDownList.map((item: any) => (
-                      <SelectItem key={item.key} value={item.key}>
-                        {service.carrierStr} - {item.value}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+              }}
+              onServiceDataChange={(serviceData) => {
+                if (serviceData.carrierValue) {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    carrier: serviceData.carrierValue
+                  }));
+                }
+              }}
+              label="物流服务"
+              required
+              mode="detailed"
+            />
             <div className="space-y-2">
               <Label>签名服务</Label>
               <Select value={formData.signature_service || "none"} onValueChange={(v) => setFormData({ ...formData, signature_service: v === "none" ? "" : v })}>

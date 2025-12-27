@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Search, AlertTriangle, ChevronDown, Copy, History, Eye, FileText } from "lucide-react";
 import { PriceHistoryDialog } from "@/components/carrier/PriceHistoryDialog";
 import { useTab } from "@/contexts/TabContext";
+import { useNavigate } from "react-router-dom";
 
 interface CustomerGroup {
   customerId: string;
@@ -40,6 +41,7 @@ interface PricingConfig {
 
 export default function CustomerPricing() {
   const { openTab } = useTab();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [customerGroups, setCustomerGroups] = useState<CustomerGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,18 +49,46 @@ export default function CustomerPricing() {
   const [historyDialog, setHistoryDialog] = useState<{ open: boolean; config: any }>({ 
     open: false, config: null 
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    console.log('=== CustomerPricing 状态更新 ===');
+    console.log('客户分组数量:', customerGroups.length);
+    console.log('搜索词:', searchTerm);
+    console.log('过滤后分组数量:', filteredGroups.length);
+    console.log('加载状态:', loading);
+  }, [customerGroups, searchTerm, loading]);
+
   const fetchData = async () => {
-    const { data: pricingRes } = await supabase
-      .from("customer_carrier_pricing")
-      .select("*, customers(customer_code, company_name)")
-      .order("created_at", { ascending: false });
-    
-    if (pricingRes) {
+    try {
+      console.log('=== 开始获取客户报价数据 ===');
+      const { data: pricingRes, error } = await supabase
+        .from("customer_carrier_pricing")
+        .select("*, customers(customer_code, company_name)")
+        .order("created_at", { ascending: false });
+      
+      console.log('客户报价查询结果:', { data: pricingRes, error });
+
+      if (error) {
+        console.error('查询客户报价失败:', error);
+        toast({
+          title: "获取数据失败",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!pricingRes || pricingRes.length === 0) {
+        console.log('没有找到客户报价数据');
+        setCustomerGroups([]);
+        return;
+      }
+
       const groups = pricingRes.reduce((acc: any[], config: any) => {
         const existingGroup = acc.find(g => g.customerId === config.customer_id);
         if (existingGroup) {
@@ -66,14 +96,25 @@ export default function CustomerPricing() {
         } else {
           acc.push({
             customerId: config.customer_id,
-            customerCode: config.customers.customer_code,
-            companyName: config.customers.company_name,
+            customerCode: config.customers?.customer_code || 'Unknown',
+            companyName: config.customers?.company_name || 'Unknown',
             configs: [config]
           });
         }
         return acc;
       }, []);
+
+      console.log('处理后的客户分组:', groups);
       setCustomerGroups(groups);
+    } catch (error: any) {
+      console.error('获取客户报价异常:', error);
+      toast({
+        title: "获取数据异常",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -138,6 +179,17 @@ export default function CustomerPricing() {
     group.customerCode.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-muted-foreground">
+          <h3 className="text-lg font-semibold">加载中...</h3>
+          <p className="text-sm mt-2">正在获取客户报价数据</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -145,11 +197,26 @@ export default function CustomerPricing() {
           <h1 className="text-3xl font-bold">客户报价管理</h1>
           <p className="text-muted-foreground mt-2">按客户分组管理运费报价配置</p>
         </div>
-        <Button onClick={() => openTab({
-          title: "新增客户报价",
-          path: "/dashboard/carrier/customer-pricing/new",
-          icon: FileText,
-        })}>
+        <Button onClick={() => {
+          console.log('=== 点击新增配置按钮 ===');
+          const targetPath = "/dashboard/carrier/customer-pricing/new";
+          console.log('目标路径:', targetPath);
+          
+          // 尝试使用 TabContext
+          try {
+            openTab({
+              title: "新增客户报价",
+              path: targetPath,
+              icon: FileText,
+            });
+            console.log('TabContext openTab 调用成功');
+          } catch (error) {
+            console.error('TabContext openTab 失败:', error);
+            // 备用方案：直接导航
+            navigate(targetPath);
+            console.log('使用备用导航方案');
+          }
+        }}>
           <Plus className="h-4 w-4 mr-2" />
           新增配置
         </Button>
@@ -166,12 +233,29 @@ export default function CustomerPricing() {
       </div>
 
       <div className="space-y-4">
-        {filteredGroups.map((group) => {
-          const currentConfigs = group.configs.filter(isCurrentConfig);
-          const futureConfigs = group.configs.filter(isFutureConfig);
-          const historicalConfigs = group.configs.filter(c => !isCurrentConfig(c) && !isFutureConfig(c));
+        {filteredGroups.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="text-muted-foreground">
+                <h3 className="text-lg font-semibold mb-2">
+                  {searchTerm ? '没有找到匹配的客户' : '暂无客户报价数据'}
+                </h3>
+                <p className="text-sm">
+                  {searchTerm 
+                    ? '请尝试修改搜索条件' 
+                    : '点击"新增配置"按钮创建第一个客户报价'
+                  }
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredGroups.map((group) => {
+            const currentConfigs = group.configs.filter(isCurrentConfig);
+            const futureConfigs = group.configs.filter(isFutureConfig);
+            const historicalConfigs = group.configs.filter(c => !isCurrentConfig(c) && !isFutureConfig(c));
 
-          return (
+            return (
             <Card key={group.customerId}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -346,7 +430,8 @@ export default function CustomerPricing() {
               </CardContent>
             </Card>
           );
-        })}
+        })
+        )}
       </div>
 
       <PriceHistoryDialog

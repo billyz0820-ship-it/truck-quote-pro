@@ -54,9 +54,16 @@ const FinanceQuotations = () => {
   const isAdmin = ['admin', 'customer_service', 'operations'].includes(userRole || '');
 
   useEffect(() => {
+    console.log('=== FinanceQuotations 用户信息 ===', { user, userRole, isAdmin });
+    if (!user) {
+      console.log('用户未登录，停止加载');
+      setLoading(false);
+      return;
+    }
+
     if (isAdmin) {
       fetchCustomers();
-    } else if (user) {
+    } else {
       fetchCustomerForUser();
     }
   }, [user, isAdmin]);
@@ -69,11 +76,14 @@ const FinanceQuotations = () => {
 
   const fetchCustomers = async () => {
     try {
+      console.log('=== 开始获取客户列表 ===');
       const { data, error } = await supabase
         .from('customers')
         .select('id, customer_code, company_name')
         .eq('status', 'active')
         .order('customer_code');
+
+      console.log('客户数据:', { data, error });
 
       if (error) throw error;
       setCustomers(data || []);
@@ -81,26 +91,64 @@ const FinanceQuotations = () => {
         setSelectedCustomer(data[0].id);
       }
     } catch (error: any) {
-      toast.error('加载客户列表失败');
+      console.error('获取客户列表失败:', error);
+      toast.error('加载客户列表失败: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchCustomerForUser = async () => {
     try {
-      // 直接使用用户关联的客户信息，不查询 customer_users 表
-      if (!user?.customerId) {
+      console.log('=== 开始获取用户有权限的客户信息 ===', { userId: user?.id });
+      
+      if (!user?.id) {
+        console.log('用户未登录');
+        setLoading(false);
         return;
       }
 
-      setSelectedCustomer(user.customerId);
+      // 查询用户有权限的所有客户
+      const { data, error } = await supabase
+        .from('customer_users')
+        .select(`
+          customer_id,
+          customers (
+            id,
+            customer_code,
+            company_name
+          )
+        `)
+        .eq('user_id', user.id);
+
+      console.log('用户客户权限数据:', { data, error });
+
+      if (error) throw error;
+
+      const userCustomers = data?.map(item => item.customers).filter(Boolean);
+      console.log('处理后的客户列表:', userCustomers);
+
+      setCustomers(userCustomers || []);
+      
+      if (userCustomers && userCustomers.length > 0) {
+        setSelectedCustomer(userCustomers[0].id);
+        console.log('选择第一个客户:', userCustomers[0].id);
+      } else {
+        console.log('用户没有关联任何客户');
+      }
+      
+      setLoading(false);
     } catch (error: any) {
-      toast.error('加载客户信息失败');
+      console.error('获取用户客户信息失败:', error);
+      toast.error('加载客户信息失败: ' + error.message);
+      setLoading(false);
     }
   };
 
   const fetchCurrentPricing = async () => {
     try {
       setLoading(true);
+      console.log('=== 开始获取报价配置 ===', { selectedCustomer, selectedCarrier, selectedService });
       
       const { data, error } = await supabase
         .from('customer_carrier_pricing')
@@ -109,6 +157,8 @@ const FinanceQuotations = () => {
         .eq('is_active', true)
         .eq('carrier', selectedCarrier);
 
+      console.log('报价数据:', { data, error });
+
       if (error) throw error;
 
       const filtered = data?.filter(d => {
@@ -116,11 +166,13 @@ const FinanceQuotations = () => {
         return !customPrices?.service_type || customPrices?.service_type === selectedService;
       });
 
+      console.log('过滤后的报价:', filtered);
+
       setPricingConfig(filtered && filtered.length > 0 ? filtered[0] : null);
       setCurrentPage(1);
     } catch (error: any) {
-      console.error('Error fetching pricing:', error);
-      toast.error('加载报价失败');
+      console.error('获取报价失败:', error);
+      toast.error('加载报价失败: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -256,8 +308,21 @@ const FinanceQuotations = () => {
 
   const surchargeItems = getSurchargeItems();
 
-  if (loading && !pricingConfig) {
+  if (loading) {
     return <div className="p-6">加载中...</div>;
+  }
+
+  // 检查用户是否有关联的客户信息
+  if (!isAdmin && (customers.length === 0 || !selectedCustomer)) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-muted-foreground">
+          <h1 className="text-2xl font-bold mb-4">当前报价</h1>
+          <p>无法加载报价配置：您没有被分配任何客户权限</p>
+          <p>请联系管理员为您分配客户权限</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -270,7 +335,8 @@ const FinanceQuotations = () => {
       </div>
 
       <div className="flex gap-4 items-center flex-wrap">
-        {isAdmin && (
+        {/* 管理员或拥有多个客户权限的用户显示客户选择 */}
+        {(isAdmin || customers.length > 1) && (
           <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="选择客户" />
@@ -283,6 +349,13 @@ const FinanceQuotations = () => {
               ))}
             </SelectContent>
           </Select>
+        )}
+        
+        {/* 只有一个客户权限的用户显示当前客户 */}
+        {!isAdmin && customers.length === 1 && (
+          <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded">
+            客户: {customers[0]?.customer_code} - {customers[0]?.company_name}
+          </div>
         )}
 
         <Select value={selectedCarrier} onValueChange={setSelectedCarrier}>

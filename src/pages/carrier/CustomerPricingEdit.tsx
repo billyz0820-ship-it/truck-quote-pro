@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LogisticsServiceSelect } from "@/components/ui/LogisticsServiceSelect";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -12,14 +13,29 @@ import { ArrowLeft, Save, FileText } from "lucide-react";
 import { PricingConfigTabs } from "@/components/carrier/PricingConfigTabs";
 import { ProfitabilityAnalyzer } from "@/lib/profitabilityAnalyzer";
 import { useTab } from "@/contexts/TabContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/utils/api";
 
 export default function CustomerPricingEdit() {
   const { openTab, closeTab } = useTab();
+  const { user, userRole } = useAuth();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const copyFrom = searchParams.get("copyFrom");
   const { toast } = useToast();
   const isEditing = !!id;
+  
+  const isAdmin = ['admin', 'customer_service', 'operations'].includes(userRole || '');
+  
+  // 添加调试信息
+  useEffect(() => {
+    console.log('=== CustomerPricingEdit 用户信息调试 ===');
+    console.log('user:', user);
+    console.log('userRole:', userRole);
+    console.log('isAdmin:', isAdmin);
+    console.log('user.customerList:', user?.customerList);
+    console.log('用户是否登录:', !!user);
+  }, [user, userRole, isAdmin]);
   
   const currentTabId = `/dashboard/carrier/customer-pricing${id ? `/${id}` : copyFrom ? `/new?copyFrom=${copyFrom}` : '/new'}`.replace(/\//g, "-");
   
@@ -38,7 +54,7 @@ export default function CustomerPricingEdit() {
   const [templates, setTemplates] = useState<any[]>([]);
 
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [carrier, setCarrier] = useState("FedEx");
+  const [logisticsService, setLogisticsService] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("none");
   const [customPrices, setCustomPrices] = useState<any>({});
   const [effectiveDateFrom, setEffectiveDateFrom] = useState<string>("");
@@ -58,10 +74,33 @@ export default function CustomerPricingEdit() {
   }, [id, copyFrom]);
 
   const fetchData = async () => {
-    const [customersRes, templatesRes] = await Promise.all([
-      supabase.from("customers").select("id, customer_code, company_name").order("customer_code"),
-      supabase.from("pricing_templates").select("*").order("template_name"),
-    ]);
+    console.log('=== 开始获取客户报价编辑页数据 ===');
+    console.log('用户信息:', { user, userRole, isAdmin });
+    console.log('用户客户列表:', user?.customerList);
+    
+    // 根据用户权限获取客户列表
+    let customersRes;
+    if (isAdmin) {
+      console.log('管理员用户，获取所有客户');
+      customersRes = await supabase.from("customers").select("id, customer_code, company_name").order("customer_code");
+    } else {
+      console.log('普通用户，使用用户登录信息中的客户权限');
+      // 直接使用用户登录信息中的 customerList
+      const userCustomerList = user?.customerList || [];
+      console.log('用户客户权限数据:', userCustomerList);
+      
+      // 转换数据格式以匹配需要的结构
+      const formattedCustomers = userCustomerList.map((customer: any) => ({
+        id: customer.id || customer.customerId,
+        customer_code: customer.customerCode || customer.customer_code,
+        company_name: customer.customerName || customer.company_name
+      }));
+      
+      console.log('格式化后的客户数据:', formattedCustomers);
+      customersRes = { data: formattedCustomers, error: null };
+    }
+
+    const templatesRes = await supabase.from("pricing_templates").select("*").order("template_name");
 
     if (customersRes.data) setCustomers(customersRes.data);
     if (templatesRes.data) setTemplates(templatesRes.data);
@@ -91,7 +130,7 @@ export default function CustomerPricingEdit() {
         setEffectiveDateTo(data.effective_date_to || "");
         setNotes(data.notes || "");
       }
-      setCarrier(data.carrier);
+      setLogisticsService(data.carrier || data.logisticsService);
       setSelectedTemplate(data.template_id || "none");
       setCustomPrices(data.custom_prices || {});
     }
@@ -134,7 +173,7 @@ export default function CustomerPricingEdit() {
 
   const handleSave = async () => {
     try {
-      if (!selectedCustomer || !carrier) {
+      if (!selectedCustomer || !logisticsService) {
         toast({ title: "请填写必填项", variant: "destructive" });
         return;
       }
@@ -150,7 +189,7 @@ export default function CustomerPricingEdit() {
       const { data: accountData } = await supabase
         .from("carrier_accounts")
         .select("id")
-        .eq("carrier", carrier)
+        .eq("carrier", logisticsService)
         .single();
 
       let profitabilityAnalysis = {};
@@ -191,7 +230,7 @@ export default function CustomerPricingEdit() {
         .from("customer_carrier_pricing")
         .select("version")
         .eq("customer_id", selectedCustomer)
-        .eq("carrier", carrier)
+        .eq("carrier", logisticsService)
         .order("version", { ascending: false })
         .limit(1);
 
@@ -204,7 +243,7 @@ export default function CustomerPricingEdit() {
         .from("customer_carrier_pricing")
         .insert({
           customer_id: selectedCustomer,
-          carrier,
+          logisticsService,
           template_id: selectedTemplate && selectedTemplate !== "none" ? selectedTemplate : null,
           custom_prices: customPrices,
           effective_date_from: effectiveDateFrom || null,
@@ -228,7 +267,7 @@ export default function CustomerPricingEdit() {
             customer_id: selectedCustomer,
             pricing_config_id: data.id,
             title: "价格配置更新通知",
-            message: `您的${carrier}运费配置已更新，将于${effectiveDateFrom}生效${effectiveDateTo ? `，${effectiveDateTo}失效` : ''}。`,
+            message: `您的${logisticsService}运费配置已更新，将于${effectiveDateFrom}生效${effectiveDateTo ? `，${effectiveDateTo}失效` : ''}。`,
             effective_date: effectiveDateFrom
           });
       }
@@ -291,18 +330,13 @@ export default function CustomerPricingEdit() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>承运商 *</Label>
-              <Select value={carrier} onValueChange={setCarrier}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FedEx">FedEx</SelectItem>
-                  <SelectItem value="UPS">UPS</SelectItem>
-                  <SelectItem value="USPS">USPS</SelectItem>
-                  <SelectItem value="DHL">DHL</SelectItem>
-                </SelectContent>
-              </Select>
+              <LogisticsServiceSelect
+                value={logisticsService}
+                onValueChange={setLogisticsService}
+                label="物流服务"
+                required
+                mode="simple"
+              />
             </div>
             <div className="space-y-2">
               <Label>基于账套</Label>
@@ -313,7 +347,7 @@ export default function CustomerPricingEdit() {
                 <SelectContent>
                   <SelectItem value="none">不使用账套</SelectItem>
                   {templates
-                    .filter(t => t.carrier === carrier)
+                    .filter(t => t.carrier === logisticsService)
                     .map((template) => (
                       <SelectItem key={template.id} value={template.id}>
                         {template.template_name}

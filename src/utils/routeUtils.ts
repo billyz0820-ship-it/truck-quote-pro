@@ -22,7 +22,7 @@ export const staticRoutes = [
     children: [
       { path: '/dashboard/orders/truck', component: 'TruckOrders', code: 'truck-orders', title: '货运订单' },
       { path: '/dashboard/orders/express', component: 'ExpressOrders', code: 'express-orders', title: '快递订单' },
-      { path: '/dashboard/orders/express/new', component: 'CreateExpressOrderPage', code: 'create-express-order', title: '创建快递订单' },
+      { path: '/dashboard/orders/express/new', component: 'CreateExpressOrderPage', code: 'create-express-order', title: '新增快递订单' },
       { path: '/dashboard/orders/return', component: 'ReturnOrders', code: 'return-orders', title: '退货订单' },
       { path: '/dashboard/orders/return/new', component: 'CreateReturnOrderPage', code: 'create-return-order', title: '创建退货订单' },
       { path: '/dashboard/orders/create', component: 'CreateOrder', code: 'create-order', title: '创建订单' },
@@ -83,6 +83,7 @@ export const staticRoutes = [
       { path: '/dashboard/settings', component: 'Settings', code: 'settings-overview', title: '设置概览' },
       { path: '/dashboard/settings/addresses', component: 'AddressManagement', code: 'address-management', title: '地址管理' },
       { path: '/dashboard/settings/addresses/:addressId/zones', component: 'AddressZoneConfig', code: 'address-zone-config', title: '地址区域配置' },
+      { path: '/dashboard/settings/resources', component: 'ResourceManagement', code: 'resource-management', title: '资源管理' },
     ]
   },
   
@@ -196,45 +197,69 @@ export const staticRoutes = [
   },
 ];
 
-// 根据用户权限过滤路由
+// 根据用户权限过滤路由 - 仅基于菜单权限，不检查功能点权限
 export const filterRoutesByPermission = (
   userMenus: ResourceInfoForMenuResponse[],
-  userFunctionPoints: string[] = []
+  userFunctionPoints: string[] = [] // 暂时不使用功能点权限
 ): typeof staticRoutes => {
   console.log('=== 路由权限过滤调试开始 ===');
   
-  // 从 menus 数组中提取所有权限代码（包括菜单分组、菜单、功能点）
+  // 从 menus 数组中提取菜单权限（resourceType === 1:分组, 2:菜单）
+  // 明确排除功能点 (resourceType === 3)
   const permittedMenuCodes = new Set(
     userMenus
-      .filter(menu => menu.resourceType === 1 || menu.resourceType === 2 || menu.resourceType === 3) // 取所有类型
+      .filter(menu => menu.resourceType === 1 || menu.resourceType === 2) // 仅取分组和菜单，不包括功能点
       .map(menu => menu.code)
       .filter(Boolean)
   );
 
-  // 获取用户有权限的功能点（合并 functionPoints 数组和 menus 中的功能点）
-  const permittedFunctionPoints = new Set([
-    ...userFunctionPoints,
-    // 从 menus 数组中提取功能点（resourceType === 3）
-    ...userMenus
-      .filter(menu => menu.resourceType === 3)
-      .map(menu => menu.code)
-      .filter(Boolean)
-  ]);
+  console.log('=== 菜单权限提取分析 ===');
+  console.log('原始用户菜单:', userMenus.map(m => ({ code: m.code, title: m.title, resourceType: m.resourceType })));
+  console.log('提取的菜单权限代码（仅分组和菜单）:', Array.from(permittedMenuCodes));
+  
+  // 检查是否有功能点被错误地当作菜单处理
+  const suspiciousFunctionPoints = userMenus.filter(m => 
+    m.resourceType === 3 && (m.title?.includes('新增') || m.title?.includes('编辑') || m.title?.includes('删除') || m.title?.includes('操作'))
+  );
+  if (suspiciousFunctionPoints.length > 0) {
+    console.warn('⚠️ 发现可能是功能点但标记为菜单的项目:', suspiciousFunctionPoints);
+  }
+
+  // 扩展权限：如果有父级菜单权限，自动包含所有子菜单
+  // 仅处理真正的菜单项，不包括功能点
+  userMenus
+    .filter(menu => menu.resourceType === 1 || menu.resourceType === 2) // 仅处理分组和菜单
+    .forEach(menu => {
+      if (menu.code) {
+        console.log(`检查菜单权限扩展: ${menu.code} (${menu.title})`);
+        // 查找静态路由配置中是否有对应的子路由
+        const parentRoute = staticRoutes.find(route => route.code === menu.code);
+        if (parentRoute && parentRoute.children) {
+          console.log(`父路由 ${menu.code} 有 ${parentRoute.children.length} 个子路由`);
+          // 如果用户有父级权限，添加所有子路由权限
+          parentRoute.children.forEach(child => {
+            if (child.code) {
+              permittedMenuCodes.add(child.code);
+              console.log(`  添加子路由权限: ${child.code} -> ${child.path}`);
+            }
+          });
+        }
+      }
+    });
 
   console.log('=== 前端路由配置对比 ===');
   console.log('前端静态路由数量:', staticRoutes.length);
   console.log('前端静态路由代码:', staticRoutes.map(r => r.code));
   console.log('');
-  console.log('=== 后端权限数据分析 ===');
+  console.log('=== 后端权限数据分析（仅菜单权限） ===');
   console.log('menus 数组总数:', userMenus.length);
   console.log('menus 中分组数量 (resourceType=1):', userMenus.filter(m => m.resourceType === 1).length);
   console.log('menus 中菜单数量 (resourceType=2):', userMenus.filter(m => m.resourceType === 2).length);
-  console.log('menus 中功能点数量 (resourceType=3):', userMenus.filter(m => m.resourceType === 3).length);
-  console.log('functionPoints 数组数量:', userFunctionPoints.length);
+  console.log('menus 中功能点数量 (resourceType=3):', userMenus.filter(m => m.resourceType === 3).length, '(功能点权限暂时不检查)');
+  console.log('functionPoints 数组数量:', userFunctionPoints.length, '(功能点权限暂时不使用)');
   console.log('');
-  console.log('=== 合并后的权限数据 ===');
+  console.log('=== 菜单权限数据 ===');
   console.log('所有菜单权限代码:', Array.from(permittedMenuCodes));
-  console.log('所有功能点权限:', Array.from(permittedFunctionPoints));
   console.log('');
   
   // 检查匹配情况
@@ -252,36 +277,40 @@ export const filterRoutesByPermission = (
 
   const filteredRoutes = staticRoutes
     .filter(route => {
-      // 检查菜单权限
-      const hasMenuPermission = route.code ? permittedMenuCodes.has(route.code) : true;
+      // 仅检查菜单权限，不检查功能点权限
+      const hasMenuPermission = route.code ? 
+        permittedMenuCodes.has(route.code) : 
+        true;
       
-      // 如果没有子路由，直接检查菜单权限
+      // 如果没有子路由，直接检查权限
       if (!route.children) {
         return hasMenuPermission;
       }
       
-      // 如果有子路由，递归过滤子路由
-      route.children = route.children.filter(child => {
-        const childHasPermission = child.code ? 
-          (permittedMenuCodes.has(child.code) || permittedFunctionPoints.has(child.code)) : 
-          true;
-        
-        // 临时绕过 create-express-order 权限检查
-        if (child.code === 'create-express-order') {
-          console.log('✅ 临时允许 create-express-order 路由通过权限检查');
-          return true;
-        }
-        
-        return childHasPermission;
-      });
+      // 如果有子路由，检查父路由权限
+      // 根据需求：功能点不需要权限控制，所以只要父路由有权限，所有子路由都应该可访问
+      const parentHasPermission = route.code ? 
+        permittedMenuCodes.has(route.code) : 
+        true;
       
-      // 父路由如果有权限的子路由，则保留
-      return hasMenuPermission || route.children.length > 0;
+      if (parentHasPermission && route.children) {
+        // 父路由有权限，保留所有子路由（不检查子路由权限）
+        console.log(`父路由 ${route.code} 有权限，保留所有 ${route.children.length} 个子路由`);
+        route.children.forEach(child => {
+          console.log(`  保留子路由: ${child.code} -> ${child.path} (功能点无需权限检查)`);
+        });
+      } else if (!parentHasPermission && route.children) {
+        // 父路由没有权限，过滤所有子路由
+        console.log(`父路由 ${route.code} 无权限，过滤所有子路由`);
+        route.children = [];
+      }
+      
+      return parentHasPermission || (!route.children || route.children.length === 0);
     })
     .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
 
   // 生成侧边栏菜单用于调试
-  const sidebarMenus = generateSidebarMenus(filteredRoutes);
+  const sidebarMenus = generateSidebarMenus(filteredRoutes, userMenus);
   
   // 提取所有菜单代码（包括父菜单和子菜单）
   const allMenuCodes = [];
@@ -308,8 +337,8 @@ export const filterRoutesByPermission = (
   return filteredRoutes;
 };
 
-// 生成侧边栏菜单
-export const generateSidebarMenus = (routes: typeof staticRoutes) => {
+// 生成侧边栏菜单 - 确保功能点不显示在菜单中
+export const generateSidebarMenus = (routes: typeof staticRoutes, userMenus?: ResourceInfoForMenuResponse[]) => {
   return routes.map(route => {
     const menu: any = {
       title: route.title,
@@ -319,47 +348,86 @@ export const generateSidebarMenus = (routes: typeof staticRoutes) => {
     };
 
     if (route.children && route.children.length > 0) {
-      menu.children = route.children.map(child => ({
-        title: child.title,
-        path: child.path,
-        code: child.code,
-      }));
-      menu.type = 'group';
+      // 过滤子菜单：只显示真正的菜单项，不显示功能点
+      menu.children = route.children
+        .filter(child => {
+          // 检查用户菜单中是否有对应的项，且类型为菜单（不是功能点）
+          const userMenuItem = userMenus?.find(m => m.code === child.code);
+          const isMenuItem = userMenuItem && (userMenuItem.resourceType === 1 || userMenuItem.resourceType === 2);
+          
+          if (!userMenuItem) {
+            console.warn(`子路由 ${child.code} 在用户菜单中不存在，可能是功能点`);
+            return false;
+          }
+          
+          if (userMenuItem.resourceType === 3) {
+            console.warn(`跳过功能点: ${child.code} (${child.title})`);
+            return false;
+          }
+          
+          return isMenuItem;
+        })
+        .map(child => ({
+          title: child.title,
+          path: child.path,
+          code: child.code,
+        }));
+      
+      menu.type = menu.children.length > 0 ? 'group' : 'menu';
     } else {
+      // 检查单个路由是否为功能点
+      const userMenuItem = userMenus?.find(m => m.code === route.code);
+      if (userMenuItem && userMenuItem.resourceType === 3) {
+        console.warn(`跳过功能点路由: ${route.code} (${route.title})`);
+        return null; // 不返回任何菜单项
+      }
+      
       menu.path = route.path;
       menu.type = 'menu';
     }
 
     return menu;
-  });
+  }).filter(menu => menu !== null); // 过滤掉null值
 };
 
-// 检查路由权限
+// 检查路由权限 - 功能点不需要权限控制
 export const hasRoutePermission = (
   routePath: string,
   userMenus: ResourceInfoForMenuResponse[],
-  userFunctionPoints: string[] = []
+  userFunctionPoints: string[] = [] // 暂时不使用功能点权限
 ): boolean => {
   const route = staticRoutes.find(r => r.path === routePath || r.children?.some(c => c.path === routePath));
   
-  if (!route) return false;
+  if (!route) {
+    console.warn(`路由权限检查: ${routePath} -> 路由不存在，拒绝访问`);
+    return false;
+  }
 
   const targetRoute = route.children?.find(c => c.path === routePath) || route;
   const routeCode = targetRoute.code;
+  const parentRoute = route.children?.some(c => c.path === routePath) ? route : null;
 
-  if (!routeCode) return true;
+  if (!routeCode) {
+    console.log(`路由权限检查: ${routePath} -> 无权限代码，允许访问`);
+    return true;
+  }
 
-  // 检查菜单权限（包括分组、菜单、功能点）
+  // 检查是否为子路由，如果是，检查父路由权限
+  if (parentRoute && parentRoute.code) {
+    const hasParentPermission = userMenus
+      .filter(menu => menu.resourceType === 1 || menu.resourceType === 2)
+      .some(menu => menu.code === parentRoute.code);
+    
+    console.log(`路由权限检查: ${routePath} (code: ${routeCode}, 父路由: ${parentRoute.code}) -> ${hasParentPermission ? '允许' : '拒绝'} (基于父路由权限)`);
+    return hasParentPermission;
+  }
+
+  // 对于顶级路由，检查菜单权限
   const hasMenuPermission = userMenus
-    .filter(menu => menu.resourceType === 1 || menu.resourceType === 2 || menu.resourceType === 3)
+    .filter(menu => menu.resourceType === 1 || menu.resourceType === 2)
     .some(menu => menu.code === routeCode);
 
-  // 检查功能点权限（合并 functionPoints 和 menus 中的功能点）
-  const allFunctionPoints = [
-    ...userFunctionPoints,
-    ...userMenus.filter(menu => menu.resourceType === 3).map(menu => menu.code).filter(Boolean)
-  ];
-  const hasFunctionPermission = allFunctionPoints.includes(routeCode);
+  console.log(`路由权限检查: ${routePath} (code: ${routeCode}) -> ${hasMenuPermission ? '允许' : '拒绝'} (顶级路由)`);
 
-  return hasMenuPermission || hasFunctionPermission;
+  return hasMenuPermission;
 };

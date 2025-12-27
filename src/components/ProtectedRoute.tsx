@@ -52,37 +52,25 @@ export const ProtectedRoute = ({
     }
   }
 
-  // 检查路由权限 - 临时绕过权限检查进行测试
+  // 检查路由权限
   if (requireRoutePermission) {
     const hasRoutePermissionResult = hasRoutePermission(requireRoutePermission);
     console.log(`权限检查: 检查路由权限 ${requireRoutePermission}: ${hasRoutePermissionResult}`);
     
-    // 临时注释权限检查，允许访问进行调试
-    // if (!hasRoutePermissionResult) {
-    //   console.log(`权限检查: 路由权限 ${requireRoutePermission} 被拒绝，跳转到首页`);
-    //   return <Navigate to="/dashboard" replace />;
-    // }
-    
-    // 临时显示权限状态
     if (!hasRoutePermissionResult) {
-      console.warn(`⚠️ 临时绕过权限检查: ${requireRoutePermission} 权限不足，但允许访问进行调试`);
+      console.log(`权限检查: 路由权限 ${requireRoutePermission} 被拒绝，跳转到首页`);
+      return <Navigate to="/dashboard" replace />;
     }
   }
 
-  // 检查当前路由权限 - 临时绕过权限检查进行测试
+  // 检查当前路由权限
   if (requireRoutePermission === undefined) {
     const hasCurrentRoutePermission = hasRoutePermission(location.pathname);
     console.log(`权限检查: 检查当前路径权限 ${location.pathname}: ${hasCurrentRoutePermission}`);
     
-    // 临时注释权限检查，允许访问进行调试
-    // if (!hasCurrentRoutePermission) {
-    //   console.log(`权限检查: 当前路径权限 ${location.pathname} 被拒绝，跳转到首页`);
-    //   return <Navigate to="/dashboard" replace />;
-    // }
-    
-    // 临时显示权限状态
     if (!hasCurrentRoutePermission) {
-      console.warn(`⚠️ 临时绕过权限检查: ${location.pathname} 权限不足，但允许访问进行调试`);
+      console.log(`权限检查: 当前路径权限 ${location.pathname} 被拒绝，跳转到首页`);
+      return <Navigate to="/dashboard" replace />;
     }
   }
 

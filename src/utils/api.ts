@@ -246,6 +246,19 @@ export const api = {
     return handleApiResponse(response);
   },
 
+  // 返回完整响应的post方法（不处理业务状态）
+  postRaw: async (endpoint: string, data?: any, options?: RequestInit) => {
+    const response = await request(endpoint, {
+      ...options,
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    if (!response.headers.get('content-type')?.includes('application/json')) {
+      return response;
+    }
+    return response.json();
+  },
+
   put: async (endpoint: string, data?: any, options?: RequestInit) => {
     const response = await request(endpoint, {
       ...options,

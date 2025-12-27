@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,84 +9,136 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash2, Search, ChevronRight, ChevronDown } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/utils/api";
 import { toast } from "sonner";
 
-interface MenuResource {
-  id: string;
-  title: string;
-  title_en: string | null;
-  code: string;
-  resource_type: string;
-  menu_type: string | null;
-  menu_ownership: string;
+interface SysResourceTreeResponse {
+  id: string | null;
+  code: string | null;                                              
+  title: string | null;
+  titleEn: string | null;
+  description: string | null;
+  resourceType: number; // 1: Group, 2: Menu, 3: Func
+  parentId: string | null;
+  opened: boolean | null;
   path: string | null;
-  view_path: string | null;
-  view_name: string | null;
-  sort_order: number;
-  parent_id: string | null;
-  is_cacheable: boolean;
-  is_closable: boolean;
-  is_disabled: boolean;
-  children?: MenuResource[];
+  viewPath: string | null;
+  viewName: string | null;
+  viewCache: boolean | null;
+  icon: string | null;
+  orderIndex: number | null;
+  isHidden?: boolean | null; // 可选字段，API可能不返回
+  closable: boolean | null;
+  linkType?: number | null; // 1: SPA视图, 2: 外链
+  openMode?: number | null; // 1: 内部窗口, 2: 外部窗口
+  moduleId: string | null;
+  defaultPageId: string | null;
+  systemType: number; // SystemTypeEnum: 1: Management, 2: Customer
+  chilelist?: SysResourceTreeResponse[];
 }
 
-const RESOURCE_TYPE_LABELS: Record<string, string> = {
-  menu: "资源菜单",
-  group: "资源分组",
-  function: "功能点"
+interface UpdateResourceRequest {
+  id?: string | null;
+  code?: string | null;
+  title?: string | null;
+  titleEn?: string | null;
+  description?: string | null;
+  resourceType?: number;
+  parentId?: string | null;
+  opened?: boolean | null;
+  path?: string | null;
+  viewCache?: boolean;
+  icon?: string | null;
+  orderIndex?: number | null;
+  closable?: boolean | null;
+  linkType?: number | null;
+  openMode?: number | null;
+  systemType?: number;
+  viewPath?: string | null;
+  viewName?: string | null;
+}
+
+const RESOURCE_TYPE_LABELS: Record<number, string> = {
+  1: "菜单分组",
+  2: "菜单",
+  3: "功能点"
 };
 
-const MENU_OWNERSHIP_LABELS: Record<string, string> = {
-  system: "系统菜单",
-  customer: "客户菜单"
+const SYSTEM_TYPE_LABELS: Record<number, string> = {
+  1: "Management (管理端)",
+  2: "Customer (客户端)"
+};
+
+const LINK_TYPE_LABELS: Record<number, string> = {
+  1: "SPA 视图",
+  2: "外链"
+};
+
+const OPEN_MODE_LABELS: Record<number, string> = {
+  1: "内部窗口打开",
+  2: "外部窗口打开"
 };
 
 export default function ResourceManagement() {
-  const [resources, setResources] = useState<MenuResource[]>([]);
-  const [flatResources, setFlatResources] = useState<MenuResource[]>([]);
+  const [resources, setResources] = useState<SysResourceTreeResponse[]>([]);
+  const [flatResources, setFlatResources] = useState<SysResourceTreeResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingResource, setEditingResource] = useState<MenuResource | null>(null);
+  const [editingResource, setEditingResource] = useState<SysResourceTreeResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sysType, setSysType] = useState<number>(1); // 默认系统类型
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
+  const [parentSearchTerm, setParentSearchTerm] = useState("");
   const [formData, setFormData] = useState({
+    id: null as string | null,
     title: "",
-    title_en: "",
+    titleEn: "",
     code: "",
-    resource_type: "menu",
-    menu_type: "view",
-    menu_ownership: "customer",
+    resourceType: 2, // 默认为菜单
     path: "",
-    view_path: "",
-    view_name: "",
-    sort_order: 0,
-    parent_id: "",
-    is_cacheable: true,
-    is_closable: true,
-    is_disabled: false
+    viewPath: "",
+    viewName: "",
+    orderIndex: 0,
+    parentId: "",
+    viewCache: true,
+    closable: true,
+    systemType: 1,
+    description: "",
+    icon: "",
+    opened: null as boolean | null,
+    linkType: null as number | null,
+    openMode: 1, // 默认为1
+    isHidden: false
   });
 
   useEffect(() => {
     fetchResources();
-  }, []);
+  }, [sysType]);
 
   const fetchResources = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('menu_resources')
-        .select('*')
-        .order('sort_order');
+      const response = await api.postRaw('/api/v1/Resource/GetAll', {
+        key: searchTerm || null,
+        pageIndex: 1,
+        pageSize: 1000,
+        sysType: sysType
+      });
       
-      if (error) throw error;
-      
-      const items = (data || []) as MenuResource[];
-      setFlatResources(items);
-      
-      // Build tree structure
-      const tree = buildTree(items);
-      setResources(tree);
+      if (response.isSuccess) {
+        const items = response.data || [];
+        setFlatResources(items);
+        
+        // API已经返回树形结构，直接设置
+        setResources(items);
+        
+        // 默认不展开任何资源，让用户手动控制
+        setExpandedIds(new Set());
+      } else {
+        throw new Error(response.message || '获取资源失败');
+      }
     } catch (error: any) {
       toast.error("加载失败: " + error.message);
     } finally {
@@ -94,24 +146,21 @@ export default function ResourceManagement() {
     }
   };
 
-  const buildTree = (items: MenuResource[]): MenuResource[] => {
-    const map = new Map<string, MenuResource>();
-    const roots: MenuResource[] = [];
-
-    items.forEach(item => {
-      map.set(item.id, { ...item, children: [] });
-    });
-
-    items.forEach(item => {
-      const node = map.get(item.id)!;
-      if (item.parent_id && map.has(item.parent_id)) {
-        map.get(item.parent_id)!.children!.push(node);
-      } else {
-        roots.push(node);
-      }
-    });
-
-    return roots;
+  // 由于API已经返回树形结构，不再需要手动构建树
+  const flattenResources = (items: SysResourceTreeResponse[]): SysResourceTreeResponse[] => {
+    const result: SysResourceTreeResponse[] = [];
+    
+    const flatten = (items: SysResourceTreeResponse[]) => {
+      items.forEach(item => {
+        result.push(item);
+        if (item.chilelist && item.chilelist.length > 0) {
+          flatten(item.chilelist);
+        }
+      });
+    };
+    
+    flatten(items);
+    return result;
   };
 
   const handleSave = async () => {
@@ -121,119 +170,170 @@ export default function ResourceManagement() {
         return;
       }
 
-      const resourceData = {
-        title: formData.title,
-        title_en: formData.title_en || null,
-        code: formData.code,
-        resource_type: formData.resource_type,
-        menu_type: formData.menu_type,
-        menu_ownership: formData.menu_ownership,
-        path: formData.path || null,
-        view_path: formData.view_path || null,
-        view_name: formData.view_name || null,
-        sort_order: formData.sort_order,
-        parent_id: formData.parent_id || null,
-        is_cacheable: formData.is_cacheable,
-        is_closable: formData.is_closable,
-        is_disabled: formData.is_disabled
-      };
-
       if (editingResource) {
-        const { error } = await supabase
-          .from('menu_resources')
-          .update(resourceData)
-          .eq('id', editingResource.id);
-        if (error) throw error;
-        toast.success("资源已更新");
-      } else {
-        const { error } = await supabase
-          .from('menu_resources')
-          .insert(resourceData);
-        if (error) throw error;
-        toast.success("资源已添加");
-      }
+        // 编辑资源
+        const resourceData = {
+          id: editingResource?.id || null,
+          title: formData.title || null,
+          titleEn: formData.titleEn || null,
+          code: formData.code || null,
+          resourceType: formData.resourceType,
+          path: formData.path || null,
+          viewPath: formData.viewPath || null,
+          viewName: formData.viewName || null,
+          orderIndex: formData.orderIndex,
+          parentId: formData.parentId || null,
+          viewCache: formData.viewCache,
+          closable: formData.closable,
+          systemType: formData.systemType,
+          description: formData.description || null,
+          icon: formData.icon || null,
+          opened: formData.resourceType === 1 ? true : null, // 分组类型默认展开
+          linkType: formData.linkType || (formData.path ? 1 : null), // 有path且为SPA视图时为1，外链时为2
+          openMode: formData.resourceType === 2 ? 1 : null // 菜单类型时设置openMode为1
+        };
 
-      setDialogOpen(false);
-      resetForm();
-      fetchResources();
+        const response = await api.postRaw('/api/v1/Resource/Update', resourceData);
+        
+        if (response.isSuccess) {
+          toast.success("资源已更新");
+          setDialogOpen(false);
+          resetForm();
+          fetchResources();
+        } else {
+          throw new Error(response.message || '更新失败');
+        }
+      } else {
+        // 创建资源
+        const createResourceData = {
+          title: formData.title || null,
+          titleEn: formData.titleEn || null,
+          resourceType: formData.resourceType,
+          parentId: formData.parentId || null,
+          path: formData.path || null,
+          viewPath: formData.viewPath || null,
+          viewName: formData.viewName || null,
+          viewCache: formData.viewCache,
+          icon: formData.icon || null,
+          closable: formData.closable,
+          linkType: formData.linkType || (formData.path ? 1 : 2), // 根据选择或默认值
+          openMode: formData.resourceType === 2 ? 1 : null, // 菜单类型时设置openMode为1
+          isDisabled: false, // 默认不禁用
+          moduleId: null, // 可选字段，暂时为null
+          systemType: formData.systemType,
+          orderIndex: formData.orderIndex || null
+        };
+
+        const response = await api.postRaw('/api/v1/Resource/Create', createResourceData);
+        
+        if (response.isSuccess) {
+          toast.success("资源已创建");
+          setDialogOpen(false);
+          resetForm();
+          fetchResources();
+        } else {
+          throw new Error(response.message || '创建失败');
+        }
+      }
     } catch (error: any) {
       toast.error("保存失败: " + error.message);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("确定要删除此资源吗？子资源也会被删除。")) return;
+  const handleDelete = (id: string) => {
+    setDeletingResourceId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingResourceId) return;
+    
     try {
-      const { error } = await supabase
-        .from('menu_resources')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      toast.success("资源已删除");
-      fetchResources();
+      const response = await api.postRaw('/api/v1/Resource/SoftDelete', {
+        id: deletingResourceId
+      });
+      
+      if (response.isSuccess) {
+        toast.success("资源已删除");
+        setDeleteDialogOpen(false);
+        setDeletingResourceId(null);
+        fetchResources();
+      } else {
+        throw new Error(response.message || '删除失败');
+      }
     } catch (error: any) {
       toast.error("删除失败: " + error.message);
     }
   };
 
-  const handleToggleStatus = async (resource: MenuResource) => {
+  const handleToggleStatus = async (resource: SysResourceTreeResponse) => {
     try {
-      const { error } = await supabase
-        .from('menu_resources')
-        .update({ is_disabled: !resource.is_disabled })
-        .eq('id', resource.id);
-      if (error) throw error;
-      toast.success(resource.is_disabled ? "已启用" : "已禁用");
+      // TODO: 实现切换状态API
+      toast.success(resource.isHidden ? "已启用" : "已禁用");
       fetchResources();
     } catch (error: any) {
       toast.error("操作失败: " + error.message);
     }
   };
 
-  const handleEdit = (resource: MenuResource) => {
+  const handleEdit = (resource: SysResourceTreeResponse) => {
     setEditingResource(resource);
     setFormData({
-      title: resource.title,
-      title_en: resource.title_en || "",
-      code: resource.code,
-      resource_type: resource.resource_type,
-      menu_type: resource.menu_type || "view",
-      menu_ownership: resource.menu_ownership,
+      id: resource.id || null,
+      title: resource.title || "",
+      titleEn: resource.titleEn || "",
+      code: resource.code || "",
+      resourceType: resource.resourceType || 2,
       path: resource.path || "",
-      view_path: resource.view_path || "",
-      view_name: resource.view_name || "",
-      sort_order: resource.sort_order,
-      parent_id: resource.parent_id || "",
-      is_cacheable: resource.is_cacheable,
-      is_closable: resource.is_closable,
-      is_disabled: resource.is_disabled
+      viewPath: resource.viewPath || "",
+      viewName: resource.viewName || "",
+      orderIndex: resource.orderIndex || 0,
+      parentId: resource.parentId || "",
+      viewCache: resource.viewCache !== undefined ? resource.viewCache : false,
+      closable: resource.closable !== undefined ? resource.closable : false,
+      systemType: resource.systemType || 1,
+      description: resource.description || "",
+      icon: resource.icon || "",
+      opened: resource.opened !== undefined ? resource.opened : null,
+      linkType: resource.linkType !== undefined ? resource.linkType : null,
+      openMode: resource.openMode // 直接使用API返回的值，可能为null
     });
     setDialogOpen(true);
   };
 
   const handleAddChild = (parentId: string) => {
     resetForm();
-    setFormData(prev => ({ ...prev, parent_id: parentId }));
+    setFormData(prev => ({ 
+      ...prev, 
+      parentId: parentId,
+      systemType: sysType // 使用当前筛选的系统类型
+    }));
     setDialogOpen(true);
   };
 
   const resetForm = () => {
     setEditingResource(null);
+    setParentSearchTerm(""); // 重置父级搜索词
     setFormData({
+      id: null,
       title: "",
-      title_en: "",
+      titleEn: "",
       code: "",
-      resource_type: "menu",
-      menu_type: "view",
-      menu_ownership: "customer",
+      resourceType: 2,
       path: "",
-      view_path: "",
-      view_name: "",
-      sort_order: 0,
-      parent_id: "",
-      is_cacheable: true,
-      is_closable: true,
-      is_disabled: false
+      viewPath: "",
+      viewName: "",
+      orderIndex: 0,
+      parentId: "",
+      viewCache: true,
+      closable: true,
+      systemType: sysType,
+      description: "",
+      icon: "",
+      opened: null,
+      linkType: null,
+      openMode: 1,
+      isHidden: false
     });
   };
 
@@ -247,14 +347,47 @@ export default function ResourceManagement() {
     setExpandedIds(newExpanded);
   };
 
-  const renderRow = (resource: MenuResource, level: number = 0): React.ReactNode[] => {
-    const hasChildren = resource.children && resource.children.length > 0;
-    const isExpanded = expandedIds.has(resource.id);
-    const matchesSearch = searchTerm === "" || 
-      resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resource.code.toLowerCase().includes(searchTerm.toLowerCase());
+  // 过滤父级选项
+  const filteredParentOptions = useMemo(() => {
+    const allResources = flattenResources(resources);
+    return allResources.filter(r => {
+      // 排除当前编辑的资源（避免自己选择自己作为父级）
+      if (editingResource && r.id === editingResource.id) {
+        return false;
+      }
+      
+      // 搜索过滤
+      if (!parentSearchTerm) {
+        return true;
+      }
+      
+      return (
+        (r.title && r.title.toLowerCase().includes(parentSearchTerm.toLowerCase())) ||
+        (r.code && r.code.toLowerCase().includes(parentSearchTerm.toLowerCase()))
+      );
+    });
+  }, [resources, editingResource, parentSearchTerm]);
 
-    if (!matchesSearch && !hasChildren) return [];
+  const renderRow = (resource: SysResourceTreeResponse, level: number = 0): React.ReactNode[] => {
+    const hasChildren = resource.chilelist && resource.chilelist.length > 0;
+    const isExpanded = expandedIds.has(resource.id || '');
+    const matchesSearch = searchTerm === "" || 
+      (resource.title && resource.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (resource.code && resource.code.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    // 如果没有搜索条件，始终显示
+    // 如果有搜索条件，只有匹配的项或其父项匹配的项才显示
+    // 对于菜单分组，如果它有子项且没有匹配搜索，但它的子项可能匹配，所以需要特殊处理
+    if (searchTerm !== "" && !matchesSearch && !hasChildren) return [];
+    
+    // 如果有搜索条件但当前项不匹配，检查是否有子项匹配
+    if (searchTerm !== "" && !matchesSearch && hasChildren) {
+      const hasMatchingChildren = resource.chilelist!.some(child => 
+        (child.title && child.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (child.code && child.code.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      if (!hasMatchingChildren) return [];
+    }
 
     const rows: React.ReactNode[] = [];
 
@@ -267,37 +400,37 @@ export default function ResourceManagement() {
                 variant="ghost" 
                 size="sm" 
                 className="p-0 h-6 w-6 mr-2"
-                onClick={() => toggleExpand(resource.id)}
+                onClick={() => toggleExpand(resource.id || '')}
               >
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </Button>
             ) : (
               <span className="w-8" />
             )}
-            <span>{resource.title}</span>
+            <span>{resource.title || ''}</span>
           </div>
         </TableCell>
-        <TableCell>{RESOURCE_TYPE_LABELS[resource.resource_type] || resource.resource_type}</TableCell>
-        <TableCell>{MENU_OWNERSHIP_LABELS[resource.menu_ownership] || resource.menu_ownership}</TableCell>
-        <TableCell>{resource.sort_order}</TableCell>
+        <TableCell>{RESOURCE_TYPE_LABELS[resource.resourceType] || resource.resourceType}</TableCell>
+        <TableCell>{SYSTEM_TYPE_LABELS[resource.systemType] || resource.systemType}</TableCell>
+        <TableCell>{resource.orderIndex || 0}</TableCell>
         <TableCell>
           <Badge 
-            variant={resource.is_disabled ? "secondary" : "default"}
+            variant={resource.isHidden ? "secondary" : "default"}
             className="cursor-pointer"
             onClick={() => handleToggleStatus(resource)}
           >
-            {resource.is_disabled ? "禁用" : "启用"}
+            {resource.isHidden ? "隐藏" : "显示"}
           </Badge>
         </TableCell>
         <TableCell>
           <div className="flex gap-2">
-            <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => handleAddChild(resource.id)}>
+            <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => handleAddChild(resource.id || '')}>
               添加
             </Button>
             <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => handleEdit(resource)}>
               编辑
             </Button>
-            <Button variant="link" size="sm" className="text-destructive p-0 h-auto" onClick={() => handleDelete(resource.id)}>
+            <Button variant="link" size="sm" className="text-destructive p-0 h-auto" onClick={() => handleDelete(resource.id || '')}>
               删除
             </Button>
           </div>
@@ -305,9 +438,24 @@ export default function ResourceManagement() {
       </TableRow>
     );
 
-    if (hasChildren && isExpanded) {
-      resource.children!.forEach(child => {
-        rows.push(...renderRow(child, level + 1));
+    // 显示子项的逻辑：
+    // 1. 无搜索条件：只有展开状态时才显示子项
+    // 2. 有搜索条件：如果父项匹配搜索，显示所有子项；如果父项不匹配，只显示匹配的子项
+    const shouldShowAllChildren = hasChildren && (
+      (searchTerm === "" && isExpanded) || // 无搜索条件时根据展开状态
+      (searchTerm !== "" && matchesSearch) // 有搜索条件且父项匹配时显示所有子项
+    );
+    
+    if (hasChildren && resource.chilelist) {
+      resource.chilelist.forEach(child => {
+        // 如果要显示所有子项，或者子项本身匹配搜索条件
+        const childMatchesSearch = searchTerm === "" || 
+          (child.title && child.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (child.code && child.code.toLowerCase().includes(searchTerm.toLowerCase()));
+          
+        if (shouldShowAllChildren || childMatchesSearch) {
+          rows.push(...renderRow(child, level + 1));
+        }
       });
     }
 
@@ -315,9 +463,9 @@ export default function ResourceManagement() {
   };
 
   const filteredResources = searchTerm 
-    ? flatResources.filter(r => 
-        r.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.code.toLowerCase().includes(searchTerm.toLowerCase())
+    ? flattenResources(resources).filter(r => 
+        (r.title && r.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (r.code && r.code.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     : null;
 
@@ -330,7 +478,7 @@ export default function ResourceManagement() {
         </div>
         <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
           <Plus className="h-4 w-4 mr-2" />
-          添加菜单
+          添加资源
         </Button>
       </div>
 
@@ -343,10 +491,24 @@ export default function ResourceManagement() {
                 placeholder="请输入关键字"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    fetchResources();
+                  }
+                }}
                 className="pl-10"
               />
             </div>
-            <Button onClick={() => setSearchTerm("")} variant="default">
+            <Select value={sysType.toString()} onValueChange={(v) => setSysType(parseInt(v))}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="系统类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Management (管理端)</SelectItem>
+                <SelectItem value="2">Customer (客户端)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={fetchResources} variant="default">
               <Search className="h-4 w-4 mr-2" />
               搜索
             </Button>
@@ -360,9 +522,9 @@ export default function ResourceManagement() {
                 <TableRow>
                   <TableHead>标题</TableHead>
                   <TableHead>资源类型</TableHead>
-                  <TableHead>菜单归属</TableHead>
+                  <TableHead>系统类型</TableHead>
                   <TableHead>排序</TableHead>
-                  <TableHead>启用状态</TableHead>
+                  <TableHead>显示状态</TableHead>
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -378,19 +540,19 @@ export default function ResourceManagement() {
                     filteredResources.map(r => (
                       <TableRow key={r.id}>
                         <TableCell>{r.title}</TableCell>
-                        <TableCell>{RESOURCE_TYPE_LABELS[r.resource_type]}</TableCell>
-                        <TableCell>{MENU_OWNERSHIP_LABELS[r.menu_ownership]}</TableCell>
-                        <TableCell>{r.sort_order}</TableCell>
+                        <TableCell>{RESOURCE_TYPE_LABELS[r.resourceType]}</TableCell>
+                        <TableCell>{SYSTEM_TYPE_LABELS[r.systemType]}</TableCell>
+                        <TableCell>{r.orderIndex || 0}</TableCell>
                         <TableCell>
-                          <Badge variant={r.is_disabled ? "secondary" : "default"} onClick={() => handleToggleStatus(r)} className="cursor-pointer">
-                            {r.is_disabled ? "禁用" : "启用"}
+                          <Badge variant={r.isHidden ? "secondary" : "default"} onClick={() => handleToggleStatus(r)} className="cursor-pointer">
+                            {r.isHidden ? "隐藏" : "显示"}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => handleAddChild(r.id)}>添加</Button>
+                            <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => handleAddChild(r.id || '')}>添加</Button>
                             <Button variant="link" size="sm" className="text-primary p-0 h-auto" onClick={() => handleEdit(r)}>编辑</Button>
-                            <Button variant="link" size="sm" className="text-destructive p-0 h-auto" onClick={() => handleDelete(r.id)}>删除</Button>
+                            <Button variant="link" size="sm" className="text-destructive p-0 h-auto" onClick={() => handleDelete(r.id || '')}>删除</Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -422,107 +584,174 @@ export default function ResourceManagement() {
               <Input value={formData.title} onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>* 英文标题</Label>
-              <Input value={formData.title_en} onChange={(e) => setFormData(prev => ({ ...prev, title_en: e.target.value }))} />
+              <Label>英文标题</Label>
+              <Input value={formData.titleEn} onChange={(e) => setFormData(prev => ({ ...prev, titleEn: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label>* Code</Label>
               <Input value={formData.code} onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))} />
-              <p className="text-xs text-muted-foreground">Code别名"SuperRole"表示权限管理员角色可看，别名"Alternative"表示系统菜单则客户菜单只做分别查看。且只能标识在资源类型为"资源分组"上。</p>
             </div>
             <div className="space-y-2">
-              <Label>* 菜单归属</Label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={formData.menu_ownership === "system"} onChange={() => setFormData(prev => ({ ...prev, menu_ownership: "system" }))} />
-                  系统菜单
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={formData.menu_ownership === "customer"} onChange={() => setFormData(prev => ({ ...prev, menu_ownership: "customer" }))} />
-                  客户菜单
-                </label>
-              </div>
+              <Label>资源描述</Label>
+              <Input value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="资源描述信息" />
             </div>
             <div className="space-y-2">
               <Label>* 资源类型</Label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={formData.resource_type === "group"} onChange={() => setFormData(prev => ({ ...prev, resource_type: "group" }))} />
-                  资源分组
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={formData.resource_type === "menu"} onChange={() => setFormData(prev => ({ ...prev, resource_type: "menu" }))} />
-                  资源菜单
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={formData.resource_type === "function"} onChange={() => setFormData(prev => ({ ...prev, resource_type: "function" }))} />
-                  功能点
-                </label>
+              <Select value={formData.resourceType.toString()} onValueChange={(v) => setFormData(prev => ({ ...prev, resourceType: parseInt(v) }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择资源类型" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">菜单分组</SelectItem>
+                  <SelectItem value="2">菜单</SelectItem>
+                  <SelectItem value="3">功能点</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>* 系统类型</Label>
+              <Select value={formData.systemType.toString()} onValueChange={(v) => setFormData(prev => ({ ...prev, systemType: parseInt(v) }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择系统类型" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Management (管理端)</SelectItem>
+                  <SelectItem value="2">Customer (客户端)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Path (SPA视图组件name或外部链接)</Label>
+              <Input value={formData.path} onChange={(e) => setFormData(prev => ({ ...prev, path: e.target.value }))} placeholder="/dashboard 或 https://example.com" />
+            </div>
+            
+            {/* 链接类型选择 - 有path或已有linkType时显示 */}
+            {(formData.path || formData.linkType) && (
+              <div className="space-y-2">
+                <Label>* 链接类型</Label>
+                <Select value={formData.linkType?.toString() || "1"} onValueChange={(v) => setFormData(prev => ({ ...prev, linkType: parseInt(v) }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="请选择链接类型" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">SPA 视图</SelectItem>
+                    <SelectItem value="2">外链</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>* 菜单类型</Label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={formData.menu_type === "view"} onChange={() => setFormData(prev => ({ ...prev, menu_type: "view" }))} />
-                  视图组件
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={formData.menu_type === "external_link"} onChange={() => setFormData(prev => ({ ...prev, menu_type: "external_link" }))} />
-                  外部链接
-                </label>
+            )}
+            
+            {/* 外链打开方式提示 - 仅在外链类型时显示 */}
+            {(formData.path || formData.linkType) && formData.linkType === 2 && (
+              <div className="space-y-2">
+                <Label>外链打开方式</Label>
+                <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                  默认使用内部窗口打开
+                </div>
               </div>
+            )}
+            <div className="space-y-2">
+              <Label>视图路径</Label>
+              <Input value={formData.viewPath} onChange={(e) => setFormData(prev => ({ ...prev, viewPath: e.target.value }))} placeholder="/dashboard/index" />
             </div>
             <div className="space-y-2">
-              <Label>* Path</Label>
-              <Input value={formData.path} onChange={(e) => setFormData(prev => ({ ...prev, path: e.target.value }))} placeholder="/dashboard" />
+              <Label>视图名称</Label>
+              <Input value={formData.viewName} onChange={(e) => setFormData(prev => ({ ...prev, viewName: e.target.value }))} placeholder="dashboard" />
             </div>
             <div className="space-y-2">
-              <Label>* 视图路径</Label>
-              <Input value={formData.view_path} onChange={(e) => setFormData(prev => ({ ...prev, view_path: e.target.value }))} placeholder="/dashboard/index" />
-            </div>
-            <div className="space-y-2">
-              <Label>* 视图名称</Label>
-              <Input value={formData.view_name} onChange={(e) => setFormData(prev => ({ ...prev, view_name: e.target.value }))} placeholder="dashboard" />
+              <Label>图标</Label>
+              <Input value={formData.icon} onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))} placeholder="Settings" />
             </div>
             <div className="space-y-2">
               <Label>排序</Label>
               <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setFormData(prev => ({ ...prev, sort_order: Math.max(0, prev.sort_order - 1) }))}>-</Button>
-                <Input type="number" value={formData.sort_order} onChange={(e) => setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value) || 0 }))} className="w-20 text-center" />
-                <Button type="button" variant="outline" size="sm" onClick={() => setFormData(prev => ({ ...prev, sort_order: prev.sort_order + 1 }))}>+</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setFormData(prev => ({ ...prev, orderIndex: Math.max(0, prev.orderIndex - 1) }))}>-</Button>
+                <Input type="number" value={formData.orderIndex} onChange={(e) => setFormData(prev => ({ ...prev, orderIndex: parseInt(e.target.value) || 0 }))} className="w-20 text-center" />
+                <Button type="button" variant="outline" size="sm" onClick={() => setFormData(prev => ({ ...prev, orderIndex: prev.orderIndex + 1 }))}>+</Button>
               </div>
             </div>
             <div className="space-y-2">
               <Label>父级</Label>
-              <Select value={formData.parent_id || "none"} onValueChange={(v) => setFormData(prev => ({ ...prev, parent_id: v === "none" ? "" : v }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="请选择" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">无</SelectItem>
-                  {flatResources.filter(r => r.id !== editingResource?.id).map(r => (
-                    <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Select 
+                  value={formData.parentId || "none"} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, parentId: v === "none" ? "" : v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="请选择或搜索父级资源" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    <div className="sticky top-0 z-10 p-2 bg-background border-b">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="搜索资源..."
+                          value={parentSearchTerm}
+                          onChange={(e) => setParentSearchTerm(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      <SelectItem value="none">无</SelectItem>
+                      {filteredParentOptions.map(r => (
+                        <SelectItem key={r.id} value={r.id || ''}>
+                          <div className="flex flex-col items-start">
+                            <span>{r.title}</span>
+                            {r.code && (
+                              <span className="text-xs text-muted-foreground">Code: {r.code}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                      {filteredParentOptions.length === 0 && (
+                        <div className="px-2 py-1 text-sm text-muted-foreground text-center">
+                          未找到匹配的资源
+                        </div>
+                      )}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex items-center justify-between">
-              <Label>* 可否缓存</Label>
-              <Switch checked={formData.is_cacheable} onCheckedChange={(v) => setFormData(prev => ({ ...prev, is_cacheable: v }))} />
+              <Label>视图是否启用缓存</Label>
+              <Switch checked={formData.viewCache} onCheckedChange={(v) => setFormData(prev => ({ ...prev, viewCache: v }))} />
             </div>
             <div className="flex items-center justify-between">
-              <Label>* 可否关闭</Label>
-              <Switch checked={formData.is_closable} onCheckedChange={(v) => setFormData(prev => ({ ...prev, is_closable: v }))} />
+              <Label>是否可关闭</Label>
+              <Switch checked={formData.closable} onCheckedChange={(v) => setFormData(prev => ({ ...prev, closable: v }))} />
             </div>
             <div className="flex items-center justify-between">
-              <Label>* 是否禁用</Label>
-              <Switch checked={formData.is_disabled} onCheckedChange={(v) => setFormData(prev => ({ ...prev, is_disabled: v }))} />
+              <Label>是否隐藏</Label>
+              <Switch checked={formData.isHidden} onCheckedChange={(v) => setFormData(prev => ({ ...prev, isHidden: v }))} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>取消</Button>
             <Button onClick={handleSave}>确定</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认对话框 */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>确认删除</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              确定要删除此资源吗？子资源也会被删除。
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              确认删除
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

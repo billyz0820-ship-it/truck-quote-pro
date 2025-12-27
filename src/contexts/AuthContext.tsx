@@ -92,17 +92,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(extendedUser);
         }
         
-        // 根据权限过滤路由
+        // 根据权限过滤路由（仅基于菜单权限，不使用功能点权限）
         const filtered = filterRoutesByPermission(
           userInfo.menus || [], 
-          userInfo.functionPoints || []
+          [] // 功能点权限暂时不使用
         );
         setFilteredRoutes(filtered);
         
         console.log('刷新后的过滤路由数量:', filtered.length);
         
-        // 生成侧边栏菜单
-        const menus = generateSidebarMenus(filtered);
+        // 生成侧边栏菜单 - 传入用户菜单数据以过滤功能点
+        const menus = generateSidebarMenus(filtered, userInfo.menus || []);
         setSidebarMenus(menus);
         
         console.log('=== 用户信息刷新完成 ===');
@@ -191,28 +191,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     navigate("/login");
   };
 
-  // 检查权限
+  // 检查权限 - 暂时仅基于菜单权限，不检查功能点权限
   const hasPermission = (code: string): boolean => {
     if (!userInfo) return false;
     
-    // 检查菜单权限（包括分组、菜单、功能点）
+    // 仅检查菜单权限（resourceType === 1:分组, 2:菜单），不包括功能点
     const hasMenuPermission = userInfo.menus?.some(menu => 
-      menu.code === code && (menu.resourceType === 1 || menu.resourceType === 2 || menu.resourceType === 3)
+      menu.code === code && (menu.resourceType === 1 || menu.resourceType === 2)
     ) || false;
     
-    // 检查功能点权限（包括 functionPoints 数组）
-    const hasFunctionPermission = userInfo.functionPoints?.includes(code) || false;
+    // 功能点权限暂时不检查
+    // const hasFunctionPermission = userInfo.functionPoints?.includes(code) || false;
     
-    return hasMenuPermission || hasFunctionPermission;
+    console.log(`权限检查: ${code} -> ${hasMenuPermission ? '允许' : '拒绝'} (仅菜单权限)`);
+    
+    return hasMenuPermission;
   };
 
-  // 检查路由权限
+  // 检查路由权限 - 仅基于菜单权限，不检查功能点权限
   const hasRoutePermissionFn = (routePath: string): boolean => {
     if (!userInfo) return false;
     return hasRoutePermission(
       routePath, 
       userInfo.menus || [], 
-      userInfo.functionPoints || []
+      [] // 功能点权限暂时不使用
     );
   };
 

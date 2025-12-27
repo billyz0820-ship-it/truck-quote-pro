@@ -42,11 +42,13 @@ export enum ValidateAddressStatus {
 
 // 承运商枚举
 export enum LogisticsAccountCarrierEnum {
-  UPS = 1,
-  FedEx = 2,
-  USPS = 3,
-  DHL = 4,
-  Other = 5,
+  FedEx = 1,
+  Ups = 2,
+  Amazon = 3,
+  Ontrac = 4,
+  Usps = 5,
+  GoFo = 6,
+  UniUni = 7,
 }
 
 // 取件状态枚举
@@ -290,11 +292,11 @@ export const ORDER_STATUS_MAP: Record<OrderImageEnum, { label: string; variant: 
 
 // 承运商映射
 export const CARRIER_MAP: Record<LogisticsAccountCarrierEnum, string> = {
-  [LogisticsAccountCarrierEnum.UPS]: "UPS",
-  [LogisticsAccountCarrierEnum.FedEx]: "FedEx", 
-  [LogisticsAccountCarrierEnum.USPS]: "USPS",
-  [LogisticsAccountCarrierEnum.DHL]: "DHL",
-  [LogisticsAccountCarrierEnum.Other]: "其他",
+  [LogisticsAccountCarrierEnum.FedEx]: "FedEx",
+  [LogisticsAccountCarrierEnum.Ups]: "UPS",
+  [LogisticsAccountCarrierEnum.Amazon]: "Amazon",
+  [LogisticsAccountCarrierEnum.Ontrac]: "Ontrac",
+  [LogisticsAccountCarrierEnum.Usps]: "USPS",
 };
 
 // 订单类型映射
