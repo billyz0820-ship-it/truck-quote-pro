@@ -84,6 +84,7 @@ const Settings = () => {
   });
 
   const [internalUserForm, setInternalUserForm] = useState({
+    display_name: "",
     email: "",
     password: "",
     role: "customer_service" as "admin" | "customer_service" | "operations" | "finance" | "moderator",
@@ -415,6 +416,7 @@ const Settings = () => {
   const resetInternalUserForm = () => {
     setEditingInternalUser(null);
     setInternalUserForm({
+      display_name: "",
       email: "",
       password: "",
       role: "customer_service",
@@ -424,7 +426,7 @@ const Settings = () => {
 
   const handleSaveInternalUser = async () => {
     try {
-      if (!internalUserForm.email || (!editingInternalUser && !internalUserForm.password)) {
+      if (!internalUserForm.display_name || !internalUserForm.email || (!editingInternalUser && !internalUserForm.password)) {
         toast({
           title: "错误",
           description: "请填写所有必填字段",
@@ -438,6 +440,7 @@ const Settings = () => {
         const { error } = await supabase
           .from("user_roles")
           .update({
+            display_name: internalUserForm.display_name,
             role: internalUserForm.role,
             permissions: internalUserForm.permissions
           })
@@ -463,6 +466,7 @@ const Settings = () => {
           .from("user_roles")
           .insert({
             user_id: authData.user.id,
+            display_name: internalUserForm.display_name,
             role: internalUserForm.role,
             permissions: internalUserForm.permissions
           });
@@ -558,6 +562,15 @@ const Settings = () => {
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
+                        <Label>姓名 *</Label>
+                        <Input
+                          type="text"
+                          value={internalUserForm.display_name}
+                          onChange={(e) => setInternalUserForm({ ...internalUserForm, display_name: e.target.value })}
+                          placeholder="请输入用户姓名"
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <Label>邮箱 *</Label>
                         <Input
                           type="email"
@@ -645,6 +658,7 @@ const Settings = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>姓名</TableHead>
                     <TableHead>用户ID</TableHead>
                     <TableHead>角色</TableHead>
                     <TableHead>权限</TableHead>
@@ -655,13 +669,14 @@ const Settings = () => {
                 <TableBody>
                   {internalUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         暂无内部用户
                       </TableCell>
                     </TableRow>
                   ) : (
                     internalUsers.map((user) => (
                       <TableRow key={user.user_id}>
+                        <TableCell className="font-medium">{user.display_name || "-"}</TableCell>
                         <TableCell className="font-mono text-xs">{user.user_id}</TableCell>
                         <TableCell>
                           <Badge>{getRoleName(user.role)}</Badge>
@@ -684,6 +699,7 @@ const Settings = () => {
                               onClick={() => {
                                 setEditingInternalUser(user);
                                 setInternalUserForm({
+                                  display_name: user.display_name || "",
                                   email: "",
                                   password: "",
                                   role: user.role,
