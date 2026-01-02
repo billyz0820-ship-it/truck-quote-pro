@@ -1,17 +1,14 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Pagination } from "@/components/ui/pagination";
-import { CustomerSelect } from "@/components/ui/CustomerSelect";
-import { Plus, Trash2, ArrowLeft, Search, Edit, Eye } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { zipZoneTemplateApi } from "@/utils/api";
+import { Pagination } from "@/components/ui/pagination";
 
 interface ZipZoneTemplate {
   id: string;
@@ -20,6 +17,11 @@ interface ZipZoneTemplate {
   isRelevance: boolean;
   customerId: string;
   customerName: string;
+}
+
+interface TemplateListResponse {
+  items: ZipZoneTemplate[];
+  totalCount: number;
 }
 
 interface FilterParams {
@@ -34,43 +36,41 @@ interface FilterParams {
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
-export default function AddressZoneConfig() {
-  const { addressId } = useParams();
-  const navigate = useNavigate();
+export default function ZipZoneTemplateManagement() {
   const { toast } = useToast();
   const [templates, setTemplates] = useState<ZipZoneTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [searchName, setSearchName] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState("all");
+  const [selectedCustomer, setSelectedCustomer] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [searchTrigger, setSearchTrigger] = useState(0); // 用于强制触发搜索
 
+  // 模拟客户数据 - 实际应用中应该从API获取
+  const [customers] = useState([
+    { id: "customer1", name: "客户A" },
+    { id: "customer2", name: "客户B" },
+    { id: "customer3", name: "客户C" },
+  ]);
 
+  const filterParams: FilterParams = {
+    pageIndex: currentPage,
+    pageSize: pageSize,
+    sortField: "",
+    sortValue: true,
+    sorting: "",
+    name: searchName ? searchName.split(',').map(n => n.trim()).filter(n => n) : [],
+    customerId: selectedCustomer,
+  };
 
   useEffect(() => {
     fetchTemplates();
-  }, [currentPage, pageSize, searchName, selectedCustomer, searchTrigger]);
-
-  // 调试信息
-  console.log('当前页码:', currentPage, '总页数:', Math.ceil(totalCount / pageSize), '总记录数:', totalCount);
+  }, [currentPage, pageSize, searchName, selectedCustomer]);
 
   const fetchTemplates = async () => {
     try {
       setLoading(true);
       console.log('=== 获取邮编分区模板列表 ===');
-      
-      const filterParams: FilterParams = {
-        pageIndex: currentPage, // 直接使用从1开始的页码
-        pageSize: pageSize,
-        sortField: "",
-        sortValue: true,
-        sorting: "",
-        name: searchName ? searchName.split(',').map(n => n.trim()).filter(n => n) : [],
-        customerId: selectedCustomer === "all" ? "" : selectedCustomer,
-      };
-
       console.log('请求参数:', filterParams);
       
       const response = await zipZoneTemplateApi.getTemplateList(filterParams);
@@ -100,12 +100,11 @@ export default function AddressZoneConfig() {
 
   const handleSearch = () => {
     setCurrentPage(1); // 搜索时重置到第一页
-    setSearchTrigger(prev => prev + 1); // 强制触发搜索
   };
 
   const handleReset = () => {
     setSearchName("");
-    setSelectedCustomer("all");
+    setSelectedCustomer("");
     setCurrentPage(1);
   };
 
@@ -140,16 +139,12 @@ export default function AddressZoneConfig() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/settings/addresses')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          返回
-        </Button>
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">邮编分区模板管理</h1>
           <p className="text-muted-foreground mt-2">管理邮编分区模板配置，支持客户关联</p>
         </div>
-        <Button onClick={handleCreate} className="ml-auto">
+        <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
           新增模板
         </Button>
@@ -161,34 +156,43 @@ export default function AddressZoneConfig() {
           <CardTitle>筛选条件</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-            <div className="md:col-span-5 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
               <label className="text-sm font-medium">模板名称（多选用逗号隔开）</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="输入模板名称，多个用逗号隔开"
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-10 w-full"
-                />
-              </div>
-            </div>
-            <div className="md:col-span-5 space-y-2">
-              <CustomerSelect
-                value={selectedCustomer}
-                onValueChange={setSelectedCustomer}
-                label="客户"
-                placeholder="选择客户"
-                showAllOption={true}
+              <Input
+                placeholder="输入模板名称，多个用逗号隔开"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
-            <div className="md:col-span-2">
-              <Button onClick={handleSearch} className="w-auto px-6">
-                <Search className="h-4 w-4 mr-2" />
-                搜索
-              </Button>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">客户筛选</label>
+              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择客户" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">全部客户</SelectItem>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">操作</label>
+              <div className="flex gap-2">
+                <Button onClick={handleSearch} variant="outline">
+                  <Search className="h-4 w-4 mr-2" />
+                  搜索
+                </Button>
+                <Button onClick={handleReset} variant="ghost">
+                  重置
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -269,10 +273,6 @@ export default function AddressZoneConfig() {
               {/* 分页 */}
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">
-                    第 {currentPage > 0 ? currentPage : 1} / {Math.max(1, Math.ceil(totalCount / pageSize))} 页，共 {totalCount} 条
-                  </span>
-                  <span className="text-sm text-muted-foreground">|</span>
                   <span className="text-sm text-muted-foreground">每页显示</span>
                   <Select value={pageSize.toString()} onValueChange={(value) => handlePageSizeChange(Number(value))}>
                     <SelectTrigger className="w-20">

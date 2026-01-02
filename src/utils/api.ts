@@ -338,3 +338,35 @@ export const authApi = {
     return api.post('/auth/reset-password', { token, newPassword });
   },
 };
+
+// 邮编分区模板相关API
+export const zipZoneTemplateApi = {
+  // 获取邮编分区模板列表
+  getTemplateList: async (params: {
+    pageIndex?: number;
+    pageSize?: number;
+    sortField?: string;
+    sortValue?: boolean;
+    sorting?: string;
+    name?: string[];
+    customerId?: string;
+  }) => {
+    // 处理参数：页码从1开始，直接传递给后端
+    const processedParams = {
+      pageIndex: params.pageIndex ?? 1, // 默认第1页
+      pageSize: params.pageSize || 10,
+      sortField: params.sortField || '',
+      sortValue: params.sortValue ?? true,
+      sorting: params.sorting || '',
+      name: params.name || [],
+      customerId: params.customerId || ''
+    };
+
+    return api.post('/api/v1/ZipZoneTemplate/GetTemplateList', processedParams);
+  },
+
+  // 其他可能的邮编分区模板相关方法可以在这里添加
+  // createTemplate: (data: any) => api.post('/api/v1/ZipZoneTemplate/Create', data),
+  // updateTemplate: (id: string, data: any) => api.put(`/api/v1/ZipZoneTemplate/Update/${id}`, data),
+  // deleteTemplate: (id: string) => api.delete(`/api/v1/ZipZoneTemplate/Delete/${id}`),
+};

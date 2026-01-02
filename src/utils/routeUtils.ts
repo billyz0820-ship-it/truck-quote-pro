@@ -83,6 +83,7 @@ export const staticRoutes = [
       { path: '/dashboard/settings', component: 'Settings', code: 'settings-overview', title: '设置概览' },
       { path: '/dashboard/settings/addresses', component: 'AddressManagement', code: 'address-management', title: '地址管理' },
       { path: '/dashboard/settings/addresses/:addressId/zones', component: 'AddressZoneConfig', code: 'address-zone-config', title: '地址区域配置' },
+      { path: '/dashboard/settings/zip-zone-templates', component: 'ZipZoneTemplateManagement', code: 'zip-zone-template-management', title: '邮编分区模板管理' },
       { path: '/dashboard/settings/resources', component: 'ResourceManagement', code: 'resource-management', title: '资源管理' },
     ]
   },

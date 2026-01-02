@@ -67,6 +67,7 @@ const componentMap: Record<string, React.LazyExoticComponent<React.ComponentType
   AgreementManagement: lazy(() => import('@/pages/contracts/AgreementManagement')),
   AddressManagement: lazy(() => import('@/pages/settings/AddressManagement')),
   AddressZoneConfig: lazy(() => import('@/pages/settings/AddressZoneConfig')),
+  ZipZoneTemplateManagement: lazy(() => import('@/pages/settings/ZipZoneTemplateManagement')),
   ResourceManagement: lazy(() => import('@/pages/settings/ResourceManagement')),
 };
 
